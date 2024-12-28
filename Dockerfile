@@ -1,40 +1,23 @@
-# Stage 1: Build
-FROM golang:latest AS builder
+# Golang build image
+FROM golang:1.23-alpine AS build
+RUN apk add --no-cache alpine-sdk
 
-# Set the working directory
 WORKDIR /app
 
-# Copy go.mod and go.sum for dependency resolution
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Copy the entire project
 COPY . .
+RUN go install github.com/a-h/templ/cmd/templ@latest && \
+    templ generate
 
-# Build the Go application
-RUN GOOS=linux go build -o main ./cmd/web
+RUN CGO_ENABLED=1 GOOS=linux go build -o main cmd/api/main.go
 
-# Stage 2: Run
-FROM ubuntu:22.04
-
-# Set the working directory
+# Production image
+FROM alpine:3.20.1 AS prod
 WORKDIR /app
-
-# Copy the compiled binary from the builder
-COPY --from=builder /app/main /app/main
-
-# Copy static assets, templates, etc.
-COPY --from=builder /app/internal/templates /app/internal/templates
-COPY --from=builder /app/static /app/static
-
-# Install runtime dependencies (e.g., database clients, TLS certs)
-RUN apt-get update && apt-get install -y \
-    ca-certificates && \
-    rm -rf /var/lib/apt/lists/*
-
-# Expose the application port
-EXPOSE 8080
-
-# Command to run the application
+COPY --from=build /app/main /app/main
+EXPOSE ${PORT}
 CMD ["./main"]
+
 
