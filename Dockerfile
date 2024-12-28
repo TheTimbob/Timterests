@@ -1,21 +1,40 @@
-# Use the official Go image as the base image
-FROM golang:latest
+# Stage 1: Build
+FROM golang:latest AS builder
 
-# Set the working directory inside the container
+# Set the working directory
 WORKDIR /app
 
-# Copy go mod and sum files
+# Copy go.mod and go.sum for dependency resolution
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Copy the application source code
-COPY . ./
+# Copy the entire project
+COPY . .
 
 # Build the Go application
-RUN go build -o main .
+RUN GOOS=linux go build -o main ./cmd/web
 
-# Expose the port your application listens on
-EXPOSE 8080 
+# Stage 2: Run
+FROM ubuntu:22.04
 
-# Define the command to run your application
+# Set the working directory
+WORKDIR /app
+
+# Copy the compiled binary from the builder
+COPY --from=builder /app/main /app/main
+
+# Copy static assets, templates, etc.
+COPY --from=builder /app/internal/templates /app/internal/templates
+COPY --from=builder /app/static /app/static
+
+# Install runtime dependencies (e.g., database clients, TLS certs)
+RUN apt-get update && apt-get install -y \
+    ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+
+# Expose the application port
+EXPOSE 8080
+
+# Command to run the application
 CMD ["./main"]
+

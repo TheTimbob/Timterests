@@ -5,10 +5,11 @@ import (
 	"net/http"
 
 	"github.com/a-h/templ"
+	"internal/templates"
 )
 
 func main() {
-	component := hello("Tim")
+	component := templates.hello("Tim")
     
     // Runs server
 	http.Handle("/", templ.Handler(component))

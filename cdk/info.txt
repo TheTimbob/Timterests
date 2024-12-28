@@ -1,0 +1,2 @@
+This is where multiple binaries can be run from. For now main.go is in the root dir.
+
