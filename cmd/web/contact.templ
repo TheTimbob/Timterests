@@ -2,7 +2,7 @@ package web
 
 templ ContactForm() {
 	@Base() {
-		<h1>Contact Me</h1>
+		<h1 class="cateogry-title">Contact Me</h1>
 		<form hx-post="/contact" method="POST" hx-target="#contact-container">
 			<h2>Name</h2>
 			<input id="name" name="name" type="text" class="contact"/>
