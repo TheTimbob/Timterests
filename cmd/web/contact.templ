@@ -1,0 +1,19 @@
+package web
+
+templ ContactForm() {
+	@Base() {
+		<form hx-post="/contact" method="POST" hx-target="#contact-container">
+			<input id="name" name="name" type="text"/>
+            <input id="email" name="email" type="text"/>
+            <textarea id="message" name="message"></textarea>
+			<button type="submit" >Submit</button>
+		</form>
+		<div id="contact-container"></div>
+	}
+}
+
+templ ContactPost(name string) {
+	<div >
+		<p>Thank you { name }, You're message has been sent.</p>
+	</div>
+}
