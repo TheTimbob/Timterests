@@ -21,7 +21,7 @@ build: templ-install
 	@echo "Building..."
 	@templ generate
 	
-	@CGO_ENABLED=1 GOOS=linux go build -o main cmd/api/main.go
+	@CGO_ENABLED=1 go build -o main cmd/api/main.go
 
 # Run the application
 run:

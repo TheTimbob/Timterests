@@ -1,5 +1,15 @@
-# timtrests
+# timterests
 Personal blog to cover topics that I am interested in.
+Tools and platforms utized for this project:
+- Go
+- Templ
+- HTMX
+- TailwindCSS
+- SQLlite
+- Docker
+- AWS
+- GitHub Actions
+- 
 
 ## Getting Started
 

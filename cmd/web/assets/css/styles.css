@@ -1,0 +1,29 @@
+/* styles.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom Styles */
+.banner-header {
+	@apply bg-gradient-to-r from-green-400 to-green-800 text-white p-6 shadow-lg;
+}
+
+.banner-title {
+	@apply text-3xl font-bold;
+}
+
+.banner-subtitle {
+	@apply mt-2 text-lg;
+}
+
+.nav-container {
+    @apply bg-white shadow-md flex justify-around p-4;
+}
+
+.nav-link {
+	@apply text-gray-700 hover:text-green-500 font-semibold transition-colors mx-4 px-2 py-1 rounded hover:bg-green-100;
+}
+
+.main-content {
+	@apply container mx-auto my-8 p-4 bg-white rounded shadow-lg;
+}
