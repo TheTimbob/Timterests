@@ -12,6 +12,7 @@ services:
       PORT: ${PORT}
       BLUEPRINT_DB_URL: ${BLUEPRINT_DB_URL}
     volumes:
+      - ./cmd/web:/app/cmd/web
       - sqlite_bp:/app/db
 volumes:
   sqlite_bp:
