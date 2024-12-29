@@ -15,15 +15,24 @@ templ Base() {
                 <h1 class="banner-title">Timterests</h1>
                 <p class="banner-subtitle">Blog of Tim's interests</p>
             </header>
-            <nav class="nav-container">
+            <nav class="nav-header">
                 <a href="/web" class="nav-link">Home</a>
                 <a href="/web/articles" class="nav-link">Articles</a>
-                <a href="/web/about" class="nav-link">About Me</a>
-                <a href="/web/contact" class="nav-link">Contact</a>
+                <a href="/web/projects" class="nav-link">Projects</a>
+				<a href="/web/about" class="nav-link">About</a>
             </nav>
 			<main class="main-content">
 				{ children... }
 			</main>
+			<footer class="banner-footer">
+				<nav class="footer-nav">
+                    <a href="/web" class="nav-footer-link">Home</a>
+                    <a href="/web/articles" class="nav-footer-link">Articles</a>
+                    <a href="/web/projects" class="nav-footer-link">Projects</a>
+                    <a href="/web/about" class="nav-footer-link">About</a>
+                </nav>
+                <p>&copy; 2024 Timterests. All rights reserved.</p>
+            </footer>
 		</body>
 	</html>
 }
