@@ -1,0 +1,29 @@
+package web
+
+templ Base() {
+	<!DOCTYPE html>
+	<html lang="en" >
+		<head>
+			<meta charset="utf-8"/>
+			<meta name="viewport" content="width=device-width,initial-scale=1"/>
+			<title>timterests</title>
+            <script src="/assets/js/htmx.min.js"></script>
+			<link href="/assets/css/output.css" rel="stylesheet"/>
+		</head>
+		<body >
+            <header class="banner-header">
+                <h1 class="banner-title">Timterests</h1>
+                <p class="banner-subtitle">Blog of Tim's interests</p>
+            </header>
+            <nav class="nav-container">
+                <a href="/web" class="nav-link">Home</a>
+                <a href="/web/articles" class="nav-link">Articles</a>
+                <a href="/web/about" class="nav-link">About Me</a>
+                <a href="/web/contact" class="nav-link">Contact</a>
+            </nav>
+			<main class="main-content">
+				{ children... }
+			</main>
+		</body>
+	</html>
+}
