@@ -5,7 +5,7 @@
 
 /* Custom Styles */
 .banner-header {
-	@apply bg-gradient-to-r from-green-400 to-green-800 text-white p-6 shadow-lg;
+	@apply bg-gradient-to-r from-green-800 to-green-400 text-white p-6 shadow-lg;
 }
 
 .banner-title {
@@ -24,6 +24,18 @@
 	@apply text-gray-700 hover:text-green-500 font-semibold transition-colors mx-4 px-2 py-1 rounded hover:bg-green-100;
 }
 
+input.contact, textarea.contact {
+    @apply border border-gray-300 rounded p-2 w-96;
+}
+
+button.submit {
+    @apply bg-green-500 text-white font-semibold py-2 px-4 rounded hover:bg-green-600 transition-colors;
+}
+
 .main-content {
 	@apply container mx-auto my-8 p-4 bg-white rounded shadow-lg;
+}
+
+h1.cateogry-title {
+    @apply text-4xl font-extrabold text-gray-900 my-4;
 }
