@@ -35,3 +35,7 @@ button.submit {
 .main-content {
 	@apply container mx-auto my-8 p-4 bg-white rounded shadow-lg;
 }
+
+h1.cateogry-title {
+    @apply text-4xl font-extrabold text-gray-900 my-4;
+}
