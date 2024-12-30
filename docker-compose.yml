@@ -7,9 +7,11 @@ services:
     restart: unless-stopped
     ports:
       - ${PORT}:${PORT}
+      - ${SSL_PORT}:${SSL_PORT}
     environment:
       APP_ENV: ${APP_ENV}
       PORT: ${PORT}
+      SSL_PORT: ${SSL_PORT}
       BLUEPRINT_DB_URL: ${BLUEPRINT_DB_URL}
     volumes:
       - ./cmd/web:/app/cmd/web
