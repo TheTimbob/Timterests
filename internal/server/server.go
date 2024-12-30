@@ -19,7 +19,8 @@ type Server struct {
 }
 
 func NewServer() *http.Server {
-	port, _ := strconv.Atoi(os.Getenv("PORT"))
+
+	port := GetPort()
 	NewServer := &Server{
 		port: port,
 
@@ -36,4 +37,19 @@ func NewServer() *http.Server {
 	}
 
 	return server
+}
+
+func GetPort() int {
+	certFile := os.Getenv("SSL_CERT_FILE")
+	keyFile := os.Getenv("SSL_KEY_FILE")
+
+	if _, err := os.Stat(certFile); err == nil {
+		if _, err := os.Stat(keyFile); err == nil {
+			port, _ := strconv.Atoi(os.Getenv("SSL_PORT"))
+			return port
+		}
+	}
+
+	port, _ := strconv.Atoi(os.Getenv("PORT"))
+	return port
 }
