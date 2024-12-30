@@ -2,9 +2,9 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"os/signal"
 	"syscall"
 	"time"
@@ -46,9 +46,27 @@ func main() {
 	// Run graceful shutdown in a separate goroutine
 	go gracefulShutdown(server, done)
 
-	err := server.ListenAndServe()
-	if err != nil && err != http.ErrServerClosed {
-		panic(fmt.Sprintf("http server error: %s", err))
+	certFile := os.Getenv("SSL_CERT_FILE")
+	keyFile := os.Getenv("SSL_KEY_FILE")
+
+	tlsStarted := false
+
+	if _, err := os.Stat(certFile); err == nil {
+		if _, err := os.Stat(keyFile); err == nil {
+			err := server.ListenAndServeTLS(certFile, keyFile)
+			if err != nil {
+				log.Fatalf("Failed to start server with TLS: %v", err)
+			} else {
+				tlsStarted = true
+			}
+		}
+	}
+
+	if !tlsStarted {
+		err := server.ListenAndServe()
+		if err != nil {
+			log.Fatalf("Failed to start server: %v", err)
+		}
 	}
 
 	// Wait for the graceful shutdown to complete
