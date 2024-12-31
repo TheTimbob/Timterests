@@ -4,12 +4,12 @@
 @tailwind utilities;
 
 /* Custom Styles */
-html, body {
+html {
     @apply h-full;
 }
 
 body {
-    @apply flex flex-col;
+    @apply flex flex-col flex-1 h-screen;
 }
 
 .banner-header {
@@ -25,10 +25,10 @@ body {
 }
 
 .banner-footer {
-	@apply bg-gradient-to-r from-green-400 to-green-800 text-white p-3 shadow-lg text-right border-t mt-auto flex justify-end;
+	@apply bg-gradient-to-r from-green-400 to-green-800 text-white p-3 shadow-lg text-right border-t flex justify-end;
 }
 
-.cateogry-title {
+.category-title {
     @apply text-4xl font-extrabold text-gray-900 my-4;
 }
 
@@ -44,7 +44,6 @@ body {
 	@apply text-sm text-white hover:text-green-500 hover:bg-green-100 font-semibold transition-colors mx-4 px-2 py-1 rounded;
 }
 
-
 .main-content {
-	@apply container mx-auto my-8 p-4 bg-white rounded shadow-lg flex-grow;
+	@apply container mx-auto my-8 p-4 bg-white rounded shadow-lg flex-1 overflow-y-auto;
 }
