@@ -19,7 +19,6 @@ FROM alpine:3.20.1 AS prod
 WORKDIR /app
 
 COPY --from=build /app/main /app/main
-COPY ./.aws/credentials /root/.aws/credentials
 
 EXPOSE ${PORT}
 ENTRYPOINT ["./main"]

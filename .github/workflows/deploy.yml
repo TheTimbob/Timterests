@@ -1,0 +1,64 @@
+name: Deploy to AWS Lightsail
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install AWS Lightsail CLI
+        run: |
+          curl "https://s3.us-west-2.amazonaws.com/lightsailctl/latest/linux-arm64/lightsailctl" -o "/usr/local/bin/lightsailctl"
+          chmod +x /usr/local/bin/lightsailctl
+
+      - name: Log in to AWS Lightsail
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Build Image
+        run: |
+          docker build -t ${{ secrets.DOCKER_IMAGE_NAME }} .
+
+      - name: Push Docker image to Lightsail
+        run: |
+          aws lightsail push-container-image \
+            --service-name ${{ secrets.AWS_LIGHTSAIL_CONTAINER_SERVICE }} \
+            --label ${{ secrets.AWS_LIGHTSAIL_SERVICE }} \
+            --image ${{ secrets.DOCKER_IMAGE_NAME }}:latest
+
+      - name: Get New Container Image
+        run: |
+          NEW_IMAGE=$(aws lightsail get-container-images \
+            --service-name ${{ secrets.AWS_LIGHTSAIL_CONTAINER_SERVICE }} \
+            --region ${{ secrets.AWS_REGION }} \
+            --query 'containerImages[0].image' \
+            --output text)
+          echo "NEW_IMAGE=$NEW_IMAGE" >> $GITHUB_ENV
+
+      - name: Deploy Lightsail Container Service
+        run: |
+          aws lightsail create-container-service-deployment \
+            --service-name ${{ secrets.AWS_LIGHTSAIL_CONTAINER_SERVICE }} \
+            --containers '{
+              "${{ secrets.AWS_LIGHTSAIL_CONTAINER_NAME }}": {
+                "image": "'"$NEW_IMAGE"'", 
+                "ports": {"${{ vars.PORT }}": "HTTP"},
+                "environment": {
+                  "APP_ENV": "${{ vars.APP_ENV }}",
+                  "BLUEPRINT_DB_URL": "${{ vars.DB_URL }}",
+                  "PORT": "${{ vars.PORT }}"
+                }
+              }
+            }' \
+            --public-endpoint '{"containerName": "${{ secrets.AWS_LIGHTSAIL_CONTAINER_NAME }}", "containerPort": ${{ vars.PORT }}}' \
+            --query 'containerService.nextDeployment' \
