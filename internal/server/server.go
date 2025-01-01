@@ -9,22 +9,26 @@ import (
 
 	_ "github.com/joho/godotenv/autoload"
 
-	"timterests/internal/database"
+	"timterests/internal/storage"
 )
 
 type Server struct {
 	port int
 
-	db database.Service
+	storage *storage.Storage
 }
 
 func NewServer() *http.Server {
 
 	port, _ := strconv.Atoi(os.Getenv("PORT"))
-	NewServer := &Server{
-		port: port,
+	storageInstance, err := storage.NewStorage()
+	if err != nil {
+		panic(fmt.Sprintf("failed to initialize storage: %v", err))
+	}
 
-		db: database.New(),
+	NewServer := &Server{
+		port:    port,
+		storage: storageInstance,
 	}
 
 	// Declare Server config
