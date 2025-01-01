@@ -7,11 +7,9 @@ Tools and platforms utized for this project:
 - Templ
 - HTMX
 - TailwindCSS
-- SQLlite
 - Docker
 - AWS
 - GitHub Actions
--
 
 ## Getting Started
 
