@@ -16,6 +16,3 @@ services:
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
     volumes:
       - ./cmd/web:/app/cmd/web
-      - sqlite_bp:/app/db
-volumes:
-  sqlite_bp:
