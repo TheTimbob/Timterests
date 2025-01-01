@@ -80,14 +80,15 @@ func (storage Storage) DownloadFile(ctx context.Context, objectKey string, fileN
 	return err
 }
 
-// Lists the objects in a bucket.
-func (storage Storage) ListObjects(ctx context.Context) ([]types.Object, error) {
+// Lists the objects in a bucket with a specific prefix.
+func (storage Storage) ListObjects(ctx context.Context, prefix string) ([]types.Object, error) {
 	var err error
 	var output *s3.ListObjectsV2Output
 	var objects []types.Object
 
 	input := &s3.ListObjectsV2Input{
 		Bucket: aws.String(storage.bucketName),
+		Prefix: aws.String(prefix),
 	}
 
 	objectPaginator := s3.NewListObjectsV2Paginator(storage.S3Client, input)
@@ -109,4 +110,21 @@ func (storage Storage) ListObjects(ctx context.Context) ([]types.Object, error) 
 		}
 	}
 	return objects, err
+}
+
+func (storage Storage) Health() map[string]string {
+
+	health := make(map[string]string)
+
+	_, err := storage.S3Client.ListBuckets(context.Background(), &s3.ListBucketsInput{})
+	if err != nil {
+		health["status"] = "down"
+		health["message"] = fmt.Sprintf("Failed to list buckets: %v", err)
+		log.Fatalf("S3 connection down: %v", err) // Log the error and terminate the program
+	} else {
+		health["status"] = "up"
+		health["message"] = "S3 storage is up and running."
+	}
+
+	return health
 }
