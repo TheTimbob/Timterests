@@ -22,10 +22,22 @@ func (s *Server) RegisterRoutes() http.Handler {
 	mux.Handle("/assets/", fileServer)
 	mux.Handle("/web", templ.Handler(web.HomeForm()))
 	mux.Handle("/web/home", templ.Handler(web.HomeForm()))
-	mux.Handle("/web/articles", templ.Handler(web.ArticlesForm()))
+
 	mux.Handle("/web/projects", templ.Handler(web.ProjectsForm()))
 	mux.Handle("/web/about", templ.Handler(web.AboutForm()))
+	mux.Handle("/web/letters", templ.Handler(web.Letters()))
 
+	// Article Routes
+	mux.Handle("/web/articles", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		web.ArticlesListHandler(w, r, s.storage)
+	}))
+	mux.Handle("/web/article", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		articleID := r.URL.Query().Get("id")
+		web.GetArticleHandler(w, r, s.storage, articleID)
+	}))
+	mux.Handle("/articles/list", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		web.ListArticles(s.storage)
+	}))
 	// Wrap the mux with CORS middleware
 	return s.corsMiddleware(mux)
 }

@@ -1,10 +1,48 @@
 package web
 
-templ ArticlesForm() {
+import (
+	"fmt"
+	"timterests/internal/models"
+)
+
+templ ArticlesList(articles []models.Article) {
 	@Base() {
 		<div id="articles-container">
-            <h1 class="category-title">Articles</h1>
-            <p>Here you'll find a collection of interesting articles and posts.</p>
-        </div>
+			<h1 class="category-title">Articles</h1>
+			<ul>
+				for _, article := range articles {
+					<li>
+						@ArticleCard(article.ID, article.Title, article.Subtitle, article.Date, article.Body)
+					</li>
+				}
+			</ul>
+		</div>
 	}
+
+}
+
+templ ArticleCard(articleID, title, subtitle, date, body string) {
+	<div 
+		class="card-container"
+		hx-get={"/web/article?id=" + fmt.Sprintf("%s", articleID)}
+		hx-target="#main-content"
+		hx-swap="innerHTML">
+		<div>
+			<div class="card-title-container">
+				<h1 class="card-title">{ title }</h1>
+				<h2 class="card-subtitle">{ subtitle }</h2>
+			</div>
+			<p class="card-body">{ body }</p>
+			<p class="card-date">{ date }</p>
+		</div>
+	</div>
+}
+
+
+templ ArticlePage(article models.Article) {
+	<div id="article-container">
+		<h1 class="category-title">{ article.Title }</h1>
+		<h2 class="category-subtitle">{ article.Subtitle }</h2>
+		@templ.Raw(article.Body)
+	</div>
 }

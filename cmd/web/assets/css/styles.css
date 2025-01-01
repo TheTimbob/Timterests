@@ -32,6 +32,10 @@ body {
     @apply text-4xl font-extrabold text-gray-900 my-4;
 }
 
+.category-subtitle {
+	@apply text-xl font-bold text-gray-900 my-4
+}
+
 .nav-header {
     @apply bg-white shadow-md flex flex-wrap justify-around p-4;
 }
@@ -45,5 +49,29 @@ body {
 }
 
 .main-content {
-	@apply container mx-auto my-8 p-4 bg-white rounded shadow-lg flex-1 overflow-y-auto;
+    @apply container mx-auto my-8 p-4 bg-white rounded shadow-lg flex-grow;
+}
+
+.card-container {
+    @apply container mx-auto m-8 p-4 pr-20 bg-white rounded shadow-lg hover:bg-green-100 hover:shadow-2xl 
+}
+
+.card-title {
+    @apply text-2xl font-extrabold text-gray-900 my-4 mr-2 inline truncate
+}
+
+.card-subtitle {
+    @apply text-lg font-bold text-gray-900 my-4 inline truncate
+}
+
+.card-date {
+	@apply text-sm font-bold text-gray-700 my-4
+}
+
+.card-body {
+    @apply my-4 mr-5 text-sm text-gray-700 truncate
+}
+
+.content-text {
+	@apply text-lg text-gray-900 my-4
 }
