@@ -25,17 +25,17 @@ For any style updates in tailwindcss, a tailwindcss standalone cli binary needs 
 Available versions:
 <https://github.com/tailwindlabs/tailwindcss/releases/tag/v3.4.17>
 
-To run an update to the css, perform one of the following.
+To run an update to the css, perform one of the following. I stored the binary in a directory called utils.
 For a minified version:
 
 ```bash
-./tailwindcss -i ./cmd/web/assets/css/styles.css -o ./cmd/web/assets/css/output.css --minify
+utils/tailwindcss -i ./cmd/web/assets/css/styles.css -o ./cmd/web/assets/css/output.css --minify
 ```
 
 For a watch version for dev environments:
 
 ```bash
-./tailwindcss -i ./cmd/web/assets/css/styles.css -o ./cmd/web/assets/css/output.css --watch
+utils/tailwindcss -i ./cmd/web/assets/css/styles.css -o ./cmd/web/assets/css/output.css --watch
 ```
 
 ## MakeFile
