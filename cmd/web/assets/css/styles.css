@@ -5,7 +5,7 @@
 
 /* Custom Styles */
 html {
-    @apply h-full;
+    @apply h-full w-full;
 }
 
 body {
@@ -17,15 +17,15 @@ body {
 }
 
 .banner-title {
-	@apply text-3xl font-bold;
+    @apply text-2xl md:text-3xl font-bold;
 }
 
 .banner-subtitle {
-	@apply mt-2 text-lg;
+    @apply mt-2 text-sm md:text-lg;
 }
 
 .banner-footer {
-	@apply bg-gradient-to-r from-green-400 to-green-800 text-white p-3 shadow-lg text-right border-t flex justify-end;
+    @apply bg-gradient-to-r from-green-400 to-green-800 text-white p-3 shadow-lg text-right border-t flex flex-wrap justify-end space-y-2 md:space-y-0;
 }
 
 .category-title {
@@ -33,15 +33,15 @@ body {
 }
 
 .nav-header {
-    @apply bg-white shadow-md flex justify-around p-4;
+    @apply bg-white shadow-md flex flex-wrap justify-around p-4;
 }
 
 .nav-link {
-	@apply text-gray-700 hover:text-green-500 hover:bg-green-100 font-semibold transition-colors mx-4 px-2 py-1 rounded;
+    @apply text-gray-700 hover:text-green-500 hover:bg-green-100 font-semibold transition-colors px-2 py-1 rounded;
 }
 
 .nav-footer-link {
-	@apply text-sm text-white hover:text-green-500 hover:bg-green-100 font-semibold transition-colors mx-4 px-2 py-1 rounded;
+    @apply text-sm text-white hover:text-green-500 hover:bg-green-100 font-semibold transition-colors px-2 py-1 rounded;
 }
 
 .main-content {
