@@ -1,0 +1,3 @@
+# Ignore everything. This is a temp area for the S3 bucket to download files to.
+*
+!.gitignore
