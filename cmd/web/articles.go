@@ -2,6 +2,7 @@ package web
 
 import (
 	"context"
+	"fmt"
 	"html"
 	"log"
 	"net/http"
@@ -19,7 +20,8 @@ import (
 func ArticlesListHandler(w http.ResponseWriter, r *http.Request, storageInstance *storage.Storage) {
 	articles, err := ListArticles(storageInstance)
 	if err != nil {
-		http.Error(w, "Failed to fetch articles", http.StatusInternalServerError)
+		message := "Failed to fetch articles"
+		http.Error(w, fmt.Sprintf("%s: %v", message, err), http.StatusInternalServerError)
 		return
 	}
 
@@ -72,7 +74,7 @@ func ListArticles(storageInstance *storage.Storage) ([]models.Article, error) {
 		}
 
 		fileName := path.Base(key)
-		localFilePath := path.Join("tmp", fileName)
+		localFilePath := path.Join("s3", fileName)
 
 		// Download the file
 		err := storageInstance.DownloadFile(context.Background(), key, localFilePath)
