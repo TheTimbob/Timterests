@@ -28,8 +28,8 @@ jobs:
       - name: Log in to AWS Lightsail
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-access-key-id: ${{ secrets.LIGHTSAIL_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.LIGHTSAIL_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Build Image
@@ -65,8 +65,8 @@ jobs:
                   "APP_ENV": "${{ vars.APP_ENV }}",
                   "AWS_REGION": "${{ secrets.AWS_REGION }}",
                   "AWS_BUCKET_NAME": "${{ secrets.AWS_BUCKET_NAME }}",
-                  "AWS_ACCESS_KEY_ID": "${{ secrets.AWS_ACCESS_KEY_ID }}",
-                  "AWS_SECRET_ACCESS_KEY": "${{ secrets.AWS_ACCESS_KEY }}",
+                  "AWS_ACCESS_KEY_ID": "${{ secrets.LIGHTSAIL_ACCESS_KEY_ID }}",
+                  "AWS_SECRET_ACCESS_KEY": "${{ secrets.LIGHTSAIL_SECRET_ACCESS_KEY }}",
                   "PORT": "${{ vars.PORT }}"
                 }
               }
