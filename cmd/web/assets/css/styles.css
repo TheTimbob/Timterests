@@ -49,7 +49,7 @@ body {
 }
 
 .main-content {
-    @apply container mx-auto my-8 p-4 bg-white rounded shadow-lg flex-grow;
+    @apply container mx-auto my-8 p-4 bg-white rounded shadow-lg flex-grow overflow-y-scroll
 }
 
 .card-container {
