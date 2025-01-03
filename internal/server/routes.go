@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"timterests/cmd/web"
+	"timterests/internal/storage"
 
 	"github.com/a-h/templ"
 )
@@ -29,15 +30,16 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	// Article Routes
 	mux.Handle("/web/articles", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		web.ArticlesListHandler(w, r, s.storage)
+		web.ArticlesListHandler(w, r, *s.storage)
 	}))
 	mux.Handle("/web/article", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		articleID := r.URL.Query().Get("id")
-		web.GetArticleHandler(w, r, s.storage, articleID)
+		web.GetArticleHandler(w, r, *s.storage, articleID)
 	}))
 	mux.Handle("/articles/list", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		web.ListArticles(s.storage)
+		web.ListArticles(*s.storage)
 	}))
+
 	// Wrap the mux with CORS middleware
 	return s.corsMiddleware(mux)
 }
@@ -76,7 +78,7 @@ func (s *Server) HelloWorldHandler(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) healthHandler(w http.ResponseWriter, r *http.Request) {
 	//Marshal the health check response
-	resp, err := json.Marshal(s.storage.Health())
+	resp, err := json.Marshal(storage.Health(*s.storage))
 	if err != nil {
 		http.Error(w, "Failed to marshal health check response", http.StatusInternalServerError)
 		return
