@@ -1,10 +1,43 @@
 package web
 
-templ ProjectsForm() {
-	@Base() {
-		<div id="projects-container">		
-			<h1 class="category-title">Projects</h1>
-			<p>This is where I will describe personal projects I am working on.</p>
+import (
+"timterests/internal/models"
+)
+
+templ ProjectsList(projects []models.Document) {
+@Base() {
+<div id="project-container">
+	<h1 class="category-title">Projects</h1>
+	<ul>
+		for _, project := range projects {
+		<li>
+			@ProjectCard(project.ID, project.Title, project.Subtitle, project.Date, project.Body)
+		</li>
+		}
+	</ul>
+</div>
+}
+
+}
+
+templ ProjectCard(projectID, title, subtitle, date, body string) {
+<div class="card-container" hx-get={"/web/project?id=" + projectID} hx-target=" #main-content" hx-swap="innerHTML">
+	<div>
+		<div class="card-title-container">
+			<h1 class="card-title">{ title }</h1>
+			<h2 class="card-subtitle">{ subtitle }</h2>
 		</div>
-	}
+		<p class="card-body">{ body }</p>
+		<p class="card-date">{ date }</p>
+	</div>
+</div>
+}
+
+
+templ ProjectPage(project models.Document) {
+<div id="project-container">
+	<h1 class="category-title">{ project.Title }</h1>
+	<h2 class="category-subtitle">{ project.Subtitle }</h2>
+	@templ.Raw(project.Body)
+</div>
 }
