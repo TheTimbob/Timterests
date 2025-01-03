@@ -8,6 +8,8 @@ import (
 	"io"
 	"log"
 	"os"
+	"regexp"
+	"sort"
 	"strings"
 	"timterests/internal/models"
 
@@ -69,6 +71,12 @@ func ListObjects(ctx context.Context, storage models.Storage, prefix string) ([]
 			objects = append(objects, output.Contents...)
 		}
 	}
+
+    // Sort objects by date from most current to least current
+    sort.Slice(objects, func(i, j int) bool {
+        return objects[i].LastModified.After(*objects[j].LastModified)
+    })
+        
 	return objects, err
 }
 
@@ -142,15 +150,21 @@ func ReadFile(key, localFilePath string, storageInstance models.Storage) (models
 
 // Converts raw text into HTML paragraphs
 func ConvertTextToParagraphs(text string) string {
-	paragraphs := strings.Split(text, "\n\n") // Split by double newline for paragraphs
-	var htmlContent string
+    paragraphs := strings.Split(text, "\n\n") // Split by double newline for paragraphs
+    var htmlContent string
+    htmlTagRegex := regexp.MustCompile(`</?[a-z][\s\S]*>`)
 
-	for _, paragraph := range paragraphs {
-		// Escape any special HTML characters to prevent injection
-		htmlContent += "<p class='content-text'>" + html.EscapeString(paragraph) + "</p>"
-	}
+    for _, paragraph := range paragraphs {
+        if htmlTagRegex.MatchString(paragraph) {
+            // If the paragraph contains HTML tags, add it as is
+            htmlContent += paragraph
+        } else {
+            // Escape any special HTML characters to prevent injection
+            htmlContent += "<p class='content-text'>" + html.EscapeString(paragraph) + "</p>"
+        }
+    }
 
-	return htmlContent
+    return htmlContent
 }
 
 func Health(storage models.Storage) map[string]string {
