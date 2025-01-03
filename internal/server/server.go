@@ -9,13 +9,14 @@ import (
 
 	_ "github.com/joho/godotenv/autoload"
 
+	"timterests/internal/models"
 	"timterests/internal/storage"
 )
 
 type Server struct {
 	port int
 
-	storage *storage.Storage
+	storage *models.Storage
 }
 
 func NewServer() *http.Server {
