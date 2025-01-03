@@ -4,23 +4,22 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"html"
 	"io"
 	"log"
 	"os"
+	"strings"
+	"timterests/internal/models"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"gopkg.in/yaml.v2"
 )
 
-type Storage struct {
-	bucketName string
-	S3Client   *s3.Client
-}
-
-// Initializes a new Storage instance.
-func NewStorage() (*Storage, error) {
+// Initializes a new models.Storage instance.
+func NewStorage() (*models.Storage, error) {
 	bucketName := os.Getenv("AWS_BUCKET_NAME")
 	region := os.Getenv("AWS_REGION")
 
@@ -35,25 +34,58 @@ func NewStorage() (*Storage, error) {
 
 	client := s3.NewFromConfig(cfg)
 
-	return &Storage{
-		bucketName: bucketName,
+	return &models.Storage{
+		BucketName: bucketName,
 		S3Client:   client,
 	}, nil
 }
 
+// Lists the objects in a bucket with a specific prefix.
+func ListObjects(ctx context.Context, storage models.Storage, prefix string) ([]types.Object, error) {
+	var err error
+	var output *s3.ListObjectsV2Output
+	var objects []types.Object
+
+	input := &s3.ListObjectsV2Input{
+		Bucket: aws.String(storage.BucketName),
+		Prefix: aws.String(prefix),
+	}
+
+	objectPaginator := s3.NewListObjectsV2Paginator(storage.S3Client, input)
+	for objectPaginator.HasMorePages() {
+
+		output, err = objectPaginator.NextPage(ctx)
+		if err != nil {
+
+			var noBucket *types.NoSuchBucket
+			if errors.As(err, &noBucket) {
+				log.Printf("Bucket %s does not exist.\n", storage.BucketName)
+				err = noBucket
+			}
+
+			break
+
+		} else {
+			objects = append(objects, output.Contents...)
+		}
+	}
+	return objects, err
+}
+
 // Gets an object from a bucket and stores it in a local file.
-func (storage Storage) DownloadFile(ctx context.Context, objectKey string, fileName string) error {
+func DownloadFile(ctx context.Context, storage models.Storage, objectKey string, fileName string) error {
+
 	result, err := storage.S3Client.GetObject(ctx, &s3.GetObjectInput{
-		Bucket: aws.String(storage.bucketName),
+		Bucket: aws.String(storage.BucketName),
 		Key:    aws.String(objectKey),
 	})
 	if err != nil {
 		var noKey *types.NoSuchKey
 		if errors.As(err, &noKey) {
-			log.Printf("Can't get object %s from bucket %s. No such key exists.\n", objectKey, storage.bucketName)
+			log.Printf("Can't get object %s from bucket %s. No such key exists.\n", objectKey, storage.BucketName)
 			err = noKey
 		} else {
-			log.Printf("Couldn't get object %v:%v. Here's why: %v\n", storage.bucketName, objectKey, err)
+			log.Printf("Couldn't get object %v:%v. Here's why: %v\n", storage.BucketName, objectKey, err)
 		}
 		return err
 	}
@@ -80,40 +112,48 @@ func (storage Storage) DownloadFile(ctx context.Context, objectKey string, fileN
 	return err
 }
 
-// Lists the objects in a bucket with a specific prefix.
-func (storage Storage) ListObjects(ctx context.Context, prefix string) ([]types.Object, error) {
-	var err error
-	var output *s3.ListObjectsV2Output
-	var objects []types.Object
+// Reads a file from the local file system and decodes it into a Document object.
+func ReadFile(key, localFilePath string, storageInstance models.Storage) (models.Document, error) {
+	var document models.Document
 
-	input := &s3.ListObjectsV2Input{
-		Bucket: aws.String(storage.bucketName),
-		Prefix: aws.String(prefix),
+	// Download the file
+	err := DownloadFile(context.Background(), storageInstance, key, localFilePath)
+	if err != nil {
+		log.Println("Failed to download file: ", err)
+		return document, err
 	}
 
-	objectPaginator := s3.NewListObjectsV2Paginator(storage.S3Client, input)
-	for objectPaginator.HasMorePages() {
-
-		output, err = objectPaginator.NextPage(ctx)
-		if err != nil {
-
-			var noBucket *types.NoSuchBucket
-			if errors.As(err, &noBucket) {
-				log.Printf("Bucket %s does not exist.\n", storage.bucketName)
-				err = noBucket
-			}
-
-			break
-
-		} else {
-			objects = append(objects, output.Contents...)
-		}
+	// Open the downloaded file
+	file, err := os.Open(localFilePath)
+	if err != nil {
+		log.Println("Failed to open file: ", err)
+		return document, err
 	}
-	return objects, err
+	defer file.Close()
+
+	// Decode the yaml file into a document object
+	decoder := yaml.NewDecoder(file)
+	if err := decoder.Decode(&document); err != nil {
+		log.Println("Failed to decode file: ", err)
+		return document, err
+	}
+	return document, nil
 }
 
-func (storage Storage) Health() map[string]string {
+// Converts raw text into HTML paragraphs
+func ConvertTextToParagraphs(text string) string {
+	paragraphs := strings.Split(text, "\n\n") // Split by double newline for paragraphs
+	var htmlContent string
 
+	for _, paragraph := range paragraphs {
+		// Escape any special HTML characters to prevent injection
+		htmlContent += "<p class='content-text'>" + html.EscapeString(paragraph) + "</p>"
+	}
+
+	return htmlContent
+}
+
+func Health(storage models.Storage) map[string]string {
 	health := make(map[string]string)
 
 	_, err := storage.S3Client.ListBuckets(context.Background(), &s3.ListBucketsInput{})

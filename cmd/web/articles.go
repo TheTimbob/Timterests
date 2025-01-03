@@ -3,21 +3,17 @@ package web
 import (
 	"context"
 	"fmt"
-	"html"
 	"log"
 	"net/http"
-	"os"
 	"path"
 	"strconv"
-	"strings"
 	"timterests/internal/models"
 	"timterests/internal/storage"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"gopkg.in/yaml.v2"
 )
 
-func ArticlesListHandler(w http.ResponseWriter, r *http.Request, storageInstance *storage.Storage) {
+func ArticlesListHandler(w http.ResponseWriter, r *http.Request, storageInstance models.Storage) {
 	articles, err := ListArticles(storageInstance)
 	if err != nil {
 		message := "Failed to fetch articles"
@@ -33,7 +29,7 @@ func ArticlesListHandler(w http.ResponseWriter, r *http.Request, storageInstance
 	}
 }
 
-func GetArticleHandler(w http.ResponseWriter, r *http.Request, storageInstance *storage.Storage, articleID string) {
+func GetArticleHandler(w http.ResponseWriter, r *http.Request, storageInstance models.Storage, articleID string) {
 
 	articles, err := ListArticles(storageInstance)
 	if err != nil {
@@ -43,7 +39,7 @@ func GetArticleHandler(w http.ResponseWriter, r *http.Request, storageInstance *
 
 	for _, article := range articles {
 		if article.ID == articleID {
-			article.Body = ConvertTextToParagraphs(article.Body)
+			article.Body = storage.ConvertTextToParagraphs(article.Body)
 			component := ArticlePage(article)
 			err = component.Render(r.Context(), w)
 			if err != nil {
@@ -54,14 +50,13 @@ func GetArticleHandler(w http.ResponseWriter, r *http.Request, storageInstance *
 	}
 
 }
-
-func ListArticles(storageInstance *storage.Storage) ([]models.Article, error) {
-	var articles []models.Article
-	var article models.Article
+func ListArticles(storageInstance models.Storage) ([]models.Document, error) {
+	var articles []models.Document
+	var article models.Document
 
 	// Get all articles from the storage
 	prefix := "articles/"
-	articleFiles, err := storageInstance.ListObjects(context.Background(), prefix)
+	articleFiles, err := storage.ListObjects(context.Background(), storageInstance, prefix)
 	if err != nil {
 		return nil, err
 	}
@@ -76,25 +71,9 @@ func ListArticles(storageInstance *storage.Storage) ([]models.Article, error) {
 		fileName := path.Base(key)
 		localFilePath := path.Join("s3", fileName)
 
-		// Download the file
-		err := storageInstance.DownloadFile(context.Background(), key, localFilePath)
+		article, err = storage.ReadFile(key, localFilePath, storageInstance)
 		if err != nil {
-			log.Println("Failed to download file: ", err)
-			return nil, err
-		}
-
-		// Open the downloaded file
-		file, err := os.Open(localFilePath)
-		if err != nil {
-			log.Println("Failed to open file: ", err)
-			return nil, err
-		}
-		defer file.Close()
-
-		// Decode the yaml file into an article object
-		decoder := yaml.NewDecoder(file)
-		if err := decoder.Decode(&article); err != nil {
-			log.Println("Failed to decode file: ", err)
+			log.Printf("Failed to read file: %v", err)
 			return nil, err
 		}
 
@@ -103,17 +82,4 @@ func ListArticles(storageInstance *storage.Storage) ([]models.Article, error) {
 	}
 
 	return articles, nil
-}
-
-// Converts raw text into HTML paragraphs
-func ConvertTextToParagraphs(text string) string {
-	paragraphs := strings.Split(text, "\n\n") // Split by double newline for paragraphs
-	var htmlContent string
-
-	for _, paragraph := range paragraphs {
-		// Escape any special HTML characters to prevent injection
-		htmlContent += "<p class='content-text'>" + html.EscapeString(paragraph) + "</p>"
-	}
-
-	return htmlContent
 }
