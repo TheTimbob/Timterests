@@ -1,7 +1,6 @@
 package web
 
 import (
-"fmt"
 "timterests/internal/models"
 )
 
@@ -22,8 +21,8 @@ templ ArticlesList(articles []models.Document) {
 }
 
 templ ArticleCard(articleID, title, subtitle, date, body string) {
-<div class="card-container" hx-get={"/web/article?id=" + fmt.Sprintf(" %s", articleID)} hx-target="#main-content"
-	hx-swap="innerHTML">
+
+<div class="card-container" hx-get={"/web/article?id=" + articleID} hx-target=" #main-content" hx-swap="innerHTML">
 	<div>
 		<div class="card-title-container">
 			<h1 class="card-title">{ title }</h1>
