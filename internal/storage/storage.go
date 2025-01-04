@@ -83,10 +83,15 @@ func ListObjects(ctx context.Context, storage models.Storage, prefix string) ([]
 // Gets an object from a bucket and stores it in a local file.
 func DownloadFile(ctx context.Context, storage models.Storage, objectKey string, fileName string) error {
 
-	result, err := storage.S3Client.GetObject(ctx, &s3.GetObjectInput{
+	if _, err := os.Stat(fileName); err == nil {
+        return nil
+    }
+
+    result, err := storage.S3Client.GetObject(ctx, &s3.GetObjectInput{
 		Bucket: aws.String(storage.BucketName),
 		Key:    aws.String(objectKey),
 	})
+
 	if err != nil {
 		var noKey *types.NoSuchKey
 		if errors.As(err, &noKey) {
