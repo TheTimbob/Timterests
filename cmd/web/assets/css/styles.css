@@ -72,6 +72,10 @@ body {
     @apply my-4 mr-5 text-sm text-gray-700 truncate
 }
 
+.card-tag {
+	@apply text-sm mr-2 py-1 px-2 font-bold bg-green-300 text-gray-700 rounded-full inline
+}
+
 .content-text {
 	@apply text-lg text-gray-900 my-4
 }
