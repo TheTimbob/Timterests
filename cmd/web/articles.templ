@@ -11,7 +11,7 @@ templ ArticlesList(articles []models.Document) {
 	<ul>
 		for _, article := range articles {
 		<li>
-			@ArticleCard(article.ID, article.Title, article.Subtitle, article.Date, article.Body)
+			@ArticleCard(article.ID, article.Title, article.Subtitle, article.Date, article.Body, article.Tags)
 		</li>
 		}
 	</ul>
@@ -20,7 +20,7 @@ templ ArticlesList(articles []models.Document) {
 
 }
 
-templ ArticleCard(articleID, title, subtitle, date, body string) {
+templ ArticleCard(articleID, title, subtitle, date, body string, tags []string) {
 
 <div class="card-container" hx-get={"/web/article?id=" + articleID} hx-target=" #main-content" hx-swap="innerHTML">
 	<div>
@@ -30,6 +30,9 @@ templ ArticleCard(articleID, title, subtitle, date, body string) {
 		</div>
 		<p class="card-body">{ body }</p>
 		<p class="card-date">{ date }</p>
+		for _, tag := range tags {
+		<p class="card-tag">{ tag }</p>
+		}
 	</div>
 </div>
 }
