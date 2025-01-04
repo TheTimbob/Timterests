@@ -7,6 +7,12 @@ type Storage struct {
 	S3Client   *s3.Client
 }
 
+type About struct {
+	Title    string `yaml:"title"`
+	Subtitle string `yaml:"subtitle"`
+	Body     string `yaml:"body"`
+}
+
 type Document struct {
 	ID       string
 	Title    string `yaml:"title"`
