@@ -17,6 +17,9 @@ func (s *Server) RegisterRoutes() http.Handler {
 	// Register routes
 	mux.Handle("/", templ.Handler(web.HomeForm()))
 
+    // Favicon Route
+    mux.Handle("/favicon.ico", http.FileServer(http.Dir(".")))
+
 	mux.HandleFunc("/health", s.healthHandler)
 
 	fileServer := http.FileServer(http.FS(web.Files))
@@ -24,7 +27,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	mux.Handle("/web", templ.Handler(web.HomeForm()))
 	mux.Handle("/web/home", templ.Handler(web.HomeForm()))
 	mux.Handle("/web/letters", templ.Handler(web.Letters()))
-
+    
 	// About Routes
 	mux.Handle("/web/about", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		web.AboutHandler(w, r, *s.storage)
