@@ -19,4 +19,5 @@ type Document struct {
 	Subtitle string `yaml:"subtitle"`
 	Date     string `yaml:"date"`
 	Body     string `yaml:"body"`
+    Tags     []string `yaml:"tags"`
 }
