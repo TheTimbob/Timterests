@@ -50,6 +50,7 @@ func GetArticleHandler(w http.ResponseWriter, r *http.Request, storageInstance m
 	}
 
 }
+
 func ListArticles(storageInstance models.Storage) ([]models.Document, error) {
 	var articles []models.Document
 	var article models.Document
