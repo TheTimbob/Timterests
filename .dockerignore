@@ -1,0 +1,16 @@
+# Ignore version control system directories
+.git
+.gitignore
+
+# Ignore environment variable files
+.env
+
+# Ignore temporary files and directories
+tmp
+
+# Ignore IDE/editor specific files
+.vscode
+
+# Ignore OS generated files
+.DS_Store
+._*

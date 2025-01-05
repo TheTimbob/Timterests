@@ -21,32 +21,32 @@ func ProjectsListHandler(w http.ResponseWriter, r *http.Request, storageInstance
 		return
 	}
 
-	for i, _ := range projects {
+	for i := range projects {
 		projects[i].Body = storage.RemoveHTMLTags(projects[i].Body)
 	}
 	component := ProjectsList(projects)
 	err = component.Render(r.Context(), w)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		log.Fatalf("Error rendering in ArticlesPosts: %e", err)
+		log.Fatalf("Error rendering in ProjectPosts: %e", err)
 	}
 }
 
-func GetProjectsHandler(w http.ResponseWriter, r *http.Request, storageInstance models.Storage, articleID string) {
+func GetProjectsHandler(w http.ResponseWriter, r *http.Request, storageInstance models.Storage, projectID string) {
 
-	projects, err := ListArticles(storageInstance)
+	projects, err := ListProjects(storageInstance)
 	if err != nil {
 		http.Error(w, "Failed to fetch projects", http.StatusInternalServerError)
 		return
 	}
 
 	for _, project := range projects {
-		if project.ID == articleID {
-			component := ArticlePage(project)
+		if project.ID == projectID {
+			component := ProjectPage(project)
 			err = component.Render(r.Context(), w)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)
-				log.Fatalf("Error rendering in GetArticleByIDHandler: %e", err)
+				log.Fatalf("Error rendering in GetProjectsHandler: %e", err)
 			}
 		}
 	}
@@ -55,16 +55,16 @@ func GetProjectsHandler(w http.ResponseWriter, r *http.Request, storageInstance 
 
 func ListProjects(storageInstance models.Storage) ([]models.Document, error) {
 	var projects []models.Document
-	var article models.Document
+	var project models.Document
 
 	// Get all projects from the storage
 	prefix := "projects/"
-	articleFiles, err := storage.ListObjects(context.Background(), storageInstance, prefix)
+	projectFiles, err := storage.ListObjects(context.Background(), storageInstance, prefix)
 	if err != nil {
 		return nil, err
 	}
 
-	for id, obj := range articleFiles {
+	for id, obj := range projectFiles {
 		key := aws.ToString(obj.Key)
 
 		if key == prefix {
@@ -74,14 +74,14 @@ func ListProjects(storageInstance models.Storage) ([]models.Document, error) {
 		fileName := path.Base(key)
 		localFilePath := path.Join("s3", fileName)
 
-		article, err = storage.ReadFile(key, localFilePath, storageInstance)
+		project, err = storage.ReadFile(key, localFilePath, storageInstance)
 		if err != nil {
 			log.Printf("Failed to read file: %v", err)
 			return nil, err
 		}
 
-		article.ID = strconv.Itoa(id)
-		projects = append(projects, article)
+		project.ID = strconv.Itoa(id)
+		projects = append(projects, project)
 	}
 
 	return projects, nil

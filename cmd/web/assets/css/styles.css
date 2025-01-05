@@ -13,7 +13,7 @@ body {
 }
 
 .banner-header {
-	@apply bg-gradient-to-r from-green-800 to-green-400 text-white dark:text-black p-4 shadow-lg;
+	@apply bg-gradient-to-r from-green-800 to-green-400 text-white p-4 shadow-lg;
 }
 
 .banner-title {
@@ -45,7 +45,7 @@ body {
 }
 
 .nav-footer-link {
-    @apply text-sm text-white dark:text-black hover:text-green-500 hover:bg-green-100 dark:hover:bg-green-800 font-semibold transition-colors px-2 py-1 rounded;
+    @apply text-sm text-gray-200 hover:text-green-500 hover:bg-green-100 dark:hover:bg-green-800 font-semibold transition-colors px-2 py-1 rounded;
 }
 
 .main-content {
@@ -81,7 +81,7 @@ body {
 }
 
 .copywrite-text {
-    @apply my-4 text-gray-200 dark:text-gray-900
+    @apply my-4 text-gray-200
 }
 
 .hyperlink {

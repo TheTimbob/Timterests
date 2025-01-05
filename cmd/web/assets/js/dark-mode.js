@@ -17,11 +17,19 @@ document.addEventListener('DOMContentLoaded', function () {
     const darkModeSwitch = document.getElementById('dark-mode-switch');
 
     // Load stored theme or system preference on page load
-    const storedTheme = localStorage.getItem('theme') || window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    const storedTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
     document.documentElement.classList.toggle('dark', storedTheme === 'dark');
+
+    // Temporarily disable transitions to prevent noticable button change
+    document.documentElement.classList.add('no-transition');
 
     //Sync switch
     darkModeSwitch.checked = storedTheme === 'light';
+
+    // Re-enable transitions after a short delay
+    setTimeout(() => {
+        document.documentElement.classList.remove('no-transition');
+    }, 100);
 
     // Add event listener to toggle theme
     darkModeSwitch.addEventListener('change', toggleTheme);

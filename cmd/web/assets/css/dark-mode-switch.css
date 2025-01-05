@@ -82,3 +82,6 @@
     }
 }
 
+.no-transition, .no-transition * {
+    transition: none !important;
+}
