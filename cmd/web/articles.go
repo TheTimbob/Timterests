@@ -21,6 +21,9 @@ func ArticlesListHandler(w http.ResponseWriter, r *http.Request, storageInstance
 		return
 	}
 
+	for i, _ := range articles {
+		articles[i].Body = storage.RemoveHTMLTags(articles[i].Body)
+	}
 	component := ArticlesList(articles)
 	err = component.Render(r.Context(), w)
 	if err != nil {
@@ -39,7 +42,6 @@ func GetArticleHandler(w http.ResponseWriter, r *http.Request, storageInstance m
 
 	for _, article := range articles {
 		if article.ID == articleID {
-			article.Body = storage.ConvertTextToParagraphs(article.Body)
 			component := ArticlePage(article)
 			err = component.Render(r.Context(), w)
 			if err != nil {

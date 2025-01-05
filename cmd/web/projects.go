@@ -21,6 +21,9 @@ func ProjectsListHandler(w http.ResponseWriter, r *http.Request, storageInstance
 		return
 	}
 
+	for i, _ := range projects {
+		projects[i].Body = storage.RemoveHTMLTags(projects[i].Body)
+	}
 	component := ProjectsList(projects)
 	err = component.Render(r.Context(), w)
 	if err != nil {
@@ -39,7 +42,6 @@ func GetProjectsHandler(w http.ResponseWriter, r *http.Request, storageInstance 
 
 	for _, project := range projects {
 		if project.ID == articleID {
-			project.Body = storage.ConvertTextToParagraphs(project.Body)
 			component := ArticlePage(project)
 			err = component.Render(r.Context(), w)
 			if err != nil {
