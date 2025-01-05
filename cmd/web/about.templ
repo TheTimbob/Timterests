@@ -7,9 +7,9 @@ import (
 templ AboutForm(about models.About) {
 	@Base() {
 		<div id="about-container">
-      <h1 class="category-title">{ about.Title }</h1>
-      <h2 class="category-subtitle">{ about.Subtitle }</h2>
-      @templ.Raw(about.Body)
-   </div>
+            <h1 class="category-title">{ about.Title }</h1>
+            <h2 class="category-subtitle">{ about.Subtitle }</h2>
+            @templ.Raw(about.Body)
+        </div>
 	}
 }

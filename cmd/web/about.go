@@ -40,6 +40,6 @@ func AboutHandler(w http.ResponseWriter, r *http.Request, storageInstance models
 	err = component.Render(r.Context(), w)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		log.Fatalf("Error rendering in GetArticleByIDHandler: %e", err)
+		log.Fatalf("Error rendering in AboutHandler: %e", err)
 	}
 }
