@@ -9,15 +9,15 @@ html {
 }
 
 body {
-    @apply flex flex-col flex-1 h-screen;
+    @apply flex flex-col flex-1 h-screen bg-gray-100 dark:bg-gray-600 
 }
 
 .banner-header {
-	@apply bg-gradient-to-r from-green-800 to-green-400 text-white p-4 shadow-lg;
+	@apply bg-gradient-to-r from-green-800 to-green-400 text-white dark:text-black p-4 shadow-lg;
 }
 
 .banner-title {
-    @apply text-2xl md:text-3xl font-bold;
+    @apply text-2xl md:text-3xl font-bold inline-block;
 }
 
 .banner-subtitle {
@@ -25,51 +25,51 @@ body {
 }
 
 .banner-footer {
-    @apply bg-gradient-to-r from-green-400 to-green-800 text-white p-3 shadow-lg text-right border-t flex flex-wrap justify-end space-y-2 md:space-y-0;
+    @apply bg-gradient-to-r from-green-400 to-green-800 text-white dark:text-black p-3 shadow-lg text-right border-t flex flex-wrap justify-end space-y-2 md:space-y-0;
 }
 
 .category-title {
-    @apply text-4xl font-extrabold text-gray-900 my-4;
+    @apply text-4xl font-extrabold text-gray-900 dark:text-gray-200 my-4;
 }
 
 .category-subtitle {
-	@apply text-xl font-bold text-gray-900 my-4
+	@apply text-xl font-bold text-gray-900 dark:text-gray-200 my-4
 }
 
 .nav-header {
-    @apply bg-white shadow-md flex flex-wrap justify-around p-4;
+    @apply dark:bg-gray-600 shadow-md flex flex-wrap justify-around p-4;
 }
 
 .nav-link {
-    @apply text-gray-700 hover:text-green-500 hover:bg-green-100 font-semibold transition-colors px-2 py-1 rounded;
+    @apply text-gray-700 hover:text-green-500 hover:bg-green-100 dark:hover:bg-green-800 dark:text-gray-200 font-semibold transition-colors px-2 py-1 rounded;
 }
 
 .nav-footer-link {
-    @apply text-sm text-white hover:text-green-500 hover:bg-green-100 font-semibold transition-colors px-2 py-1 rounded;
+    @apply text-sm text-white dark:text-black hover:text-green-500 hover:bg-green-100 dark:hover:bg-green-800 font-semibold transition-colors px-2 py-1 rounded;
 }
 
 .main-content {
-    @apply container mx-auto my-8 p-4 bg-white rounded shadow-lg flex-grow overflow-y-scroll
+    @apply container mx-auto my-5 p-4 bg-white dark:bg-gray-600 rounded shadow-lg flex-grow overflow-y-scroll
 }
 
 .card-container {
-    @apply container mx-auto m-8 p-4 bg-white rounded shadow-lg hover:bg-green-100 hover:shadow-2xl truncate 
+    @apply container mx-auto m-8 p-4 bg-gray-100 dark:bg-gray-700 rounded shadow-lg hover:bg-green-100 dark:hover:bg-green-700 hover:shadow-2xl truncate 
 }
 
 .card-title {
-    @apply text-2xl font-extrabold text-gray-900 my-4 mr-2 inline truncate 
+    @apply text-2xl font-extrabold text-gray-900 dark:text-gray-200 my-4 mr-2 inline truncate 
 }
 
 .card-subtitle {
-    @apply text-lg font-bold text-gray-900 my-4 mr-4 inline truncate 
+    @apply text-lg font-bold text-gray-900 dark:text-gray-200 my-4 mr-4 inline truncate 
 }
 
 .card-date {
-	@apply text-sm my-4 font-bold text-gray-700
+	@apply text-sm my-4 font-bold text-gray-700 dark:text-gray-300
 }
 
 .card-body {
-    @apply my-4 mr-4 text-sm text-gray-700 truncate
+    @apply my-4 mr-4 text-sm text-gray-700 dark:text-gray-300 truncate 
 }
 
 .card-tag {
@@ -77,5 +77,13 @@ body {
 }
 
 .content-text {
-	@apply text-lg my-4 text-gray-900
+	@apply text-lg my-4 text-gray-900 dark:text-gray-200
+}
+
+.copywrite-text {
+    @apply my-4 text-gray-200 dark:text-gray-900
+}
+
+.hyperlink {
+    @apply hover:text-green-500
 }

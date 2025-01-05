@@ -4,13 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"html"
 	"io"
 	"log"
 	"os"
 	"regexp"
 	"sort"
-	"strings"
 	"timterests/internal/models"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -72,11 +70,11 @@ func ListObjects(ctx context.Context, storage models.Storage, prefix string) ([]
 		}
 	}
 
-    // Sort objects by date from most current to least current
-    sort.Slice(objects, func(i, j int) bool {
-        return objects[i].LastModified.After(*objects[j].LastModified)
-    })
-        
+	// Sort objects by date from most current to least current
+	sort.Slice(objects, func(i, j int) bool {
+		return objects[i].LastModified.After(*objects[j].LastModified)
+	})
+
 	return objects, err
 }
 
@@ -84,10 +82,10 @@ func ListObjects(ctx context.Context, storage models.Storage, prefix string) ([]
 func DownloadFile(ctx context.Context, storage models.Storage, objectKey string, fileName string) error {
 
 	if _, err := os.Stat(fileName); err == nil {
-        return nil
-    }
+		return nil
+	}
 
-    result, err := storage.S3Client.GetObject(ctx, &s3.GetObjectInput{
+	result, err := storage.S3Client.GetObject(ctx, &s3.GetObjectInput{
 		Bucket: aws.String(storage.BucketName),
 		Key:    aws.String(objectKey),
 	})
@@ -153,23 +151,9 @@ func ReadFile(key, localFilePath string, storageInstance models.Storage) (models
 	return document, nil
 }
 
-// Converts raw text into HTML paragraphs
-func ConvertTextToParagraphs(text string) string {
-    paragraphs := strings.Split(text, "\n\n") // Split by double newline for paragraphs
-    var htmlContent string
-    htmlTagRegex := regexp.MustCompile(`</?[a-z][\s\S]*>`)
-
-    for _, paragraph := range paragraphs {
-        if htmlTagRegex.MatchString(paragraph) {
-            // If the paragraph contains HTML tags, add it as is
-            htmlContent += paragraph
-        } else {
-            // Escape any special HTML characters to prevent injection
-            htmlContent += "<p class='content-text'>" + html.EscapeString(paragraph) + "</p>"
-        }
-    }
-
-    return htmlContent
+func RemoveHTMLTags(s string) string {
+	re := regexp.MustCompile(`<[^>]*>`)
+	return re.ReplaceAllString(s, "")
 }
 
 func Health(storage models.Storage) map[string]string {

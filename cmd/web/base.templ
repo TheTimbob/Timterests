@@ -2,18 +2,26 @@ package web
 
 templ Base() {
 	<!DOCTYPE html>
-	<html lang="en" >
+	<html lang="en" class="dark">
 		<head>
 			<meta charset="utf-8"/>
 			<meta name="viewport" content="width=device-width,initial-scale=1"/>
 			<title>Timterests</title>
             <script src="/assets/js/htmx.min.js"></script>
+            <script src="/assets/js/dark-mode.js"></script>
+            <link href="/assets/css/dark-mode-switch.css" rel="stylesheet"/>
 			<link href="/assets/css/output.css" rel="stylesheet"/>
             <link rel="icon" type="image/x-icon" href="/favicon.ico">
 		</head>
 		<body >
             <header class="banner-header">
                 <h1 class="banner-title">Timterests</h1>
+                <div class="dark-mode-switch">
+                    <input type="checkbox" class="dark-mode-switch-input" id="dark-mode-switch">
+                    <label class="dark-mode-switch-label" for="dark-mode-switch">
+                        <span class="dark-mode-switch-indicator"></span>
+                    </label>
+                </div>
                 <p class="banner-subtitle">Blog of Tim's interests</p>
             </header>
             <nav class="nav-header">
@@ -32,7 +40,7 @@ templ Base() {
                     <a href="/web/projects" class="nav-footer-link">Projects</a>
                     <a href="/web/about" class="nav-footer-link">About</a>
                 </nav>
-                <p>&copy; 2024 Tim Scott</p>
+                <p class="copywrite-text">&copy; 2024 Tim Scott</p>
             </footer>
 		</body>
 	</html>
