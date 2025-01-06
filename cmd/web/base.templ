@@ -9,6 +9,7 @@ templ Base() {
 			<title>Timterests</title>
             <script src="/assets/js/htmx.min.js"></script>
             <script src="/assets/js/dark-mode.js"></script>
+			<script src="https://kit.fontawesome.com/3453ab8a44.js" crossorigin="anonymous"></script>
             <link href="/assets/css/dark-mode-switch.css" rel="stylesheet"/>
 			<link href="/assets/css/output.css" rel="stylesheet"/>
             <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -25,10 +26,10 @@ templ Base() {
                 <p class="banner-subtitle">Blog of Tim's interests</p>
             </header>
             <nav class="nav-header">
-                <a href="/web" class="nav-link">Home</a>
-                <a href="/web/articles" class="nav-link">Articles</a>
-                <a href="/web/projects" class="nav-link">Projects</a>
-				<a href="/web/about" class="nav-link">About</a>
+                <a href="/web" class="nav-link"><i class="fa-solid fa-house text-xl"></i> Home</a>
+                <a href="/web/articles" class="nav-link"><i class="fa-solid fa-newspaper text-xl"></i> Articles</a>
+                <a href="/web/projects" class="nav-link"><i class="fa-brands fa-github text-xl"></i> Projects</a>
+				<a href="/web/about" class="nav-link"><i class="fa-solid fa-question text-xl"></i> About</a>
             </nav>
 			<main id="main-content" class="main-content">
 				{ children... }
