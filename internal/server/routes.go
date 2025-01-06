@@ -47,14 +47,18 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	// Article Routes
 	mux.Handle("/web/articles", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		web.ArticlesListHandler(w, r, *s.storage)
+		web.ArticlesPageHandler(w, r, *s.storage, "all")
+	}))
+    mux.Handle("/web/filtered-articles", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        tag := r.URL.Query().Get("tag")
+		web.ArticlesPageHandler(w, r, *s.storage, tag)
 	}))
 	mux.Handle("/web/article", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		articleID := r.URL.Query().Get("id")
 		web.GetArticleHandler(w, r, *s.storage, articleID)
 	}))
 	mux.Handle("/articles/list", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		web.ListArticles(*s.storage)
+		web.ListArticles(*s.storage, "all")
 	}))
 
 	// Wrap the mux with CORS middleware

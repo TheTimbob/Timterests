@@ -6,25 +6,37 @@ import (
 	"log"
 	"net/http"
 	"path"
+	"slices"
 	"strconv"
 	"timterests/internal/models"
 	"timterests/internal/storage"
 
+	"github.com/a-h/templ"
 	"github.com/aws/aws-sdk-go-v2/aws"
 )
 
-func ArticlesListHandler(w http.ResponseWriter, r *http.Request, storageInstance models.Storage) {
-	articles, err := ListArticles(storageInstance)
+func ArticlesPageHandler(w http.ResponseWriter, r *http.Request, storageInstance models.Storage, tag string) {
+    var component templ.Component
+    var tags []string
+
+    articles, err := ListArticles(storageInstance, tag)
 	if err != nil {
 		message := "Failed to fetch articles"
 		http.Error(w, fmt.Sprintf("%s: %v", message, err), http.StatusInternalServerError)
 		return
 	}
 
-	for i, _ := range articles {
+    for i := range articles {
 		articles[i].Body = storage.RemoveHTMLTags(articles[i].Body)
-	}
-	component := ArticlesList(articles)
+        tags = GetTags(articles[i], tags)
+    }
+
+    if tag == "all" {
+	    component = ArticlesPage(articles, tags)
+    } else {
+        component = ArticlesList(articles)
+    }
+    
 	err = component.Render(r.Context(), w)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -34,7 +46,7 @@ func ArticlesListHandler(w http.ResponseWriter, r *http.Request, storageInstance
 
 func GetArticleHandler(w http.ResponseWriter, r *http.Request, storageInstance models.Storage, articleID string) {
 
-	articles, err := ListArticles(storageInstance)
+	articles, err := ListArticles(storageInstance, "all")
 	if err != nil {
 		http.Error(w, "Failed to fetch articles", http.StatusInternalServerError)
 		return
@@ -53,7 +65,7 @@ func GetArticleHandler(w http.ResponseWriter, r *http.Request, storageInstance m
 
 }
 
-func ListArticles(storageInstance models.Storage) ([]models.Document, error) {
+func ListArticles(storageInstance models.Storage, tag string) ([]models.Document, error) {
 	var articles []models.Document
 	var article models.Document
 
@@ -76,13 +88,26 @@ func ListArticles(storageInstance models.Storage) ([]models.Document, error) {
 
 		article, err = storage.ReadFile(key, localFilePath, storageInstance)
 		if err != nil {
-			log.Printf("Failed to read file: %v", err)
+			log.Fatalf("Failed to read file: %v", err)
 			return nil, err
 		}
 
 		article.ID = strconv.Itoa(id)
-		articles = append(articles, article)
+        if slices.Contains(article.Tags, tag) || tag == "all" {
+		    articles = append(articles, article)
+        }
 	}
 
 	return articles, nil
+}
+
+func GetTags(article models.Document, tags []string) []string {
+
+    for _, tag := range article.Tags {
+        if !slices.Contains(tags, tag) {
+            tags = append(tags, tag)
+        }
+    }
+
+    return tags
 }

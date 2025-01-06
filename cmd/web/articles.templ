@@ -4,20 +4,36 @@ import (
 "timterests/internal/models"
 )
 
+templ ArticlesPage(articles []models.Document, tags []string) {
+	@Base() {
+		<div id="articles-container" class="category-container">
+		    <div class="flex justify-between items-center mb-4">
+				<h1 class="category-title">Articles</h1>
+				<select 
+					class="tag-filter"
+					hx-get="/web/filtered-articles" 
+					hx-target="#articles-list" 
+					hx-trigger="change"
+					name="tag">
+					<option value="all">All</option>
+					for _, tag := range tags {
+						<option value={ tag }>{ tag }</option>
+					}
+				</select>
+			</div>
+			@ArticlesList(articles)
+		</div>
+	}
+}
+
 templ ArticlesList(articles []models.Document) {
-@Base() {
-<div id="articles-container">
-	<h1 class="category-title">Articles</h1>
-	<ul>
+	<ul id="articles-list">
 		for _, article := range articles {
 		<li>
 			@ArticleCard(article.ID, article.Title, article.Subtitle, article.Date, article.Body, article.Tags)
 		</li>
 		}
 	</ul>
-</div>
-}
-
 }
 
 templ ArticleCard(articleID, title, subtitle, date, body string, tags []string) {
