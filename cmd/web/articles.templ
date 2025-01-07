@@ -4,7 +4,7 @@ import (
 "timterests/internal/models"
 )
 
-templ ArticlesPage(articles []models.Document, tags []string) {
+templ ArticlesPage(articles []models.Article, tags []string) {
 	@Base() {
 		<div id="articles-container" class="category-container">
 		    <div class="flex justify-between items-center mb-4">
@@ -26,14 +26,14 @@ templ ArticlesPage(articles []models.Document, tags []string) {
 	}
 }
 
-templ ArticlesList(articles []models.Document) {
-	<ul id="articles-list">
-		for _, article := range articles {
-		<li>
-			@ArticleCard(article.ID, article.Title, article.Subtitle, article.Date, article.Body, article.Tags)
-		</li>
-		}
-	</ul>
+templ ArticlesList(articles []models.Article) {
+    <ul id="articles-list">
+        for _, article := range articles {
+        <li>
+            @ArticleCard(article.ID, article.Title, article.Subtitle, article.Date, article.Body, article.Tags)
+        </li>
+        }
+    </ul>
 }
 
 templ ArticleCard(articleID, title, subtitle, date, body string, tags []string) {
@@ -54,10 +54,10 @@ templ ArticleCard(articleID, title, subtitle, date, body string, tags []string) 
 }
 
 
-templ ArticlePage(article models.Document) {
-<div id="article-container">
-	<h1 class="category-title">{ article.Title }</h1>
-	<h2 class="category-subtitle">{ article.Subtitle }</h2>
-	@templ.Raw(article.Body)
-</div>
+templ ArticlePage(article models.Article) {
+    <div id="article-container">
+        <h1 class="category-title">{ article.Title }</h1>
+        <h2 class="category-subtitle">{ article.Subtitle }</h2>
+        @templ.Raw(article.Body)
+    </div>
 }

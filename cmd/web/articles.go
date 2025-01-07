@@ -65,9 +65,8 @@ func GetArticleHandler(w http.ResponseWriter, r *http.Request, storageInstance m
 
 }
 
-func ListArticles(storageInstance models.Storage, tag string) ([]models.Document, error) {
-	var articles []models.Document
-	var article models.Document
+func ListArticles(storageInstance models.Storage, tag string) ([]models.Article, error) {
+	var articles []models.Article
 
 	// Get all articles from the storage
 	prefix := "articles/"
@@ -86,7 +85,7 @@ func ListArticles(storageInstance models.Storage, tag string) ([]models.Document
 		fileName := path.Base(key)
 		localFilePath := path.Join("s3", fileName)
 
-		article, err = storage.ReadFile(key, localFilePath, storageInstance)
+		article, err := storage.ReadFile[models.Article](key, localFilePath, storageInstance)
 		if err != nil {
 			log.Fatalf("Failed to read file: %v", err)
 			return nil, err
@@ -101,7 +100,7 @@ func ListArticles(storageInstance models.Storage, tag string) ([]models.Document
 	return articles, nil
 }
 
-func GetTags(article models.Document, tags []string) []string {
+func GetTags(article models.Article, tags []string) []string {
 
     for _, tag := range article.Tags {
         if !slices.Contains(tags, tag) {

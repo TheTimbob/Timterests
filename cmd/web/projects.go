@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"path"
+	"path/filepath"
 	"strconv"
 	"timterests/internal/models"
 	"timterests/internal/storage"
@@ -22,7 +23,7 @@ func ProjectsListHandler(w http.ResponseWriter, r *http.Request, storageInstance
 	}
 
 	for i := range projects {
-		projects[i].Body = storage.RemoveHTMLTags(projects[i].Body)
+		projects[i].Document.Body = storage.RemoveHTMLTags(projects[i].Body)
 	}
 	component := ProjectsList(projects)
 	err = component.Render(r.Context(), w)
@@ -41,7 +42,7 @@ func GetProjectsHandler(w http.ResponseWriter, r *http.Request, storageInstance 
 	}
 
 	for _, project := range projects {
-		if project.ID == projectID {
+		if project.Document.ID == projectID {
 			component := ProjectPage(project)
 			err = component.Render(r.Context(), w)
 			if err != nil {
@@ -53,9 +54,8 @@ func GetProjectsHandler(w http.ResponseWriter, r *http.Request, storageInstance 
 
 }
 
-func ListProjects(storageInstance models.Storage) ([]models.Document, error) {
-	var projects []models.Document
-	var project models.Document
+func ListProjects(storageInstance models.Storage) ([]models.Project, error) {
+	var projects []models.Project
 
 	// Get all projects from the storage
 	prefix := "projects/"
@@ -74,15 +74,35 @@ func ListProjects(storageInstance models.Storage) ([]models.Document, error) {
 		fileName := path.Base(key)
 		localFilePath := path.Join("s3", fileName)
 
-		project, err = storage.ReadFile(key, localFilePath, storageInstance)
+		project, err := storage.ReadFile[models.Project](key, localFilePath, storageInstance)
 		if err != nil {
 			log.Printf("Failed to read file: %v", err)
 			return nil, err
 		}
 
-		project.ID = strconv.Itoa(id)
+        localImagePath, err := ProjectImage(storageInstance, project.Image)
+        if err != nil {
+            log.Printf("Failed to download image: %v", err)
+            return nil, err
+        }
+
+        project.Image = localImagePath
+		project.Document.ID = strconv.Itoa(id)
 		projects = append(projects, project)
 	}
 
 	return projects, nil
+}
+
+func ProjectImage(storageInstance models.Storage, imagePath string) (string, error) {
+    localImagePath := path.Join("s3", filepath.Base(imagePath))
+    err := storage.DownloadFile(context.Background(), storageInstance, imagePath, localImagePath)
+    if err != nil {
+		log.Println("Failed to download image: ", err)
+		return localImagePath, err
+	}
+
+    localImagePath = path.Join("/", localImagePath)
+
+    return localImagePath, nil
 }

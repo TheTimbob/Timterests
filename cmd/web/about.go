@@ -24,7 +24,7 @@ func AboutHandler(w http.ResponseWriter, r *http.Request, storageInstance models
 	fileName := path.Base(key)
 	localFilePath := path.Join("s3", fileName)
 
-	document, err := storage.ReadFile(key, localFilePath, storageInstance)
+	document, err := storage.ReadFile[models.Document](key, localFilePath, storageInstance)
 	if err != nil {
 		http.Error(w, "Failed to read about file", http.StatusInternalServerError)
 		return
