@@ -4,14 +4,14 @@ import (
     "timterests/internal/models"
 )
 
-templ ProjectsList(projects []models.Document) {
+templ ProjectsList(projects []models.Project) {
     @Base() {
     <div id="project-container">
         <h1 class="category-title">Projects</h1>
         <ul>
             for _, project := range projects {
             <li>
-                @ProjectCard(project.ID, project.Title, project.Subtitle, project.Body)
+                @ProjectCard(project.Document.ID, project.Document.Title, project.Document.Subtitle, project.Document.Body, project.Image, project.Document.Tags)
             </li>
             }
         </ul>
@@ -19,23 +19,30 @@ templ ProjectsList(projects []models.Document) {
     }
 }
 
-templ ProjectCard(projectID, title, subtitle, body string) {
-    <div class="card-container" hx-get={"/web/project?id=" + projectID} hx-target=" #main-content" hx-swap="innerHTML">
-        <div>
+templ ProjectCard(projectID, title, subtitle, body, imagePath string, tags []string) {
+    <div class="card-container" hx-get={"/web/project?id=" + projectID} hx-target="#main-content" hx-swap="innerHTML">
+        <img src={ string(templ.SafeURL(imagePath)) } alt="Project image" class="card-image">
+		<div class="ml-4">
             <div class="card-title-container">
                 <h1 class="card-title">{ title }</h1>
                 <h2 class="card-subtitle">{ subtitle }</h2>
             </div>
             <p class="card-body">{ body }</p>
+			for _, tag := range tags {
+				<p class="card-tag">{ tag }</p>
+			}
         </div>
     </div>
 }
 
 
-templ ProjectPage(project models.Document) {
+templ ProjectPage(project models.Project) {
     <div id="project-container">
-        <h1 class="category-title">{ project.Title }</h1>
-        <h2 class="category-subtitle">{ project.Subtitle }</h2>
-        @templ.Raw(project.Body)
+        <h1 class="category-title">{ project.Document.Title }</h1>
+        <h2 class="category-subtitle">{ project.Document.Subtitle }</h2>
+        @templ.Raw(project.Document.Body)
+		if project.Repository != "Private" {
+			<a href={ templ.SafeURL(project.Repository) } class="content-text hyperlink" ><i class="fa-brands fa-github"></i> { project.Repository }</a>
+		}
     </div>
 }

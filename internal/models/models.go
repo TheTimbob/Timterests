@@ -15,9 +15,19 @@ type About struct {
 
 type Document struct {
 	ID       string
-	Title    string `yaml:"title"`
-	Subtitle string `yaml:"subtitle"`
+	Title    string   `yaml:"title"`
+	Subtitle string   `yaml:"subtitle"`
+	Body     string   `yaml:"body"`
+	Tags     []string `yaml:"tags"`
+}
+
+type Project struct {
+	Document   `yaml:",inline"`
+	Repository string `yaml:"repository"`
+	Image      string `yaml:"image-path"`
+}
+
+type Article struct {
+	Document `yaml:",inline"`
 	Date     string `yaml:"date"`
-	Body     string `yaml:"body"`
-    Tags     []string `yaml:"tags"`
 }

@@ -18,6 +18,10 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+type Readable interface {
+    models.Document | models.Article | models.Project
+}
+
 // Initializes a new models.Storage instance.
 func NewStorage() (*models.Storage, error) {
 	bucketName := os.Getenv("AWS_BUCKET_NAME")
@@ -124,8 +128,8 @@ func DownloadFile(ctx context.Context, storage models.Storage, objectKey string,
 }
 
 // Reads a file from the local file system and decodes it into a Document object.
-func ReadFile(key, localFilePath string, storageInstance models.Storage) (models.Document, error) {
-	var document models.Document
+func ReadFile[Document Readable](key, localFilePath string, storageInstance models.Storage) (Document, error) {
+	var document Document
 
 	// Download the file
 	err := DownloadFile(context.Background(), storageInstance, key, localFilePath)

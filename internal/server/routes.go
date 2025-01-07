@@ -20,6 +20,9 @@ func (s *Server) RegisterRoutes() http.Handler {
     // Favicon Route
     mux.Handle("/favicon.ico", http.FileServer(http.Dir(".")))
 
+    // Serve static files from the "s3" directory
+    mux.Handle("/s3/", http.StripPrefix("/s3/", http.FileServer(http.Dir("s3"))))
+
 	mux.HandleFunc("/health", s.healthHandler)
 
 	fileServer := http.FileServer(http.FS(web.Files))
