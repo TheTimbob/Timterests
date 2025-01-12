@@ -1,0 +1,58 @@
+package web
+
+import (
+	"timterests/internal/models"
+)
+
+templ ReadingList(readingLists []models.ReadingList, tags []string) {
+	@Base() {
+		<div id="rading-list-container" class="category-container">
+			<div class="flex justify-between items-center mb-4">
+				<h1 class="category-title">Reading List</h1>
+				<select class="tag-filter" hx-get="/filtered-reading-list" hx-target="#reading-list" hx-trigger="change"
+					name="tag">
+					<option value="all">All</option>
+					for _, tag := range tags {
+						<option value={ tag }>{ tag }</option>
+					}
+				</select>
+			</div>
+			@BookList(readingLists)
+		</div>
+	}
+}
+
+templ BookList(readingLists []models.ReadingList) {
+	<ul id="reading-list">
+		for _, readingList := range readingLists {
+			<li>
+				@BookCard(readingList.ID, readingList.Title, readingList.Subtitle, readingList.Body,
+				readingList.Tags)
+			</li>
+		}
+	</ul>
+}
+
+templ BookCard(readingListID, title, subtitle, body string, tags []string) {
+	<div class="card-container" hx-get={"/book?id=" + readingListID} hx-target=" #main-content" hx-swap="innerHTML">
+		<div>
+			<div class="card-title-container">
+				<h1 class="card-title">{ title }</h1>
+				<h2 class="card-subtitle">{ subtitle }</h2>
+			</div>
+			<p class="card-body">{ body }</p>
+			for _, tag := range tags {
+				<p class="card-tag">{ tag }</p>
+			}
+		</div>
+	</div>
+}
+
+
+templ BookPage(readingList models.ReadingList) {
+	<div id="reading-list-container">
+		<h1 class="category-title">{ readingList.Title }</h1>
+		<h2 class="category-subtitle">{ readingList.Subtitle }</h2>
+		@templ.Raw(readingList.Body)
+	</div>
+}

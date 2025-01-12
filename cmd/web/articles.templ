@@ -4,14 +4,14 @@ import (
 "timterests/internal/models"
 )
 
-templ ArticlesPage(articles []models.Article, tags []string) {
+templ ArticlesListPage(articles []models.Article, tags []string) {
 	@Base() {
 		<div id="articles-container" class="category-container">
 		    <div class="flex justify-between items-center mb-4">
 				<h1 class="category-title">Articles</h1>
 				<select 
 					class="tag-filter"
-					hx-get="/web/filtered-articles" 
+					hx-get="/filtered-articles" 
 					hx-target="#articles-list" 
 					hx-trigger="change"
 					name="tag">
@@ -37,20 +37,19 @@ templ ArticlesList(articles []models.Article) {
 }
 
 templ ArticleCard(articleID, title, subtitle, date, body string, tags []string) {
-
-<div class="card-container" hx-get={"/web/article?id=" + articleID} hx-target=" #main-content" hx-swap="innerHTML">
-	<div>
-		<div class="card-title-container">
-			<h1 class="card-title">{ title }</h1>
-			<h2 class="card-subtitle">{ subtitle }</h2>
+	<div class="card-container" hx-get={"/article?id=" + articleID} hx-target=" #main-content" hx-swap="innerHTML">
+		<div>
+			<div class="card-title-container">
+				<h1 class="card-title">{ title }</h1>
+				<h2 class="card-subtitle">{ subtitle }</h2>
+			</div>
+			<p class="card-body">{ body }</p>
+			<p class="card-date">{ date }</p>
+			for _, tag := range tags {
+			<p class="card-tag">{ tag }</p>
+			}
 		</div>
-		<p class="card-body">{ body }</p>
-		<p class="card-date">{ date }</p>
-		for _, tag := range tags {
-		<p class="card-tag">{ tag }</p>
-		}
 	</div>
-</div>
 }
 
 

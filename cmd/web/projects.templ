@@ -6,21 +6,21 @@ import (
 
 templ ProjectsList(projects []models.Project) {
     @Base() {
-    <div id="project-container">
-        <h1 class="category-title">Projects</h1>
-        <ul>
-            for _, project := range projects {
-            <li>
-                @ProjectCard(project.Document.ID, project.Document.Title, project.Document.Subtitle, project.Document.Body, project.Image, project.Document.Tags)
-            </li>
-            }
-        </ul>
-    </div>
+		<div id="project-container">
+			<h1 class="category-title">Projects</h1>
+			<ul>
+				for _, project := range projects {
+				<li>
+					@ProjectCard(project.Document.ID, project.Document.Title, project.Document.Subtitle, project.Document.Body, project.Image, project.Document.Tags)
+				</li>
+				}
+			</ul>
+		</div>
     }
 }
 
 templ ProjectCard(projectID, title, subtitle, body, imagePath string, tags []string) {
-    <div class="card-container" hx-get={"/web/project?id=" + projectID} hx-target="#main-content" hx-swap="innerHTML">
+    <div class="card-container" hx-get={"/project?id=" + projectID} hx-target="#main-content" hx-swap="innerHTML">
         <img src={ string(templ.SafeURL(imagePath)) } alt="Project image" class="card-image">
 		<div class="ml-4">
             <div class="card-title-container">

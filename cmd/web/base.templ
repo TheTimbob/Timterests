@@ -1,52 +1,57 @@
 package web
 
 templ Base() {
-	<!DOCTYPE html>
-	<html lang="en" class="dark">
-		<head>
-			<meta charset="utf-8"/>
-			<meta name="viewport" content="width=device-width,initial-scale=1"/>
-			<title>Timterests</title>
-            <script src="/assets/js/htmx.min.js"></script>
-            <script src="/assets/js/dark-mode.js"></script>
-			<script src="https://kit.fontawesome.com/3453ab8a44.js" crossorigin="anonymous"></script>
-            <link href="/assets/css/dark-mode-switch.css" rel="stylesheet"/>
-			<link href="/assets/css/output.css" rel="stylesheet"/>
-            <link rel="icon" type="image/x-icon" href="/favicon.ico">
-		</head>
-		<body >
-            <header class="banner-header">
-				<a href="/" class="no-underline">
-                	<h1 class="banner-title">Timterests</h1>
-				</a>
-                <div class="dark-mode-switch">
-                    <input type="checkbox" class="dark-mode-switch-input" id="dark-mode-switch">
-                    <label class="dark-mode-switch-label" for="dark-mode-switch">
-                        <span class="dark-mode-switch-indicator"></span>
-                    </label>
-                </div>
-                <p class="banner-subtitle">Blog of Tim's interests</p>
-            </header>
-            <nav class="nav-header">
-                <a href="/web" class="nav-link"><i class="fa-solid fa-house text-xl"></i> Home</a>
-                <a href="/web/articles" class="nav-link"><i class="fa-solid fa-newspaper text-xl"></i> Articles</a>
-                <a href="/web/projects" class="nav-link"><i class="fa-brands fa-github text-xl"></i> Projects</a>
-				<a href="/web/about" class="nav-link"><i class="fa-solid fa-question text-xl"></i> About</a>
-            </nav>
-			<main id="main-content" class="main-content">
-				{ children... }
-			</main>
-			<footer class="banner-footer">
-				<nav class="footer-nav">
-                    <a href="/web" class="nav-footer-link">Home</a>
-                    <a href="/web/articles" class="nav-footer-link">Articles</a>
-                    <a href="/web/projects" class="nav-footer-link">Projects</a>
-                    <a href="/web/about" class="nav-footer-link">About</a>
-                </nav>
-				<p class="copywrite-text">
-					<a href="https://github.com/TheTimbob/timterests">&copy; 2024 Tim Scott</a>
-				</p>
-            </footer>
-		</body>
-	</html>
+<!DOCTYPE html>
+<html lang="en" class="dark">
+
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width,initial-scale=1" />
+	<title>Timterests</title>
+	<script src="/assets/js/htmx.min.js"></script>
+	<script src="/assets/js/dark-mode.js"></script>
+	<script src="https://kit.fontawesome.com/3453ab8a44.js" crossorigin="anonymous"></script>
+	<link href="/assets/css/dark-mode-switch.css" rel="stylesheet" />
+	<link href="/assets/css/output.css" rel="stylesheet" />
+	<link rel="icon" type="image/x-icon" href="/favicon.ico">
+</head>
+
+<body>
+	<header class="banner-header">
+		<a href="/" class="no-underline">
+			<h1 class="banner-title">Timterests</h1>
+		</a>
+		<div class="dark-mode-switch">
+			<input type="checkbox" class="dark-mode-switch-input" id="dark-mode-switch">
+			<label class="dark-mode-switch-label" for="dark-mode-switch">
+				<span class="dark-mode-switch-indicator"></span>
+			</label>
+		</div>
+		<p class="banner-subtitle">Blog of Tim's interests</p>
+	</header>
+	<nav class="nav-header">
+		<a href="/home" class="nav-link"><i class="fa-solid fa-house text-xl"></i> Home</a>
+		<a href="/articles" class="nav-link"><i class="fa-solid fa-newspaper text-xl"></i> Articles</a>
+		<a href="/projects" class="nav-link"><i class="fa-brands fa-github text-xl"></i> Projects</a>
+		<a href="/reading-list" class="nav-link"><i class="fa-solid fa-book text-xl"></i> Reading List</a>
+		<a href="/about" class="nav-link"><i class="fa-solid fa-question text-xl"></i> About</a>
+	</nav>
+	<main id="main-content" class="main-content">
+		{ children... }
+	</main>
+	<footer class="banner-footer">
+		<nav class="footer-nav">
+			<a href="/home" class="nav-footer-link">Home</a>
+			<a href="/articles" class="nav-footer-link">Articles</a>
+			<a href="/projects" class="nav-footer-link">Projects</a>
+			<a href="/reading-list" class="nav-footer-link">Reading List</a>
+			<a href="/about" class="nav-footer-link">About</a>
+		</nav>
+		<p class="copywrite-text">
+			<a href="https://github.com/TheTimbob/timterests">&copy; 2024 Tim Scott</a>
+		</p>
+	</footer>
+</body>
+
+</html>
 }

@@ -7,7 +7,9 @@ import (
 	"io"
 	"log"
 	"os"
+	"reflect"
 	"regexp"
+	"slices"
 	"sort"
 	"timterests/internal/models"
 
@@ -19,7 +21,7 @@ import (
 )
 
 type Readable interface {
-    models.Document | models.Article | models.Project
+    models.Document | models.Article | models.Project | models.ReadingList
 }
 
 // Initializes a new models.Storage instance.
@@ -158,6 +160,30 @@ func ReadFile[Document Readable](key, localFilePath string, storageInstance mode
 func RemoveHTMLTags(s string) string {
 	re := regexp.MustCompile(`<[^>]*>`)
 	return re.ReplaceAllString(s, "")
+}
+
+func GetTags[Doc Readable](document Doc, tags []string) []string {
+
+    v := reflect.ValueOf(document)
+    tagsField := v.FieldByName("Tags")
+
+    if !tagsField.IsValid() {
+        // If the Tags field is not directly on the struct, check the embedded Document
+        documentField := v.FieldByName("Document")
+        if documentField.IsValid() {
+            tagsField = documentField.FieldByName("Tags")
+        }
+    }
+
+
+	for i := 0; i < tagsField.Len(); i++ {
+		tag := tagsField.Index(i).String()
+        if !slices.Contains(tags, tag) {
+            tags = append(tags, tag)
+        }
+    }
+
+    return tags
 }
 
 func Health(storage models.Storage) map[string]string {
