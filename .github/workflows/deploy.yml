@@ -28,8 +28,8 @@ jobs:
         run: |
           docker build -t ${{ secrets.DOCKER_IMAGE_NAME }}:latest .
 
-	  - name: Display docker image
-		run: docker image ls
+      - name: Display docker image
+        run: docker image ls
 
       - name: Push Docker image to Lightsail
         run: |
@@ -66,5 +66,4 @@ jobs:
                 }
               }
             }' \
-            --public-endpoint '{"containerName": "${{ secrets.AWS_LIGHTSAIL_CONTAINER_NAME }}", "containerPort": ${{ vars.PORT }}}' \
-            --query 'containerService.nextDeployment' \
+            --public-endpoint '{"containerName": "${{ secrets.AWS_LIGHTSAIL_CONTAINER_NAME }}", "containerPort": ${{ vars.PORT }}}'
