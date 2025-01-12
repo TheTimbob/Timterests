@@ -9,11 +9,17 @@ html {
 }
 
 body {
-    @apply flex flex-col flex-1 h-screen bg-gray-100 dark:bg-gray-600 
+    @apply flex flex-col flex-1 h-screen bg-gray-100 dark:bg-gray-600
+}
+
+body::before {
+    content: '';
+    @apply absolute inset-0 bg-[url('/assets/images/background.jpg')] bg-cover bg-center opacity-15;
+    z-index: -1;
 }
 
 .banner-header {
-	@apply bg-gradient-to-r from-green-800 to-green-400 text-white p-4 shadow-lg;
+	@apply bg-gradient-to-r from-green-800 to-green-400 bg-gradient-to-r dark:bg-gradient-to-l text-white dark:text-black p-4 shadow-lg;
 }
 
 .banner-title {
@@ -25,7 +31,7 @@ body {
 }
 
 .banner-footer {
-    @apply bg-gradient-to-r from-green-400 to-green-800 text-white dark:text-black p-3 shadow-lg text-right border-t flex flex-wrap justify-end space-y-2 md:space-y-0;
+    @apply bg-gradient-to-r from-green-400 to-green-800 bg-gradient-to-r dark:bg-gradient-to-l  p-3 shadow-lg text-right border-t flex flex-wrap justify-end space-y-2 md:space-y-0;
 }
 
 .category-title {
@@ -33,11 +39,11 @@ body {
 }
 
 .category-subtitle {
-	@apply text-xl font-bold text-gray-900 dark:text-gray-200 my-4
+	@apply text-xl font-bold text-gray-900 dark:text-gray-200 my-2
 }
 
 .nav-header {
-    @apply dark:bg-gray-600 shadow-md flex flex-wrap justify-around p-4;
+    @apply shadow-md flex flex-wrap justify-around p-2;
 }
 
 .nav-link {
@@ -45,11 +51,11 @@ body {
 }
 
 .nav-footer-link {
-    @apply text-sm text-gray-200 hover:text-green-500 hover:bg-green-100 dark:hover:bg-green-800 font-semibold transition-colors px-2 py-1 rounded;
+    @apply text-sm text-gray-200 dark:text-gray-800 hover:text-green-500 hover:bg-green-100 dark:hover:bg-green-800 font-semibold transition-colors px-2 py-1 rounded;
 }
 
 .main-content {
-    @apply container mx-auto my-5 p-4 bg-white dark:bg-gray-600 rounded shadow-lg flex-grow overflow-y-scroll
+    @apply container mx-auto my-5 p-4 rounded shadow-lg flex-grow overflow-y-scroll bg-gray-100 dark:bg-gray-600 bg-opacity-80 dark:bg-opacity-80;
 }
 
 .card-container {
@@ -81,7 +87,7 @@ body {
 }
 
 .copywrite-text {
-    @apply my-4 text-gray-200
+    @apply my-4 text-gray-200 dark:text-gray-800
 }
 
 .hyperlink {
