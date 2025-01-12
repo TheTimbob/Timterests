@@ -34,7 +34,7 @@ templ BookList(readingLists []models.ReadingList) {
 }
 
 templ BookCard(readingListID, title, subtitle, body string, tags []string) {
-	<div class="card-container" hx-get={"/book?id=" + readingListID} hx-target=" #main-content" hx-swap="innerHTML">
+	<div class="card-container" hx-get={"/book?id=" + readingListID} hx-target=" #main-content" hx-swap="innerHTML" tabindex="0">
 		<div>
 			<div class="card-title-container">
 				<h1 class="card-title">{ title }</h1>

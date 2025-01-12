@@ -28,6 +28,9 @@ jobs:
         run: |
           docker build -t ${{ secrets.DOCKER_IMAGE_NAME }}:latest .
 
+	  - name: Display docker image
+		run: docker image ls
+
       - name: Push Docker image to Lightsail
         run: |
           aws lightsail push-container-image \
