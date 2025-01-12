@@ -28,11 +28,11 @@ func ArticlesPageHandler(w http.ResponseWriter, r *http.Request, storageInstance
 
     for i := range articles {
 		articles[i].Body = storage.RemoveHTMLTags(articles[i].Body)
-        tags = GetTags(articles[i], tags)
+        tags = storage.GetTags(articles[i], tags)
     }
 
     if tag == "all" {
-	    component = ArticlesPage(articles, tags)
+	    component = ArticlesListPage(articles, tags)
     } else {
         component = ArticlesList(articles)
     }
@@ -98,15 +98,4 @@ func ListArticles(storageInstance models.Storage, tag string) ([]models.Article,
 	}
 
 	return articles, nil
-}
-
-func GetTags(article models.Article, tags []string) []string {
-
-    for _, tag := range article.Tags {
-        if !slices.Contains(tags, tag) {
-            tags = append(tags, tag)
-        }
-    }
-
-    return tags
 }

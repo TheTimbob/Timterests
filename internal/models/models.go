@@ -31,3 +31,8 @@ type Article struct {
 	Document `yaml:",inline"`
 	Date     string `yaml:"date"`
 }
+
+type ReadingList struct {
+    Document `yaml:",inline"`
+    Image    string `yaml:"image-path"`
+}

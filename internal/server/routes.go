@@ -14,8 +14,7 @@ import (
 func (s *Server) RegisterRoutes() http.Handler {
 	mux := http.NewServeMux()
 
-	// Register routes
-	mux.Handle("/", templ.Handler(web.HomeForm()))
+
 
     // Favicon Route
     mux.Handle("/favicon.ico", http.FileServer(http.Dir(".")))
@@ -23,45 +22,64 @@ func (s *Server) RegisterRoutes() http.Handler {
     // Serve static files from the "s3" directory
     mux.Handle("/s3/", http.StripPrefix("/s3/", http.FileServer(http.Dir("s3"))))
 
+    // Health check
 	mux.HandleFunc("/health", s.healthHandler)
 
+    mux.Handle("/", templ.Handler(web.HomeForm()))
+    mux.Handle("/home", templ.Handler(web.HomeForm()))
+    mux.Handle("/web", templ.Handler(web.HomeForm()))
+	mux.Handle("/web/home", templ.Handler(web.HomeForm()))
+
+    // Serve static files from the "web" directory
 	fileServer := http.FileServer(http.FS(web.Files))
 	mux.Handle("/assets/", fileServer)
-	mux.Handle("/web", templ.Handler(web.HomeForm()))
-	mux.Handle("/web/home", templ.Handler(web.HomeForm()))
-	mux.Handle("/web/letters", templ.Handler(web.Letters()))
+
+	mux.Handle("/letters", templ.Handler(web.Letters()))
     
 	// About Routes
-	mux.Handle("/web/about", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	mux.Handle("/about", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		web.AboutHandler(w, r, *s.storage)
 	}))
 
-	// Projects Routes
-	mux.Handle("/web/projects", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		web.ProjectsListHandler(w, r, *s.storage)
-	}))
-	mux.Handle("/web/project", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		articleID := r.URL.Query().Get("id")
-		web.GetProjectsHandler(w, r, *s.storage, articleID)
-	}))
-	mux.Handle("/projects/list", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		web.ListProjects(*s.storage)
-	}))
-
 	// Article Routes
-	mux.Handle("/web/articles", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	mux.Handle("/articles", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		web.ArticlesPageHandler(w, r, *s.storage, "all")
 	}))
-    mux.Handle("/web/filtered-articles", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+    mux.Handle("/filtered-articles", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
         tag := r.URL.Query().Get("tag")
 		web.ArticlesPageHandler(w, r, *s.storage, tag)
 	}))
-	mux.Handle("/web/article", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	mux.Handle("/article", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		articleID := r.URL.Query().Get("id")
 		web.GetArticleHandler(w, r, *s.storage, articleID)
 	}))
 	mux.Handle("/articles/list", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		web.ListArticles(*s.storage, "all")
+	}))
+
+
+	// Projects Routes
+	mux.Handle("/projects", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		web.ProjectsListHandler(w, r, *s.storage)
+	}))
+	mux.Handle("/project", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		articleID := r.URL.Query().Get("id")
+		web.ProjectsPageHandler(w, r, *s.storage, articleID)
+	}))
+	mux.Handle("/projects/list", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		web.ListProjects(*s.storage)
+	}))
+
+	// Reading List Routes
+	mux.Handle("/reading-list", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		web.ReadingListHandler(w, r, *s.storage, "all")
+	}))
+	mux.Handle("/book", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		articleID := r.URL.Query().Get("id")
+		web.ReadingListPageHandler(w, r, *s.storage, articleID)
+	}))
+	mux.Handle("/reading-list/list", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		web.ListProjects(*s.storage)
 	}))
 
 	// Wrap the mux with CORS middleware

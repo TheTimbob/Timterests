@@ -33,7 +33,7 @@ func ProjectsListHandler(w http.ResponseWriter, r *http.Request, storageInstance
 	}
 }
 
-func GetProjectsHandler(w http.ResponseWriter, r *http.Request, storageInstance models.Storage, projectID string) {
+func ProjectsPageHandler(w http.ResponseWriter, r *http.Request, storageInstance models.Storage, projectID string) {
 
 	projects, err := ListProjects(storageInstance)
 	if err != nil {
