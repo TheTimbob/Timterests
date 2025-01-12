@@ -20,7 +20,7 @@ templ ProjectsList(projects []models.Project) {
 }
 
 templ ProjectCard(projectID, title, subtitle, body, imagePath string, tags []string) {
-    <div class="card-container" hx-get={"/project?id=" + projectID} hx-target="#main-content" hx-swap="innerHTML">
+    <div class="card-container" hx-get={"/project?id=" + projectID} hx-target="#main-content" hx-swap="innerHTML" tabindex="0">
         <img src={ string(templ.SafeURL(imagePath)) } alt="Project image" class="card-image">
 		<div class="ml-4">
             <div class="card-title-container">
