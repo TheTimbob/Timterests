@@ -14,8 +14,8 @@ jobs:
 
       - name: Install AWS Lightsail CLI
         run: |
-          curl "https://s3.us-west-2.amazonaws.com/lightsailctl/latest/linux-arm64/lightsailctl" -o "/usr/local/bin/lightsailctl"
-          chmod +x /usr/local/bin/lightsailctl
+          curl "https://s3.us-west-2.amazonaws.com/lightsailctl/latest/linux-amd64/lightsailctl" -o "/usr/local/bin/lightsailctl"
+          sudo chmod +x /usr/local/bin/lightsailctl
 
       - name: Log in to AWS Lightsail
         uses: aws-actions/configure-aws-credentials@v1
@@ -28,16 +28,13 @@ jobs:
         run: |
           docker build -t ${{ secrets.DOCKER_IMAGE_NAME }}:latest .
 
-      - name: Display docker image
-        run: docker image ls
-
       - name: Push Docker image to Lightsail
         run: |
           aws lightsail push-container-image \
             --service-name ${{ secrets.AWS_LIGHTSAIL_CONTAINER_SERVICE }} \
             --region ${{ secrets.AWS_REGION }} \
             --label ${{ secrets.AWS_LIGHTSAIL_SERVICE }} \
-            --image ${{ secrets.DOCKER_IMAGE_NAME }}:latest
+            --image ${{ secrets.DOCKER_IMAGE_NAME }}:latest \
 
       - name: Get New Container Image
         run: |

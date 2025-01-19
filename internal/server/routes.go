@@ -14,28 +14,29 @@ import (
 func (s *Server) RegisterRoutes() http.Handler {
 	mux := http.NewServeMux()
 
+	// Favicon Route
+	mux.Handle("/favicon.ico", http.FileServer(http.Dir(".")))
 
+	// Serve static files from the "s3" directory
+	mux.Handle("/s3/", http.StripPrefix("/s3/", http.FileServer(http.Dir("s3"))))
 
-    // Favicon Route
-    mux.Handle("/favicon.ico", http.FileServer(http.Dir(".")))
-
-    // Serve static files from the "s3" directory
-    mux.Handle("/s3/", http.StripPrefix("/s3/", http.FileServer(http.Dir("s3"))))
-
-    // Health check
-	mux.HandleFunc("/health", s.healthHandler)
-
-    mux.Handle("/", templ.Handler(web.HomeForm()))
-    mux.Handle("/home", templ.Handler(web.HomeForm()))
-    mux.Handle("/web", templ.Handler(web.HomeForm()))
-	mux.Handle("/web/home", templ.Handler(web.HomeForm()))
-
-    // Serve static files from the "web" directory
+	// Serve static files from the "web" directory
 	fileServer := http.FileServer(http.FS(web.Files))
 	mux.Handle("/assets/", fileServer)
 
-	mux.Handle("/letters", templ.Handler(web.Letters()))
+    // Home Routes
     
+	mux.Handle("/", templ.Handler(web.HomeForm()))
+	mux.Handle("/home", templ.Handler(web.HomeForm()))
+	mux.Handle("/web", templ.Handler(web.HomeForm()))
+	mux.Handle("/web/home", templ.Handler(web.HomeForm()))
+
+	// Health check
+	mux.HandleFunc("/health", s.healthHandler)
+
+
+	mux.Handle("/letters", templ.Handler(web.Letters()))
+
 	// About Routes
 	mux.Handle("/about", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		web.AboutHandler(w, r, *s.storage)
@@ -45,8 +46,8 @@ func (s *Server) RegisterRoutes() http.Handler {
 	mux.Handle("/articles", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		web.ArticlesPageHandler(w, r, *s.storage, "all")
 	}))
-    mux.Handle("/filtered-articles", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        tag := r.URL.Query().Get("tag")
+	mux.Handle("/filtered-articles", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		tag := r.URL.Query().Get("tag")
 		web.ArticlesPageHandler(w, r, *s.storage, tag)
 	}))
 	mux.Handle("/article", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -56,7 +57,6 @@ func (s *Server) RegisterRoutes() http.Handler {
 	mux.Handle("/articles/list", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		web.ListArticles(*s.storage, "all")
 	}))
-
 
 	// Projects Routes
 	mux.Handle("/projects", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
