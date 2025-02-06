@@ -130,31 +130,31 @@ func DownloadFile(ctx context.Context, storage models.Storage, objectKey string,
 }
 
 // Reads a file from the local file system and decodes it into a Document object.
-func ReadFile[Document Readable](key, localFilePath string, storageInstance models.Storage) (Document, error) {
-	var document Document
+func ReadFile[T Readable](key, localPath string, storage models.Storage) (T, error) {
+    var doc T
 
 	// Download the file
-	err := DownloadFile(context.Background(), storageInstance, key, localFilePath)
+	err := DownloadFile(context.Background(), storage, key, localPath)
 	if err != nil {
 		log.Println("Failed to download file: ", err)
-		return document, err
+		return doc, err
 	}
 
 	// Open the downloaded file
-	file, err := os.Open(localFilePath)
+	file, err := os.Open(localPath)
 	if err != nil {
 		log.Println("Failed to open file: ", err)
-		return document, err
+		return doc, err
 	}
 	defer file.Close()
 
 	// Decode the yaml file into a document object
 	decoder := yaml.NewDecoder(file)
-	if err := decoder.Decode(&document); err != nil {
+	if err := decoder.Decode(&doc); err != nil {
 		log.Println("Failed to decode file: ", err)
-		return document, err
+		return doc, err
 	}
-	return document, nil
+	return doc, nil
 }
 
 func RemoveHTMLTags(s string) string {
@@ -162,22 +162,22 @@ func RemoveHTMLTags(s string) string {
 	return re.ReplaceAllString(s, "")
 }
 
-func GetTags[Doc Readable](document Doc, tags []string) []string {
+func GetTags[Doc Readable](doc Doc, tags []string) []string {
 
-    v := reflect.ValueOf(document)
-    tagsField := v.FieldByName("Tags")
+    v := reflect.ValueOf(doc)
+    field := v.FieldByName("Tags")
 
-    if !tagsField.IsValid() {
-        // If the Tags field is not directly on the struct, check the embedded Document
-        documentField := v.FieldByName("Document")
-        if documentField.IsValid() {
-            tagsField = documentField.FieldByName("Tags")
+    // If the Tags field is not directly on the struct, check the embedded Document
+    if !field.IsValid() {
+        embeddedDoc := v.FieldByName("Document")
+        if embeddedDoc.IsValid() {
+            field = embeddedDoc.FieldByName("Tags")
         }
     }
 
-
-	for i := 0; i < tagsField.Len(); i++ {
-		tag := tagsField.Index(i).String()
+    // Create a list of tags
+    for i := 0; i < field.Len(); i++ {
+        tag := field.Index(i).String()
         if !slices.Contains(tags, tag) {
             tags = append(tags, tag)
         }
@@ -185,7 +185,6 @@ func GetTags[Doc Readable](document Doc, tags []string) []string {
 
     return tags
 }
-
 func Health(storage models.Storage) map[string]string {
 	health := make(map[string]string)
 
