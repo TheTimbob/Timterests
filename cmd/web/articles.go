@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"path"
+	"reflect"
 	"slices"
 	"strconv"
 	"timterests/internal/models"
@@ -28,7 +29,8 @@ func ArticlesPageHandler(w http.ResponseWriter, r *http.Request, storageInstance
 
     for i := range articles {
 		articles[i].Body = storage.RemoveHTMLTags(articles[i].Body)
-        tags = storage.GetTags(articles[i], tags)
+        v := reflect.ValueOf(articles[i])
+        tags = storage.GetTags(v, tags)
     }
 
     if tag == "all" {
@@ -82,20 +84,46 @@ func ListArticles(storageInstance models.Storage, tag string) ([]models.Article,
 			continue
 		}
 
-		fileName := path.Base(key)
-		localFilePath := path.Join("s3", fileName)
+        article, err := GetArticle(key, id, storageInstance)
+        if err != nil {
+            return nil, err
+        }
 
-		article, err := storage.ReadFile[models.Article](key, localFilePath, storageInstance)
-		if err != nil {
-			log.Fatalf("Failed to read file: %v", err)
-			return nil, err
-		}
-
-		article.ID = strconv.Itoa(id)
         if slices.Contains(article.Tags, tag) || tag == "all" {
-		    articles = append(articles, article)
+		    articles = append(articles, *article)
         }
 	}
 
 	return articles, nil
+}
+
+
+func GetArticle(key string, id int, storageInstance models.Storage) (*models.Article, error) {
+    var article models.Article
+    fileName := path.Base(key)
+    localFilePath := path.Join("s3", fileName)
+
+    // Retrieve file content
+    file, err := storage.GetFile(key, localFilePath, storageInstance)
+    if err != nil {
+        log.Fatalf("Failed to read file: %v", err)
+        return nil, err
+    }
+    
+    if err := storage.DecodeFile(file, article); err != nil {
+        log.Fatalf("Failed to decode file: %v", err)
+        return nil, err
+    }
+    log.Println(article)
+
+    body, err := storage.BodyToHTML(article.Body)
+    if err != nil {
+        log.Fatalf("Failed to parse the body text into HTML: %v", err)
+        return nil, err
+    }
+
+
+    article.Body = body
+    article.ID = strconv.Itoa(id)    
+    return &article, nil
 }

@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -11,18 +12,29 @@ import (
 	"regexp"
 	"slices"
 	"sort"
+	"strings"
 	"timterests/internal/models"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/yuin/goldmark"
+	"github.com/yuin/goldmark/renderer/html"
 	"gopkg.in/yaml.v2"
 )
 
-type Readable interface {
-    models.Document | models.Article | models.Project | models.ReadingList
+type HasBody interface {
+	GetBody() string
+	SetBody(string)
 }
+
+type Readable interface {
+    *models.Document | *models.Article | *models.Project | *models.ReadingList
+    HasBody
+}
+
+
 
 // Initializes a new models.Storage instance.
 func NewStorage() (*models.Storage, error) {
@@ -129,32 +141,53 @@ func DownloadFile(ctx context.Context, storage models.Storage, objectKey string,
 	return err
 }
 
-// Reads a file from the local file system and decodes it into a Document object.
-func ReadFile[T Readable](key, localPath string, storage models.Storage) (T, error) {
-    var doc T
+// Reads a file from the local file system.
+func GetFile(key, localPath string, storage models.Storage) (*os.File, error) {
+    var file *os.File
 
 	// Download the file
 	err := DownloadFile(context.Background(), storage, key, localPath)
 	if err != nil {
-		log.Println("Failed to download file: ", err)
-		return doc, err
+		return file, err
 	}
 
-	// Open the downloaded file
-	file, err := os.Open(localPath)
-	if err != nil {
-		log.Println("Failed to open file: ", err)
-		return doc, err
-	}
-	defer file.Close()
+    // Open the downloaded file
+    file, err = os.Open(localPath)
+    if err != nil {
+        return file, err
+    }
+
+	return file, nil
+}
+
+func DecodeFile(file *os.File, out interface{}) error {
 
 	// Decode the yaml file into a document object
 	decoder := yaml.NewDecoder(file)
-	if err := decoder.Decode(&doc); err != nil {
-		log.Println("Failed to decode file: ", err)
-		return doc, err
+	if err := decoder.Decode(&out); err != nil {
+        log.Printf("Failed to decode file: %v", err)
+		return err
 	}
-	return doc, nil
+	return nil
+}
+
+// Function to convert body text to HTML
+func BodyToHTML(str string) (string, error) {
+    var buf bytes.Buffer
+    md := goldmark.New(
+        goldmark.WithRendererOptions(
+            html.WithHardWraps(),
+        ),
+    )
+    err := md.Convert([]byte(str), &buf)
+
+    str = buf.String()
+
+    str = strings.ReplaceAll(str, "<p>", `<p class="content-text">`)
+    str = strings.ReplaceAll(str, "<h2>", `<h2 class="category-subtitle">`)
+    str = strings.ReplaceAll(str, "<a ", `<a class="hyperlink"`)
+
+    return str, err
 }
 
 func RemoveHTMLTags(s string) string {
@@ -162,9 +195,8 @@ func RemoveHTMLTags(s string) string {
 	return re.ReplaceAllString(s, "")
 }
 
-func GetTags[Doc Readable](doc Doc, tags []string) []string {
+func GetTags(v reflect.Value, tags []string) []string {
 
-    v := reflect.ValueOf(doc)
     field := v.FieldByName("Tags")
 
     // If the Tags field is not directly on the struct, check the embedded Document
@@ -185,6 +217,7 @@ func GetTags[Doc Readable](doc Doc, tags []string) []string {
 
     return tags
 }
+
 func Health(storage models.Storage) map[string]string {
 	health := make(map[string]string)
 

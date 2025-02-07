@@ -24,17 +24,23 @@ func AboutHandler(w http.ResponseWriter, r *http.Request, storageInstance models
 	fileName := path.Base(key)
 	localFilePath := path.Join("s3", fileName)
 
-	document, err := storage.ReadFile[models.Document](key, localFilePath, storageInstance)
+	file, err := storage.GetFile(key, localFilePath, storageInstance)
 	if err != nil {
 		http.Error(w, "Failed to read about file", http.StatusInternalServerError)
 		return
 	}
 
-	about = models.About{
-		Title:    document.Title,
-		Subtitle: document.Subtitle,
-		Body:     document.Body,
-	}
+    if err := storage.DecodeFile(file, about); err != nil {
+        log.Println("Failed to decode file:", err)
+        return
+    }
+    
+    body, err := storage.BodyToHTML(about.Body)
+    if err != nil {
+        return
+    }
+
+    about.Body = body
 
 	component := AboutForm(about)
 	err = component.Render(r.Context(), w)
@@ -42,4 +48,11 @@ func AboutHandler(w http.ResponseWriter, r *http.Request, storageInstance models
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		log.Fatalf("Error rendering in AboutHandler: %e", err)
 	}
+}
+
+func getString(m map[string]interface{}, key string) string {
+	if value, ok := m[key].(string); ok {
+		return value
+	}
+	return "" // Return empty string if key is missing or not a string
 }

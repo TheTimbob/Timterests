@@ -7,10 +7,12 @@ type Storage struct {
 	S3Client   *s3.Client
 }
 
-type About struct {
-	Title    string `yaml:"title"`
-	Subtitle string `yaml:"subtitle"`
-	Body     string `yaml:"body"`
+func (d *Document) GetBody() string {
+	return d.Body
+}
+
+func (d *Document) SetBody(body string) {
+	d.Body = body
 }
 
 type Document struct {
@@ -19,6 +21,12 @@ type Document struct {
 	Subtitle string   `yaml:"subtitle"`
 	Body     string   `yaml:"body"`
 	Tags     []string `yaml:"tags"`
+}
+
+type About struct {
+	Title    string `yaml:"title"`
+	Subtitle string `yaml:"subtitle"`
+	Body     string `yaml:"body"`
 }
 
 type Project struct {
