@@ -22,9 +22,6 @@ func ProjectsListHandler(w http.ResponseWriter, r *http.Request, storageInstance
 		return
 	}
 
-	for i := range projects {
-		projects[i].Document.Body = storage.RemoveHTMLTags(projects[i].Body)
-	}
 	component := ProjectsList(projects)
 	err = component.Render(r.Context(), w)
 	if err != nil {
@@ -71,38 +68,60 @@ func ListProjects(storageInstance models.Storage) ([]models.Project, error) {
 			continue
 		}
 
-		fileName := path.Base(key)
-		localFilePath := path.Join("s3", fileName)
-
-		project, err := storage.ReadFile[models.Project](key, localFilePath, storageInstance)
+		project, err := GetProject(key, id, storageInstance)
 		if err != nil {
-			log.Printf("Failed to read file: %v", err)
+			log.Fatalf("Failed to get project: %v", err)
 			return nil, err
 		}
-
-        localImagePath, err := ProjectImage(storageInstance, project.Image)
-        if err != nil {
-            log.Printf("Failed to download image: %v", err)
-            return nil, err
-        }
-
-        project.Image = localImagePath
-		project.Document.ID = strconv.Itoa(id)
-		projects = append(projects, project)
+		projects = append(projects, *project)
 	}
 
 	return projects, nil
 }
 
 func ProjectImage(storageInstance models.Storage, imagePath string) (string, error) {
-    localImagePath := path.Join("s3", filepath.Base(imagePath))
-    err := storage.DownloadFile(context.Background(), storageInstance, imagePath, localImagePath)
-    if err != nil {
-		log.Println("Failed to download image: ", err)
+	localImagePath := path.Join("s3", filepath.Base(imagePath))
+	err := storage.DownloadFile(context.Background(), storageInstance, imagePath, localImagePath)
+	if err != nil {
+		log.Fatalf("Failed to download image: %v", err)
 		return localImagePath, err
 	}
 
-    localImagePath = path.Join("/", localImagePath)
+	localImagePath = path.Join("/", localImagePath)
 
-    return localImagePath, nil
+	return localImagePath, nil
+}
+
+func GetProject(key string, id int, storageInstance models.Storage) (*models.Project, error) {
+	var project models.Project
+	fileName := path.Base(key)
+	localFilePath := path.Join("s3", fileName)
+
+	file, err := storage.GetFile(key, localFilePath, storageInstance)
+	if err != nil {
+		log.Fatalf("Failed to read file: %v", err)
+		return nil, err
+	}
+
+	if err := storage.DecodeFile(file, &project); err != nil {
+		log.Fatalf("Failed to decode file: %v", err)
+		return nil, err
+	}
+
+	body, err := storage.BodyToHTML(project.Body)
+	if err != nil {
+		log.Fatalf("Failed to convert body to HTML: %v", err)
+		return nil, err
+	}
+
+	localImagePath, err := ProjectImage(storageInstance, project.Image)
+	if err != nil {
+		log.Fatalf("Failed to download image: %v", err)
+		return nil, err
+	}
+
+	project.Body = body
+	project.Image = localImagePath
+	project.Document.ID = strconv.Itoa(id)
+	return &project, nil
 }

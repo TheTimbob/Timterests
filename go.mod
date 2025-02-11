@@ -31,5 +31,7 @@ require (
 
 require (
 	github.com/aws/smithy-go v1.22.1 // indirect
+	github.com/mitchellh/mapstructure v1.5.0
+	github.com/yuin/goldmark v1.7.8
 	gopkg.in/yaml.v2 v2.4.0
 )
