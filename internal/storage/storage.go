@@ -9,7 +9,6 @@ import (
 	"log"
 	"os"
 	"reflect"
-	"regexp"
 	"slices"
 	"sort"
 	"strings"
@@ -23,18 +22,6 @@ import (
 	"github.com/yuin/goldmark/renderer/html"
 	"gopkg.in/yaml.v2"
 )
-
-type HasBody interface {
-	GetBody() string
-	SetBody(string)
-}
-
-type Readable interface {
-    *models.Document | *models.Article | *models.Project | *models.ReadingList
-    HasBody
-}
-
-
 
 // Initializes a new models.Storage instance.
 func NewStorage() (*models.Storage, error) {
@@ -143,7 +130,7 @@ func DownloadFile(ctx context.Context, storage models.Storage, objectKey string,
 
 // Reads a file from the local file system.
 func GetFile(key, localPath string, storage models.Storage) (*os.File, error) {
-    var file *os.File
+	var file *os.File
 
 	// Download the file
 	err := DownloadFile(context.Background(), storage, key, localPath)
@@ -151,11 +138,11 @@ func GetFile(key, localPath string, storage models.Storage) (*os.File, error) {
 		return file, err
 	}
 
-    // Open the downloaded file
-    file, err = os.Open(localPath)
-    if err != nil {
-        return file, err
-    }
+	// Open the downloaded file
+	file, err = os.Open(localPath)
+	if err != nil {
+		return file, err
+	}
 
 	return file, nil
 }
@@ -164,8 +151,10 @@ func DecodeFile(file *os.File, out interface{}) error {
 
 	// Decode the yaml file into a document object
 	decoder := yaml.NewDecoder(file)
-	if err := decoder.Decode(&out); err != nil {
-        log.Printf("Failed to decode file: %v", err)
+
+	// Out should be a pointer to a struct
+	if err := decoder.Decode(out); err != nil {
+		log.Printf("Failed to decode file: %v", err)
 		return err
 	}
 	return nil
@@ -173,49 +162,44 @@ func DecodeFile(file *os.File, out interface{}) error {
 
 // Function to convert body text to HTML
 func BodyToHTML(str string) (string, error) {
-    var buf bytes.Buffer
-    md := goldmark.New(
-        goldmark.WithRendererOptions(
-            html.WithHardWraps(),
-        ),
-    )
-    err := md.Convert([]byte(str), &buf)
+	var buf bytes.Buffer
+	md := goldmark.New(
+		goldmark.WithRendererOptions(
+			html.WithHardWraps(),
+		),
+	)
+	err := md.Convert([]byte(str), &buf)
 
-    str = buf.String()
+	str = buf.String()
 
-    str = strings.ReplaceAll(str, "<p>", `<p class="content-text">`)
-    str = strings.ReplaceAll(str, "<h2>", `<h2 class="category-subtitle">`)
-    str = strings.ReplaceAll(str, "<a ", `<a class="hyperlink"`)
+	str = strings.ReplaceAll(str, "<p>", `<p class="content-text">`)
+	str = strings.ReplaceAll(str, "<h2>", `<h2 class="category-subtitle">`)
+	str = strings.ReplaceAll(str, "<a ", `<a class="hyperlink"`)
 
-    return str, err
-}
-
-func RemoveHTMLTags(s string) string {
-	re := regexp.MustCompile(`<[^>]*>`)
-	return re.ReplaceAllString(s, "")
+	return str, err
 }
 
 func GetTags(v reflect.Value, tags []string) []string {
 
-    field := v.FieldByName("Tags")
+	field := v.FieldByName("Tags")
 
-    // If the Tags field is not directly on the struct, check the embedded Document
-    if !field.IsValid() {
-        embeddedDoc := v.FieldByName("Document")
-        if embeddedDoc.IsValid() {
-            field = embeddedDoc.FieldByName("Tags")
-        }
-    }
+	// If the Tags field is not directly on the struct, check the embedded Document
+	if !field.IsValid() {
+		embeddedDoc := v.FieldByName("Document")
+		if embeddedDoc.IsValid() {
+			field = embeddedDoc.FieldByName("Tags")
+		}
+	}
 
-    // Create a list of tags
-    for i := 0; i < field.Len(); i++ {
-        tag := field.Index(i).String()
-        if !slices.Contains(tags, tag) {
-            tags = append(tags, tag)
-        }
-    }
+	// Create a list of tags
+	for i := 0; i < field.Len(); i++ {
+		tag := field.Index(i).String()
+		if !slices.Contains(tags, tag) {
+			tags = append(tags, tag)
+		}
+	}
 
-    return tags
+	return tags
 }
 
 func Health(storage models.Storage) map[string]string {

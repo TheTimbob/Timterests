@@ -7,14 +7,6 @@ type Storage struct {
 	S3Client   *s3.Client
 }
 
-func (d *Document) GetBody() string {
-	return d.Body
-}
-
-func (d *Document) SetBody(body string) {
-	d.Body = body
-}
-
 type Document struct {
 	ID       string
 	Title    string   `yaml:"title"`
@@ -41,6 +33,6 @@ type Article struct {
 }
 
 type ReadingList struct {
-    Document `yaml:",inline"`
-    Image    string `yaml:"image-path"`
+	Document `yaml:",inline"`
+	Image    string `yaml:"image-path"`
 }

@@ -30,17 +30,17 @@ func AboutHandler(w http.ResponseWriter, r *http.Request, storageInstance models
 		return
 	}
 
-    if err := storage.DecodeFile(file, about); err != nil {
-        log.Println("Failed to decode file:", err)
-        return
-    }
-    
-    body, err := storage.BodyToHTML(about.Body)
-    if err != nil {
-        return
-    }
+	if err := storage.DecodeFile(file, &about); err != nil {
+		log.Println("Failed to decode file:", err)
+		return
+	}
 
-    about.Body = body
+	body, err := storage.BodyToHTML(about.Body)
+	if err != nil {
+		return
+	}
+
+	about.Body = body
 
 	component := AboutForm(about)
 	err = component.Render(r.Context(), w)

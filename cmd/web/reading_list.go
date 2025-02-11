@@ -28,8 +28,7 @@ func ReadingListHandler(w http.ResponseWriter, r *http.Request, storageInstance 
 	}
 
 	for i := range readingList {
-		readingList[i].Body = storage.RemoveHTMLTags(readingList[i].Body)
-        v := reflect.ValueOf(readingList[i])
+		v := reflect.ValueOf(readingList[i])
 		tags = storage.GetTags(v, tags)
 	}
 
@@ -84,10 +83,10 @@ func ListBooks(storageInstance models.Storage, tag string) ([]models.ReadingList
 			continue
 		}
 
-        book, err := GetBook(key, id, storageInstance)
-        if err != nil {
-            return nil, err
-        }
+		book, err := GetBook(key, id, storageInstance)
+		if err != nil {
+			return nil, err
+		}
 
 		if slices.Contains(book.Tags, tag) || tag == "all" {
 			readingList = append(readingList, *book)
@@ -98,28 +97,28 @@ func ListBooks(storageInstance models.Storage, tag string) ([]models.ReadingList
 }
 
 func GetBook(key string, id int, storageInstance models.Storage) (*models.ReadingList, error) {
-    var book models.ReadingList
-    fileName := path.Base(key)
-    localFilePath := path.Join("s3", fileName)
+	var book models.ReadingList
+	fileName := path.Base(key)
+	localFilePath := path.Join("s3", fileName)
 
-    file, err := storage.GetFile(key, localFilePath, storageInstance)
-    if err != nil {
-        log.Fatalf("Failed to read file: %v", err)
-        return nil, err
-    }
+	file, err := storage.GetFile(key, localFilePath, storageInstance)
+	if err != nil {
+		log.Fatalf("Failed to read file: %v", err)
+		return nil, err
+	}
 
-    if err := storage.DecodeFile(file, book); err != nil {
-        log.Fatalf("Failed to decode file: %v", err)
-        return nil, err
-    }
-    
-    body, err := storage.BodyToHTML(book.Body)
-    if err != nil {
-        log.Fatalf("Failed to parse the body into HTML: %v", err)
-        return nil, err
-    }
+	if err := storage.DecodeFile(file, &book); err != nil {
+		log.Fatalf("Failed to decode file: %v", err)
+		return nil, err
+	}
 
-    book.Body = body
-    book.ID = strconv.Itoa(id)
-    return &book, nil
+	body, err := storage.BodyToHTML(book.Body)
+	if err != nil {
+		log.Fatalf("Failed to parse the body into HTML: %v", err)
+		return nil, err
+	}
+
+	book.Body = body
+	book.ID = strconv.Itoa(id)
+	return &book, nil
 }
