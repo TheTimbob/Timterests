@@ -9,6 +9,7 @@ import (
 	"log"
 	"os"
 	"reflect"
+	"regexp"
 	"slices"
 	"sort"
 	"strings"
@@ -175,6 +176,7 @@ func BodyToHTML(str string) (string, error) {
 	str = strings.ReplaceAll(str, "<p>", `<p class="content-text">`)
 	str = strings.ReplaceAll(str, "<h2>", `<h2 class="category-subtitle">`)
 	str = strings.ReplaceAll(str, "<a ", `<a class="hyperlink"`)
+    str = strings.ReplaceAll(str, "<li>", `<li class="content-text">- `)
 
 	return str, err
 }
@@ -200,6 +202,11 @@ func GetTags(v reflect.Value, tags []string) []string {
 	}
 
 	return tags
+}
+
+func RemoveHTMLTags(s string) string {
+	re := regexp.MustCompile(`<[^>]*>`)
+	return re.ReplaceAllString(s, "")
 }
 
 func Health(storage models.Storage) map[string]string {

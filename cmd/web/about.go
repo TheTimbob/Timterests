@@ -49,10 +49,3 @@ func AboutHandler(w http.ResponseWriter, r *http.Request, storageInstance models
 		log.Fatalf("Error rendering in AboutHandler: %e", err)
 	}
 }
-
-func getString(m map[string]interface{}, key string) string {
-	if value, ok := m[key].(string); ok {
-		return value
-	}
-	return "" // Return empty string if key is missing or not a string
-}

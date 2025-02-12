@@ -60,26 +60,34 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	// Projects Routes
 	mux.Handle("/projects", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		web.ProjectsListHandler(w, r, *s.storage)
+		web.ProjectsPageHandler(w, r, *s.storage, "all")
+	}))
+    mux.Handle("/filtered-projects", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		tag := r.URL.Query().Get("tag")
+		web.ProjectsPageHandler(w, r, *s.storage, tag)
 	}))
 	mux.Handle("/project", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		articleID := r.URL.Query().Get("id")
-		web.ProjectsPageHandler(w, r, *s.storage, articleID)
+		projectID := r.URL.Query().Get("id")
+		web.GetProjectHandler(w, r, *s.storage, projectID)
 	}))
 	mux.Handle("/projects/list", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		web.ListProjects(*s.storage)
+		web.ListProjects(*s.storage, "all")
 	}))
 
 	// Reading List Routes
 	mux.Handle("/reading-list", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		web.ReadingListHandler(w, r, *s.storage, "all")
 	}))
+    mux.Handle("/filtered-reading-list", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		tag := r.URL.Query().Get("tag")
+		web.ReadingListPageHandler(w, r, *s.storage, tag)
+	}))
 	mux.Handle("/book", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		articleID := r.URL.Query().Get("id")
 		web.ReadingListPageHandler(w, r, *s.storage, articleID)
 	}))
 	mux.Handle("/reading-list/list", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		web.ListProjects(*s.storage)
+		web.ListProjects(*s.storage, "all")
 	}))
 
 	// Wrap the mux with CORS middleware
