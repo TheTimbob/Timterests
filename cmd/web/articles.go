@@ -28,6 +28,7 @@ func ArticlesPageHandler(w http.ResponseWriter, r *http.Request, storageInstance
 	}
 
 	for i := range articles {
+        articles[i].Body = storage.RemoveHTMLTags(articles[i].Body)
 		v := reflect.ValueOf(articles[i])
 		tags = storage.GetTags(v, tags)
 	}

@@ -7,22 +7,39 @@ import (
 	"net/http"
 	"path"
 	"path/filepath"
+	"reflect"
+	"slices"
 	"strconv"
 	"timterests/internal/models"
 	"timterests/internal/storage"
 
+	"github.com/a-h/templ"
 	"github.com/aws/aws-sdk-go-v2/aws"
 )
 
-func ProjectsListHandler(w http.ResponseWriter, r *http.Request, storageInstance models.Storage) {
-	projects, err := ListProjects(storageInstance)
+func ProjectsPageHandler(w http.ResponseWriter, r *http.Request, storageInstance models.Storage, tag string) {
+	var component templ.Component
+	var tags []string
+
+	projects, err := ListProjects(storageInstance, tag)
 	if err != nil {
 		message := "Failed to fetch projects"
 		http.Error(w, fmt.Sprintf("%s: %v", message, err), http.StatusInternalServerError)
 		return
 	}
 
-	component := ProjectsList(projects)
+	for i := range projects {
+		projects[i].Body = storage.RemoveHTMLTags(projects[i].Body)
+		v := reflect.ValueOf(projects[i])
+		tags = storage.GetTags(v, tags)
+	}
+
+	if tag == "all" {
+		component = ProjectsListPage(projects, tags)
+	} else {
+		component = ProjectsList(projects)
+	}
+
 	err = component.Render(r.Context(), w)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -30,16 +47,16 @@ func ProjectsListHandler(w http.ResponseWriter, r *http.Request, storageInstance
 	}
 }
 
-func ProjectsPageHandler(w http.ResponseWriter, r *http.Request, storageInstance models.Storage, projectID string) {
+func GetProjectHandler(w http.ResponseWriter, r *http.Request, storageInstance models.Storage, projectID string) {
 
-	projects, err := ListProjects(storageInstance)
+	projects, err := ListProjects(storageInstance, "all")
 	if err != nil {
 		http.Error(w, "Failed to fetch projects", http.StatusInternalServerError)
 		return
 	}
 
 	for _, project := range projects {
-		if project.Document.ID == projectID {
+		if project.ID == projectID {
 			component := ProjectPage(project)
 			err = component.Render(r.Context(), w)
 			if err != nil {
@@ -51,7 +68,7 @@ func ProjectsPageHandler(w http.ResponseWriter, r *http.Request, storageInstance
 
 }
 
-func ListProjects(storageInstance models.Storage) ([]models.Project, error) {
+func ListProjects(storageInstance models.Storage, tag string) ([]models.Project, error) {
 	var projects []models.Project
 
 	// Get all projects from the storage
@@ -73,7 +90,10 @@ func ListProjects(storageInstance models.Storage) ([]models.Project, error) {
 			log.Fatalf("Failed to get project: %v", err)
 			return nil, err
 		}
-		projects = append(projects, *project)
+
+		if slices.Contains(project.Tags, tag) || tag == "all" {
+			projects = append(projects, *project)
+		}
 	}
 
 	return projects, nil
@@ -120,8 +140,9 @@ func GetProject(key string, id int, storageInstance models.Storage) (*models.Pro
 		return nil, err
 	}
 
-	project.Body = body
+
 	project.Image = localImagePath
-	project.Document.ID = strconv.Itoa(id)
+    project.Body = body
+	project.ID = strconv.Itoa(id)
 	return &project, nil
 }

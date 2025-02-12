@@ -4,19 +4,36 @@ import (
     "timterests/internal/models"
 )
 
-templ ProjectsList(projects []models.Project) {
-    @Base() {
-		<div id="project-container">
-			<h1 class="category-title">Projects</h1>
-			<ul>
-				for _, project := range projects {
-				<li>
-					@ProjectCard(project.Document.ID, project.Document.Title, project.Document.Subtitle, project.Document.Body, project.Image, project.Document.Tags)
-				</li>
-				}
-			</ul>
+templ ProjectsListPage(projects []models.Project, tags []string) {
+	@Base() {
+		<div id="projects-container" class="category-container">
+		    <div class="flex justify-between items-center mb-4">
+				<h1 class="category-title">Projects</h1>
+				<select 
+					class="tag-filter"
+					hx-get="/filtered-projects" 
+					hx-target="#projects-list" 
+					hx-trigger="change"
+					name="tag">
+					<option value="all">All</option>
+					for _, tag := range tags {
+						<option value={ tag }>{ tag }</option>
+					}
+				</select>
+			</div>
+			@ProjectsList(projects)
 		</div>
-    }
+	}
+}
+
+templ ProjectsList(projects []models.Project) {
+	<ul id="projects-list">
+		for _, project := range projects {
+		<li>
+			@ProjectCard(project.ID, project.Title, project.Subtitle, project.Body, project.Image, project.Tags)
+		</li>
+		}
+	</ul>
 }
 
 templ ProjectCard(projectID, title, subtitle, body, imagePath string, tags []string) {
@@ -38,11 +55,11 @@ templ ProjectCard(projectID, title, subtitle, body, imagePath string, tags []str
 
 templ ProjectPage(project models.Project) {
     <div id="project-container">
-        <h1 class="category-title">{ project.Document.Title }</h1>
-        <h2 class="category-subtitle">{ project.Document.Subtitle }</h2>
-        @templ.Raw(project.Document.Body)
+        <h1 class="category-title">{ project.Title }</h1>
+        <h2 class="category-subtitle">{ project.Subtitle }</h2>
 		if project.Repository != "Private" {
-			<a href={ templ.SafeURL(project.Repository) } class="content-text hyperlink" ><i class="fa-brands fa-github"></i> { project.Repository }</a>
+			<p class="content-text"><i class="fa-brands fa-github"></i> Repository: <a href={ templ.SafeURL(project.Repository) } class="content-text hyperlink" >{ project.Repository }</a></p>
 		}
+        @templ.Raw(project.Body)
     </div>
 }

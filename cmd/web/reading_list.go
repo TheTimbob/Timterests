@@ -28,6 +28,7 @@ func ReadingListHandler(w http.ResponseWriter, r *http.Request, storageInstance 
 	}
 
 	for i := range readingList {
+        readingList[i].Body = storage.RemoveHTMLTags(readingList[i].Body)
 		v := reflect.ValueOf(readingList[i])
 		tags = storage.GetTags(v, tags)
 	}
