@@ -1,9 +1,48 @@
 package web
 
-templ Letters() {
+import (
+"timterests/internal/models"
+)
+
+templ LettersListPage(letters []models.Letter) {
 	@Base() {
-		<div id="letters-container">		
-			<h1 class="category-title">Letters</h1>
+		<div id="letters-container" class="category-container">
+		    <div class="flex justify-between items-center mb-4">
+				<h1 class="category-title">Letters</h1>
+			</div>
+			@LettersList(letters)
 		</div>
 	}
+}
+
+templ LettersList(letters []models.Letter) {
+    <ul id="letters-list">
+        for _, letter := range letters {
+        <li>
+            @LetterCard(letter.ID, letter.Title, letter.Subtitle, letter.Date, letter.Body)
+        </li>
+        }
+    </ul>
+}
+
+templ LetterCard(letterID, title, subtitle, date, body string) {
+	<div class="card-container" tabindex="0" >
+		<div>
+			<div class="card-title-container">
+				<h1 class="card-title">{ title }</h1>
+				<h2 class="card-subtitle">{ subtitle }</h2>
+			</div>
+			<input type="password" name="password" class="letter-password" />
+			<button type="submit" hx-get={"/letter?id=" + letterID } hx-include="[name='password']" hx-target=" #main-content" hx-swap="innerHTML">Submit</button>
+		</div>
+	</div>
+}
+
+
+templ LetterPage(letter models.Letter) {
+    <div id="letter-container">
+        <h1 class="category-title">{ letter.Title }</h1>
+        <h2 class="category-subtitle">{ letter.Subtitle }</h2>
+        @templ.Raw(letter.Body)
+    </div>
 }
