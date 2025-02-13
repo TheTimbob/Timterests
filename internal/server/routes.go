@@ -34,9 +34,6 @@ func (s *Server) RegisterRoutes() http.Handler {
 	// Health check
 	mux.HandleFunc("/health", s.healthHandler)
 
-
-	mux.Handle("/letters", templ.Handler(web.Letters()))
-
 	// About Routes
 	mux.Handle("/about", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		web.AboutHandler(w, r, *s.storage)
@@ -88,6 +85,19 @@ func (s *Server) RegisterRoutes() http.Handler {
 	}))
 	mux.Handle("/reading-list/list", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		web.ListProjects(*s.storage, "all")
+	}))
+
+    // Letter Routes
+    mux.Handle("/letters", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		web.LettersPageHandler(w, r, *s.storage)
+	}))
+	mux.Handle("/letter", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		letterID := r.URL.Query().Get("id")
+        password := r.URL.Query().Get("password")
+		web.GetLetterHandler(w, r, *s.storage, letterID, password)
+	}))
+	mux.Handle("/letters/list", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		web.ListLetters(*s.storage)
 	}))
 
 	// Wrap the mux with CORS middleware
