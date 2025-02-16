@@ -16,7 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 )
 
-func ArticlesPageHandler(w http.ResponseWriter, r *http.Request, storageInstance models.Storage, tag string) {
+func ArticlesPageHandler(w http.ResponseWriter, r *http.Request, storageInstance models.Storage, tag, design string) {
 	var component templ.Component
 	var tags []string
 
@@ -33,10 +33,10 @@ func ArticlesPageHandler(w http.ResponseWriter, r *http.Request, storageInstance
 		tags = storage.GetTags(v, tags)
 	}
 
-	if tag == "all" {
-		component = ArticlesListPage(articles, tags)
+	if tag != "" || design != "" {
+        component = ArticlesList(articles, design)
 	} else {
-		component = ArticlesList(articles)
+		component = ArticlesListPage(articles, tags, design)
 	}
 
 	err = component.Render(r.Context(), w)
@@ -89,7 +89,7 @@ func ListArticles(storageInstance models.Storage, tag string) ([]models.Article,
 			return nil, err
 		}
 
-		if slices.Contains(article.Tags, tag) || tag == "all" {
+		if slices.Contains(article.Tags, tag) || tag == "all" || tag == "" {
 			articles = append(articles, *article)
 		}
 	}

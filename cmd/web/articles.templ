@@ -1,38 +1,59 @@
 package web
 
 import (
-"timterests/internal/models"
+	"timterests/internal/models"
 )
 
-templ ArticlesListPage(articles []models.Article, tags []string) {
+templ ArticlesListPage(articles []models.Article, tags []string, design string) {
 	@Base() {
 		<div id="articles-container" class="category-container">
 		    <div class="flex justify-between items-center mb-4">
 				<h1 class="category-title">Articles</h1>
-				<select 
-					class="tag-filter"
-					hx-get="/filtered-articles" 
-					hx-target="#articles-list" 
-					hx-trigger="change"
-					name="tag">
-					<option value="all">All</option>
-					for _, tag := range tags {
-						<option value={ tag }>{ tag }</option>
-					}
-				</select>
+				<div>
+					<select 
+						class="filter-select"
+						hx-get="/articles" 
+						hx-target="#articles-list"
+						hx-trigger="change"
+						name="tag">
+							<option value="all">All</option>
+							for _, tag := range tags {
+								<option value={ tag }>{ tag }</option>
+							}
+					</select>
+					<select
+						class="filter-select" 					
+						hx-get="/articles" 
+						hx-target="#articles-list"
+						hx-trigger="change"
+						name="design">
+							<option value="list">List</option>
+							<option value="grid">Grid</option>
+						</select>
+				</div>
 			</div>
-			@ArticlesList(articles)
+			@ArticlesList(articles, design)
 		</div>
 	}
 }
 
-templ ArticlesList(articles []models.Article) {
+templ ArticlesList(articles []models.Article, design string) {
     <ul id="articles-list">
-        for _, article := range articles {
-        <li>
-            @ArticleCard(article.ID, article.Title, article.Subtitle, article.Date, article.Body, article.Tags)
-        </li>
-        }
+		if design == "grid" {
+			for i := 0; i < len(articles); i += 3 {
+				<li class="grid-list-element">
+					for j := i; j < i+3 && j < len(articles); j++ {
+						@ArticleMiniCard(articles[j].ID, articles[j].Title, articles[j].Date, articles[j].Tags)
+					}
+				</li>
+			}
+		} else {
+			for _, article := range articles {
+				<li>
+					@ArticleCard(article.ID, article.Title, article.Subtitle, article.Date, article.Body, article.Tags)
+				</li>
+			}
+		}
     </ul>
 }
 
@@ -46,12 +67,25 @@ templ ArticleCard(articleID, title, subtitle, date, body string, tags []string) 
 			<p class="card-body">{ body }</p>
 			<p class="card-date">{ date }</p>
 			for _, tag := range tags {
-			<p class="card-tag">{ tag }</p>
+				<p class="card-tag">{ tag }</p>
 			}
 		</div>
 	</div>
 }
 
+templ ArticleMiniCard(articleID, title, date string, tags []string) {
+	<div class="mini-card-container" hx-get={"/article?id=" + articleID} hx-target=" #main-content" hx-swap="innerHTML" tabindex="0">
+		<div>
+			<div class="card-title-container">
+				<h1 class="card-subtitle">{ title }</h1>
+			</div>
+			<p class="card-date">{ date }</p>
+			for _, tag := range tags {
+				<p class="card-tag">{ tag }</p>
+			}
+		</div>
+	</div>
+}
 
 templ ArticlePage(article models.Article) {
     <div id="article-container">

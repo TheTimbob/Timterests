@@ -10,7 +10,7 @@ templ ProjectsListPage(projects []models.Project, tags []string) {
 		    <div class="flex justify-between items-center mb-4">
 				<h1 class="category-title">Projects</h1>
 				<select 
-					class="tag-filter"
+					class="filter-select"
 					hx-get="/filtered-projects" 
 					hx-target="#projects-list" 
 					hx-trigger="change"
