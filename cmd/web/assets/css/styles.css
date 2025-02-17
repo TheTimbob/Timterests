@@ -87,7 +87,11 @@ body::before {
 }
 
 .card-tag {
-	@apply text-sm mr-2 py-1 px-2 font-bold bg-green-300 text-gray-700 rounded-full inline
+	@apply text-sm mr-2 my-1 py-1 px-2 font-bold bg-green-300 text-gray-700 rounded-full inline
+}
+
+.tag-container {
+	@apply flex flex-wrap
 }
 
 .content-text {

@@ -66,9 +66,11 @@ templ ArticleCard(articleID, title, subtitle, date, body string, tags []string) 
 			</div>
 			<p class="card-body">{ body }</p>
 			<p class="card-date">{ date }</p>
-			for _, tag := range tags {
-				<p class="card-tag">{ tag }</p>
-			}
+			<div class="tag-container">
+				for _, tag := range tags {
+					<p class="card-tag">{ tag }</p>
+				}
+			</div>
 		</div>
 	</div>
 }
