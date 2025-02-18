@@ -62,6 +62,14 @@ body::before {
     @apply container mx-auto m-8 p-4 bg-gray-100 dark:bg-gray-700 rounded shadow-lg hover:bg-green-100 dark:hover:bg-green-700 hover:shadow-2xl truncate flex flex-row items-start;
 }
 
+.grid-list-element {
+	@apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4;
+}
+
+.mini-card-container {
+	@apply container w-full p-2 bg-gray-100 dark:bg-gray-700 rounded shadow-lg hover:bg-green-100 dark:hover:bg-green-700 hover:shadow-2xl truncate flex flex-row items-start;
+}
+
 .card-title {
     @apply text-2xl font-extrabold text-gray-900 dark:text-gray-200 my-4 mr-2 inline truncate 
 }
@@ -79,7 +87,11 @@ body::before {
 }
 
 .card-tag {
-	@apply text-sm mr-2 py-1 px-2 font-bold bg-green-300 text-gray-700 rounded-full inline
+	@apply text-sm mr-2 my-1 py-1 px-2 font-bold bg-green-300 text-gray-700 rounded-full inline
+}
+
+.tag-container {
+	@apply flex flex-wrap
 }
 
 .content-text {
@@ -94,7 +106,7 @@ body::before {
     @apply hover:text-green-500
 }
 
-.tag-filter {
+.filter-select {
 	@apply bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-700 rounded-md py-2 px-4
 }
 

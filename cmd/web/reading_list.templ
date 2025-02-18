@@ -9,7 +9,7 @@ templ ReadingList(readingLists []models.ReadingList, tags []string) {
 		<div id="rading-list-container" class="category-container">
 			<div class="flex justify-between items-center mb-4">
 				<h1 class="category-title">Reading List</h1>
-				<select class="tag-filter" hx-get="/filtered-reading-list" hx-target="#reading-list" hx-trigger="change"
+				<select class="filter-select" hx-get="/filtered-reading-list" hx-target="#reading-list" hx-trigger="change"
 					name="tag">
 					<option value="all">All</option>
 					for _, tag := range tags {
@@ -41,9 +41,11 @@ templ BookCard(readingListID, title, subtitle, body string, tags []string) {
 				<h2 class="card-subtitle">{ subtitle }</h2>
 			</div>
 			<p class="card-body">{ body }</p>
-			for _, tag := range tags {
-				<p class="card-tag">{ tag }</p>
-			}
+			<div class="tags-container">
+				for _, tag := range tags {
+					<p class="card-tag">{ tag }</p>
+				}
+			</div>
 		</div>
 	</div>
 }
