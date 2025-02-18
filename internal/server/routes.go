@@ -69,15 +69,12 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	// Reading List Routes
 	mux.Handle("/reading-list", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		web.ReadingListHandler(w, r, *s.storage, "all")
-	}))
-    mux.Handle("/filtered-reading-list", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		tag := r.URL.Query().Get("tag")
+        tag := r.URL.Query().Get("tag")
 		web.ReadingListPageHandler(w, r, *s.storage, tag)
 	}))
 	mux.Handle("/book", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		articleID := r.URL.Query().Get("id")
-		web.ReadingListPageHandler(w, r, *s.storage, articleID)
+		web.GetReadingListBook(w, r, *s.storage, articleID)
 	}))
 	mux.Handle("/reading-list/list", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		web.ListProjects(*s.storage, "all")

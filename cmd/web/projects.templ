@@ -94,7 +94,7 @@ templ ProjectPage(project models.Project) {
         <h1 class="category-title">{ project.Title }</h1>
         <h2 class="category-subtitle">{ project.Subtitle }</h2>
 		if project.Repository != "Private" {
-			<p class="content-text"><i class="fa-brands fa-github"></i> Repository: <a href={ templ.SafeURL(project.Repository) } class="content-text hyperlink" >{ project.Repository }</a></p>
+			<p class="content-text"><i class="fa-brands fa-github"></i> Repository: <a href={ templ.SafeURL(project.Repository) } class="content-text hyperlink" target="_blank">{ project.Repository }</a></p>
 		}
         @templ.Raw(project.Body)
     </div>
