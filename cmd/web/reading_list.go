@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"path"
+	"path/filepath"
 	"reflect"
 	"slices"
 	"strconv"
@@ -16,7 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 )
 
-func ReadingListPageHandler(w http.ResponseWriter, r *http.Request, storageInstance models.Storage, tag string) {
+func ReadingListPageHandler(w http.ResponseWriter, r *http.Request, storageInstance models.Storage, tag, design string) {
 	var component templ.Component
 	var tags []string
 
@@ -28,15 +29,15 @@ func ReadingListPageHandler(w http.ResponseWriter, r *http.Request, storageInsta
 	}
 
 	for i := range readingList {
-        readingList[i].Body = storage.RemoveHTMLTags(readingList[i].Body)
+		readingList[i].Body = storage.RemoveHTMLTags(readingList[i].Body)
 		v := reflect.ValueOf(readingList[i])
 		tags = storage.GetTags(v, tags)
 	}
 
-	if tag != "" {
-        component = ReadingList(readingList)
+	if tag != "" || design != "" {
+		component = ReadingList(readingList, design)
 	} else {
-        component = ReadingListPage(readingList, tags)
+		component = ReadingListPage(readingList, tags, design)
 	}
 
 	err = component.Render(r.Context(), w)
@@ -111,14 +112,34 @@ func GetBook(key string, id int, storageInstance models.Storage) (*models.Readin
 		log.Fatalf("Failed to decode file: %v", err)
 		return nil, err
 	}
-    log.Printf("Book: %v", book)
+
 	body, err := storage.BodyToHTML(book.Body)
 	if err != nil {
 		log.Fatalf("Failed to parse the body into HTML: %v", err)
 		return nil, err
 	}
 
+	localImagePath, err := BookImage(storageInstance, book.Image)
+	if err != nil {
+		log.Fatalf("Failed to download image: %v", err)
+		return nil, err
+	}
+
+	book.Image = localImagePath
 	book.Body = body
 	book.ID = strconv.Itoa(id)
 	return &book, nil
+}
+
+func BookImage(storageInstance models.Storage, imagePath string) (string, error) {
+	localImagePath := path.Join("s3", filepath.Base(imagePath))
+	err := storage.DownloadFile(context.Background(), storageInstance, imagePath, localImagePath)
+	if err != nil {
+		log.Printf("Failed to download image: %v", err)
+		return localImagePath, err
+	}
+
+	localImagePath = path.Join("/", localImagePath)
+
+	return localImagePath, nil
 }

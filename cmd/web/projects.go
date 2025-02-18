@@ -35,9 +35,9 @@ func ProjectsPageHandler(w http.ResponseWriter, r *http.Request, storageInstance
 	}
 
 	if tag != "" || design != "" {
-        component = ProjectsList(projects, design)
+		component = ProjectsList(projects, design)
 	} else {
-        component = ProjectsListPage(projects, tags, design)
+		component = ProjectsListPage(projects, tags, design)
 	}
 
 	err = component.Render(r.Context(), w)
@@ -136,13 +136,12 @@ func GetProject(key string, id int, storageInstance models.Storage) (*models.Pro
 
 	localImagePath, err := ProjectImage(storageInstance, project.Image)
 	if err != nil {
-		log.Fatalf("Failed to download image: %v", err)
+		log.Printf("Failed to download image: %v", err)
 		return nil, err
 	}
 
-
 	project.Image = localImagePath
-    project.Body = body
+	project.Body = body
 	project.ID = strconv.Itoa(id)
 	return &project, nil
 }

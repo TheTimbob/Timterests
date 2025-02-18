@@ -24,8 +24,8 @@ func (s *Server) RegisterRoutes() http.Handler {
 	fileServer := http.FileServer(http.FS(web.Files))
 	mux.Handle("/assets/", fileServer)
 
-    // Home Routes
-    
+	// Home Routes
+
 	mux.Handle("/", templ.Handler(web.HomeForm()))
 	mux.Handle("/home", templ.Handler(web.HomeForm()))
 	mux.Handle("/web", templ.Handler(web.HomeForm()))
@@ -41,8 +41,8 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	// Article Routes
 	mux.Handle("/articles", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        design := r.URL.Query().Get("design")
-        tag := r.URL.Query().Get("tag")
+		design := r.URL.Query().Get("design")
+		tag := r.URL.Query().Get("tag")
 		web.ArticlesPageHandler(w, r, *s.storage, tag, design)
 	}))
 	mux.Handle("/article", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -55,8 +55,8 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	// Projects Routes
 	mux.Handle("/projects", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        design := r.URL.Query().Get("design")
-        tag := r.URL.Query().Get("tag")
+		design := r.URL.Query().Get("design")
+		tag := r.URL.Query().Get("tag")
 		web.ProjectsPageHandler(w, r, *s.storage, tag, design)
 	}))
 	mux.Handle("/project", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -69,8 +69,9 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	// Reading List Routes
 	mux.Handle("/reading-list", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        tag := r.URL.Query().Get("tag")
-		web.ReadingListPageHandler(w, r, *s.storage, tag)
+		design := r.URL.Query().Get("design")
+		tag := r.URL.Query().Get("tag")
+		web.ReadingListPageHandler(w, r, *s.storage, tag, design)
 	}))
 	mux.Handle("/book", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		articleID := r.URL.Query().Get("id")
@@ -80,13 +81,13 @@ func (s *Server) RegisterRoutes() http.Handler {
 		web.ListProjects(*s.storage, "all")
 	}))
 
-    // Letter Routes
-    mux.Handle("/letters", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	// Letter Routes
+	mux.Handle("/letters", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		web.LettersPageHandler(w, r, *s.storage)
 	}))
 	mux.Handle("/letter", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		letterID := r.URL.Query().Get("id")
-        password := r.URL.Query().Get("password")
+		password := r.URL.Query().Get("password")
 		web.GetLetterHandler(w, r, *s.storage, letterID, password)
 	}))
 	mux.Handle("/letters/list", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
