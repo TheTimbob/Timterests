@@ -17,7 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 )
 
-func ProjectsPageHandler(w http.ResponseWriter, r *http.Request, storageInstance models.Storage, tag string) {
+func ProjectsPageHandler(w http.ResponseWriter, r *http.Request, storageInstance models.Storage, tag, design string) {
 	var component templ.Component
 	var tags []string
 
@@ -34,10 +34,10 @@ func ProjectsPageHandler(w http.ResponseWriter, r *http.Request, storageInstance
 		tags = storage.GetTags(v, tags)
 	}
 
-	if tag == "all" {
-		component = ProjectsListPage(projects, tags)
+	if tag != "" || design != "" {
+        component = ProjectsList(projects, design)
 	} else {
-		component = ProjectsList(projects)
+        component = ProjectsListPage(projects, tags, design)
 	}
 
 	err = component.Render(r.Context(), w)
@@ -91,7 +91,7 @@ func ListProjects(storageInstance models.Storage, tag string) ([]models.Project,
 			return nil, err
 		}
 
-		if slices.Contains(project.Tags, tag) || tag == "all" {
+		if slices.Contains(project.Tags, tag) || tag == "all" || tag == "" {
 			projects = append(projects, *project)
 		}
 	}

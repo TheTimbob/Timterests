@@ -41,11 +41,9 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	// Article Routes
 	mux.Handle("/articles", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		web.ArticlesPageHandler(w, r, *s.storage, "all")
-	}))
-	mux.Handle("/filtered-articles", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		tag := r.URL.Query().Get("tag")
-		web.ArticlesPageHandler(w, r, *s.storage, tag)
+        design := r.URL.Query().Get("design")
+        tag := r.URL.Query().Get("tag")
+		web.ArticlesPageHandler(w, r, *s.storage, tag, design)
 	}))
 	mux.Handle("/article", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		articleID := r.URL.Query().Get("id")
@@ -57,11 +55,9 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	// Projects Routes
 	mux.Handle("/projects", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		web.ProjectsPageHandler(w, r, *s.storage, "all")
-	}))
-    mux.Handle("/filtered-projects", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		tag := r.URL.Query().Get("tag")
-		web.ProjectsPageHandler(w, r, *s.storage, tag)
+        design := r.URL.Query().Get("design")
+        tag := r.URL.Query().Get("tag")
+		web.ProjectsPageHandler(w, r, *s.storage, tag, design)
 	}))
 	mux.Handle("/project", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		projectID := r.URL.Query().Get("id")

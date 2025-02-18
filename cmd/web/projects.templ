@@ -4,34 +4,55 @@ import (
     "timterests/internal/models"
 )
 
-templ ProjectsListPage(projects []models.Project, tags []string) {
+templ ProjectsListPage(projects []models.Project, tags []string, design string) {
 	@Base() {
 		<div id="projects-container" class="category-container">
 		    <div class="flex justify-between items-center mb-4">
 				<h1 class="category-title">Projects</h1>
-				<select 
-					class="tag-filter"
-					hx-get="/filtered-projects" 
-					hx-target="#projects-list" 
-					hx-trigger="change"
-					name="tag">
-					<option value="all">All</option>
-					for _, tag := range tags {
-						<option value={ tag }>{ tag }</option>
-					}
-				</select>
+				<div>
+					<select 
+						class="filter-select"
+						hx-get="/projects" 
+						hx-target="#projects-list" 
+						hx-trigger="change"
+						name="tag">
+						<option value="all">All</option>
+						for _, tag := range tags {
+							<option value={ tag }>{ tag }</option>
+						}
+					</select>
+					<select
+						class="filter-select" 					
+						hx-get="/projects" 
+						hx-target="#projects-list"
+						hx-trigger="change"
+						name="design">
+							<option value="list">List</option>
+							<option value="grid">Grid</option>
+					</select>
+				</div>
 			</div>
-			@ProjectsList(projects)
+			@ProjectsList(projects, design)
 		</div>
 	}
 }
 
-templ ProjectsList(projects []models.Project) {
+templ ProjectsList(projects []models.Project, design string) {
 	<ul id="projects-list">
-		for _, project := range projects {
-		<li>
-			@ProjectCard(project.ID, project.Title, project.Subtitle, project.Body, project.Image, project.Tags)
-		</li>
+		if design == "grid" {
+			for i := 0; i < len(projects); i += 3 {
+				<li class="grid-list-element">
+					for j := i; j < i+3 && j < len(projects); j++ {
+						@ProjectMiniCard(projects[j].ID, projects[j].Title, projects[j].Image, projects[j].Tags)
+					}
+				</li>
+			}
+		} else {
+			for _, project := range projects {
+			<li>
+				@ProjectCard(project.ID, project.Title, project.Subtitle, project.Body, project.Image, project.Tags)
+			</li>
+			}
 		}
 	</ul>
 }
@@ -52,6 +73,21 @@ templ ProjectCard(projectID, title, subtitle, body, imagePath string, tags []str
     </div>
 }
 
+templ ProjectMiniCard(projectID, title, imagePath string, tags []string) {
+	<div class="mini-card-container" hx-get={"/project?id=" + projectID} hx-target=" #main-content" hx-swap="innerHTML" tabindex="0">
+		<img src={ string(templ.SafeURL(imagePath)) } alt="Project image" class="card-image">
+		<div class="ml-2">
+			<div class="card-title-container">
+				<h1 class="card-subtitle">{ title }</h1>
+			</div>
+			<div class="tag-container">
+				for _, tag := range tags {
+					<p class="card-tag">{ tag }</p>
+				}
+			</div>
+		</div>
+	</div>
+}
 
 templ ProjectPage(project models.Project) {
     <div id="project-container">
