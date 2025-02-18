@@ -36,8 +36,13 @@ type Article struct {
 
 type ReadingList struct {
 	Document `yaml:",inline"`
-	Image    string `yaml:"image-path"`
-    Tags     []string `yaml:"tags"`
+	Image     string `yaml:"image-path"`
+    Author    string `yaml:"author"`
+    Published string `yaml:"published"`
+    ISBN      string `yaml:"isbn"`
+    Website   string `yaml:"website"`
+    Status    string `yaml:"status"`
+    Tags      []string `yaml:"tags"`
 }
 
 type Letter struct {

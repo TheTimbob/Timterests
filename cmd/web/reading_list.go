@@ -16,7 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 )
 
-func ReadingListHandler(w http.ResponseWriter, r *http.Request, storageInstance models.Storage, tag string) {
+func ReadingListPageHandler(w http.ResponseWriter, r *http.Request, storageInstance models.Storage, tag string) {
 	var component templ.Component
 	var tags []string
 
@@ -33,10 +33,10 @@ func ReadingListHandler(w http.ResponseWriter, r *http.Request, storageInstance 
 		tags = storage.GetTags(v, tags)
 	}
 
-	if tag == "all" {
-		component = ReadingList(readingList, tags)
+	if tag != "" {
+        component = ReadingList(readingList)
 	} else {
-		component = BookList(readingList)
+        component = ReadingListPage(readingList, tags)
 	}
 
 	err = component.Render(r.Context(), w)
@@ -46,7 +46,7 @@ func ReadingListHandler(w http.ResponseWriter, r *http.Request, storageInstance 
 	}
 }
 
-func ReadingListPageHandler(w http.ResponseWriter, r *http.Request, storageInstance models.Storage, readingListID string) {
+func GetReadingListBook(w http.ResponseWriter, r *http.Request, storageInstance models.Storage, bookID string) {
 
 	readingList, err := ListBooks(storageInstance, "all")
 	if err != nil {
@@ -54,17 +54,16 @@ func ReadingListPageHandler(w http.ResponseWriter, r *http.Request, storageInsta
 		return
 	}
 
-	for _, readingList := range readingList {
-		if readingList.ID == readingListID {
-			component := BookPage(readingList)
+	for _, book := range readingList {
+		if book.ID == bookID {
+			component := BookPage(book)
 			err = component.Render(r.Context(), w)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)
-				log.Fatalf("Error rendering in ReadingListPageHandler: %e", err)
+				log.Fatalf("Error rendering in GetReadingListBook: %e", err)
 			}
 		}
 	}
-
 }
 
 func ListBooks(storageInstance models.Storage, tag string) ([]models.ReadingList, error) {
@@ -72,12 +71,12 @@ func ListBooks(storageInstance models.Storage, tag string) ([]models.ReadingList
 
 	// Get all readingList from the storage
 	prefix := "reading-list/"
-	articleFiles, err := storage.ListObjects(context.Background(), storageInstance, prefix)
+	files, err := storage.ListObjects(context.Background(), storageInstance, prefix)
 	if err != nil {
 		return nil, err
 	}
 
-	for id, obj := range articleFiles {
+	for id, obj := range files {
 		key := aws.ToString(obj.Key)
 
 		if key == prefix {
@@ -89,7 +88,7 @@ func ListBooks(storageInstance models.Storage, tag string) ([]models.ReadingList
 			return nil, err
 		}
 
-		if slices.Contains(book.Tags, tag) || tag == "all" {
+		if slices.Contains(book.Tags, tag) || tag == "all" || tag == "" {
 			readingList = append(readingList, *book)
 		}
 	}
@@ -112,7 +111,7 @@ func GetBook(key string, id int, storageInstance models.Storage) (*models.Readin
 		log.Fatalf("Failed to decode file: %v", err)
 		return nil, err
 	}
-
+    log.Printf("Book: %v", book)
 	body, err := storage.BodyToHTML(book.Body)
 	if err != nil {
 		log.Fatalf("Failed to parse the body into HTML: %v", err)

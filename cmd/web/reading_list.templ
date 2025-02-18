@@ -4,12 +4,12 @@ import (
 	"timterests/internal/models"
 )
 
-templ ReadingList(readingLists []models.ReadingList, tags []string) {
+templ ReadingListPage(readingLists []models.ReadingList, tags []string) {
 	@Base() {
-		<div id="rading-list-container" class="category-container">
+		<div id="reading-list-container" class="category-container">
 			<div class="flex justify-between items-center mb-4">
 				<h1 class="category-title">Reading List</h1>
-				<select class="tag-filter" hx-get="/filtered-reading-list" hx-target="#reading-list" hx-trigger="change"
+				<select class="tag-filter" hx-get="/reading-list" hx-target="#reading-list" hx-trigger="change"
 					name="tag">
 					<option value="all">All</option>
 					for _, tag := range tags {
@@ -17,23 +17,23 @@ templ ReadingList(readingLists []models.ReadingList, tags []string) {
 					}
 				</select>
 			</div>
-			@BookList(readingLists)
+			@ReadingList(readingLists)
 		</div>
 	}
 }
 
-templ BookList(readingLists []models.ReadingList) {
+templ ReadingList(readingLists []models.ReadingList) {
 	<ul id="reading-list">
 		for _, readingList := range readingLists {
 			<li>
-				@BookCard(readingList.ID, readingList.Title, readingList.Subtitle, readingList.Body,
-				readingList.Tags)
+				@ReadingListCard(readingList.ID, readingList.Title, readingList.Subtitle, readingList.Body,
+				readingList.Image, readingList.Tags)
 			</li>
 		}
 	</ul>
 }
 
-templ BookCard(readingListID, title, subtitle, body string, tags []string) {
+templ ReadingListCard(readingListID, title, subtitle, body, image string, tags []string) {
 	<div class="card-container" hx-get={"/book?id=" + readingListID} hx-target=" #main-content" hx-swap="innerHTML" tabindex="0">
 		<div>
 			<div class="card-title-container">
@@ -53,6 +53,13 @@ templ BookPage(readingList models.ReadingList) {
 	<div id="reading-list-container">
 		<h1 class="category-title">{ readingList.Title }</h1>
 		<h2 class="category-subtitle">{ readingList.Subtitle }</h2>
+		<p>Author: { readingList.Author }</p>
+		<p>Published: { readingList.Published }</p>
+		<p>ISBN: { readingList.ISBN }</p>
+		<p>Website: <a href={ templ.SafeURL(readingList.Website) } class="hyperlink" target="_blank">{ readingList.Website }</a></p>
+		<p>Status: { readingList.Status }</p>
 		@templ.Raw(readingList.Body)
+		<br>
+		<div>I am not affiliated with, nor do I own any rights to, the books listed in my reading list. All purchase links are non-affiliate and provided solely for informational purposes.</div>
 	</div>
 }
