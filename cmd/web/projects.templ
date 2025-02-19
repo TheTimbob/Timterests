@@ -43,7 +43,7 @@ templ ProjectsList(projects []models.Project, design string) {
 			for i := 0; i < len(projects); i += 3 {
 				<li class="grid-list-element">
 					for j := i; j < i+3 && j < len(projects); j++ {
-						@ProjectMiniCard(projects[j].ID, projects[j].Title, projects[j].Image, projects[j].Tags)
+						@ProjectMiniCard(projects[j].ID, projects[j].Title, projects[j].Subtitle, projects[j].Image, projects[j].Tags)
 					}
 				</li>
 			}
@@ -73,12 +73,13 @@ templ ProjectCard(projectID, title, subtitle, body, imagePath string, tags []str
     </div>
 }
 
-templ ProjectMiniCard(projectID, title, imagePath string, tags []string) {
+templ ProjectMiniCard(projectID, title, subtitle, imagePath string, tags []string) {
 	<div class="mini-card-container" hx-get={"/project?id=" + projectID} hx-target=" #main-content" hx-swap="innerHTML" tabindex="0">
 		<img src={ string(templ.SafeURL(imagePath)) } alt="Project image" class="card-image">
 		<div class="ml-2">
 			<div class="card-title-container">
-				<h1 class="card-subtitle">{ title }</h1>
+				<h2 class="card-subtitle">{ title }</h2>
+				<p>{ subtitle }</p>
 			</div>
 			<div class="tag-container">
 				for _, tag := range tags {
