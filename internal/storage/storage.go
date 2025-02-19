@@ -8,6 +8,8 @@ import (
 	"io"
 	"log"
 	"os"
+	"path"
+	"path/filepath"
 	"reflect"
 	"regexp"
 	"slices"
@@ -159,6 +161,19 @@ func DecodeFile(file *os.File, out interface{}) error {
 		return err
 	}
 	return nil
+}
+
+func GetImageFromS3(storageInstance models.Storage, imagePath string) (string, error) {
+	localImagePath := path.Join("s3", filepath.Base(imagePath))
+	err := DownloadFile(context.Background(), storageInstance, imagePath, localImagePath)
+	if err != nil {
+		log.Printf("Failed to download image: %v", err)
+		return localImagePath, err
+	}
+
+	localImagePath = path.Join("/", localImagePath)
+
+	return localImagePath, nil
 }
 
 // Function to convert body text to HTML
