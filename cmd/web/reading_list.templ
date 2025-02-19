@@ -39,7 +39,7 @@ templ ReadingList(readingList []models.ReadingList, design string) {
 			for i := 0; i < len(readingList); i += 3 {
 				<li class="grid-list-element">
 					for j := i; j < i+3 && j < len(readingList); j++ {
-						@ArticleMiniCard(readingList[j].ID, readingList[j].Title, readingList[j].Image, readingList[j].Tags)
+						@ReadingListMiniCard(readingList[j].ID, readingList[j].Title, readingList[j].Image, readingList[j].Tags)
 					}
 				</li>
 			}
@@ -57,7 +57,7 @@ templ ReadingList(readingList []models.ReadingList, design string) {
 templ ReadingListCard(readingListID, title, subtitle, body, imagePath string, tags []string) {
 	<div class="card-container" hx-get={"/book?id=" + readingListID} hx-target=" #main-content" hx-swap="innerHTML" tabindex="0">
 		<img src={ string(templ.SafeURL(imagePath)) } alt="Book image" class="card-image">
-        <div>
+        <div class="ml-4">
 			<div class="card-title-container">
 				<h1 class="card-title">{ title }</h1>
 				<h2 class="card-subtitle">{ subtitle }</h2>

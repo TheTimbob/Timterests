@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 	"path"
-	"path/filepath"
 	"reflect"
 	"slices"
 	"strconv"
@@ -119,7 +118,7 @@ func GetBook(key string, id int, storageInstance models.Storage) (*models.Readin
 		return nil, err
 	}
 
-	localImagePath, err := BookImage(storageInstance, book.Image)
+	localImagePath, err := storage.GetImageFromS3(storageInstance, book.Image)
 	if err != nil {
 		log.Fatalf("Failed to download image: %v", err)
 		return nil, err
@@ -131,15 +130,3 @@ func GetBook(key string, id int, storageInstance models.Storage) (*models.Readin
 	return &book, nil
 }
 
-func BookImage(storageInstance models.Storage, imagePath string) (string, error) {
-	localImagePath := path.Join("s3", filepath.Base(imagePath))
-	err := storage.DownloadFile(context.Background(), storageInstance, imagePath, localImagePath)
-	if err != nil {
-		log.Printf("Failed to download image: %v", err)
-		return localImagePath, err
-	}
-
-	localImagePath = path.Join("/", localImagePath)
-
-	return localImagePath, nil
-}
