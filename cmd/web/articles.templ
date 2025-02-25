@@ -4,7 +4,7 @@ import (
 	"timterests/internal/models"
 )
 
-templ ArticlesListPage(articles []models.Article, tags []string, design string) {
+templ ArticlesListPage(articles []models.Article, tags []string, currentTag, design string) {
 	@Base() {
 		<div id="articles-container" class="category-container">
 		    <div class="flex justify-between items-center mb-4">
@@ -14,21 +14,34 @@ templ ArticlesListPage(articles []models.Article, tags []string, design string) 
 						class="filter-select"
 						hx-get="/articles" 
 						hx-target="#articles-list"
+                        hx-include="[name=design]"
 						hx-trigger="change"
+                        hx-push-url="true"
+                        hx-preserve="true"
 						name="tag">
 							<option value="all">All</option>
 							for _, tag := range tags {
-								<option value={ tag }>{ tag }</option>
+                                if tag == currentTag {
+                                    <option value={ tag } selected>{ tag }</option>
+                                } else {
+								    <option value={ tag }>{ tag }</option>
+                                }
 							}
 					</select>
 					<select
 						class="filter-select"
 						hx-get="/articles" 
 						hx-target="#articles-list"
+                        hx-include="[name=tag]"
 						hx-trigger="change"
+                        hx-push-url="true"
+                        hx-preserve="true"
 						name="design">
-							<option value="list">List</option>
-							<option value="grid">Grid</option>
+                            if design == "list" {
+                                <option value="list" selected>List</option>
+                            } else {
+                                <option value="list">List</option>
+                            }
 						</select>
 				</div>
 			</div>
@@ -58,7 +71,7 @@ templ ArticlesList(articles []models.Article, design string) {
 }
 
 templ ArticleCard(articleID, title, subtitle, date, body string, tags []string) {
-	<div class="card-container" hx-get={"/article?id=" + articleID} hx-target=" #main-content" hx-swap="innerHTML" tabindex="0">
+	<div class="card-container" hx-get={"/article?id=" + articleID} hx-target=" #main-content" hx-swap="innerHTML" hx-push-url="true" tabindex="0">
 		<div>
 			<div class="card-title-container">
 				<h1 class="card-title">{ title }</h1>
@@ -76,7 +89,7 @@ templ ArticleCard(articleID, title, subtitle, date, body string, tags []string) 
 }
 
 templ ArticleMiniCard(articleID, title, date string, tags []string) {
-	<div class="mini-card-container" hx-get={"/article?id=" + articleID} hx-target=" #main-content" hx-swap="innerHTML" tabindex="0">
+	<div class="mini-card-container" hx-get={"/article?id=" + articleID} hx-target=" #main-content" hx-swap="innerHTML" hx-push-url="true" tabindex="0">
 		<div>
 			<div class="card-title-container">
 				<h1 class="card-subtitle">{ title }</h1>
@@ -89,10 +102,21 @@ templ ArticleMiniCard(articleID, title, date string, tags []string) {
 	</div>
 }
 
-templ ArticlePage(article models.Article) {
+templ Article(article models.Article) {
     <div id="article-container">
         <h1 class="category-title">{ article.Title }</h1>
         <h2 class="category-subtitle">{ article.Subtitle }</h2>
         @templ.Raw(article.Body)
     </div>
+}
+
+templ ArticlePage(article models.Article, container bool) {
+    if container {
+        @Article(article)
+    } else {
+         @Base() {
+            @Article(article)
+        }
+
+    }
 }
