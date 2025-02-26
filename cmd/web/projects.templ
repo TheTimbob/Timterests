@@ -1,34 +1,47 @@
 package web
 
-import (
-    "timterests/internal/models"
-)
+import "timterests/internal/models"
 
-templ ProjectsListPage(projects []models.Project, tags []string, design string) {
+templ ProjectsListPage(projects []models.Project, tags []string, currentTag, design string) {
 	@Base() {
 		<div id="projects-container" class="category-container">
-		    <div class="flex justify-between items-center mb-4">
+			<div class="flex justify-between items-center mb-4">
 				<h1 class="category-title">Projects</h1>
 				<div>
-					<select 
+					<select
 						class="filter-select"
-						hx-get="/projects" 
-						hx-target="#projects-list" 
+						hx-get="/projects"
+						hx-target="#projects-list"
+						hx-include="[name=design]"
 						hx-trigger="change"
-						name="tag">
+						hx-replace-url="true"
+						name="tag"
+					>
 						<option value="all">All</option>
 						for _, tag := range tags {
-							<option value={ tag }>{ tag }</option>
+							if tag == currentTag {
+								<option value={ tag } selected>{ tag }</option>
+							} else {
+								<option value={ tag }>{ tag }</option>
+							}
 						}
 					</select>
 					<select
-						class="filter-select" 					
-						hx-get="/projects" 
+						class="filter-select"
+						hx-get="/projects"
 						hx-target="#projects-list"
+						hx-include="[name=tag]"
 						hx-trigger="change"
-						name="design">
+						hx-replace-url="true"
+						name="design"
+					>
+						if design == "grid" {
 							<option value="list">List</option>
+							<option value="grid" selected>Grid</option>
+						} else {
+							<option value="list" selected>List</option>
 							<option value="grid">Grid</option>
+						}
 					</select>
 				</div>
 			</div>
@@ -49,33 +62,33 @@ templ ProjectsList(projects []models.Project, design string) {
 			}
 		} else {
 			for _, project := range projects {
-			<li>
-				@ProjectCard(project.ID, project.Title, project.Subtitle, project.Body, project.Image, project.Tags)
-			</li>
+				<li>
+					@ProjectCard(project.ID, project.Title, project.Subtitle, project.Body, project.Image, project.Tags)
+				</li>
 			}
 		}
 	</ul>
 }
 
 templ ProjectCard(projectID, title, subtitle, body, imagePath string, tags []string) {
-    <div class="card-container" hx-get={"/project?id=" + projectID} hx-target="#main-content" hx-swap="innerHTML" tabindex="0">
-        <img src={ string(templ.SafeURL(imagePath)) } alt="Project image" class="card-image">
+	<div class="card-container" hx-get={ "/project?id=" + projectID } hx-target="#main-content" hx-swap="innerHTML" hx-push-url="true" tabindex="0">
+		<img src={ string(templ.SafeURL(imagePath)) } alt="Project image" class="card-image"/>
 		<div class="ml-4">
-            <div class="card-title-container">
-                <h1 class="card-title">{ title }</h1>
-                <h2 class="card-subtitle">{ subtitle }</h2>
-            </div>
-            <p class="card-body">{ body }</p>
+			<div class="card-title-container">
+				<h1 class="card-title">{ title }</h1>
+				<h2 class="card-subtitle">{ subtitle }</h2>
+			</div>
+			<p class="card-body">{ body }</p>
 			for _, tag := range tags {
 				<p class="card-tag">{ tag }</p>
 			}
-        </div>
-    </div>
+		</div>
+	</div>
 }
 
 templ ProjectMiniCard(projectID, title, subtitle, imagePath string, tags []string) {
-	<div class="mini-card-container" hx-get={"/project?id=" + projectID} hx-target=" #main-content" hx-swap="innerHTML" tabindex="0">
-		<img src={ string(templ.SafeURL(imagePath)) } alt="Project image" class="card-image">
+	<div class="mini-card-container" hx-get={ "/project?id=" + projectID } hx-target=" #main-content" hx-swap="innerHTML" hx-push-url="true" tabindex="0">
+		<img src={ string(templ.SafeURL(imagePath)) } alt="Project image" class="card-image"/>
 		<div class="ml-2">
 			<div class="card-title-container">
 				<h2 class="card-subtitle">{ title }</h2>
@@ -90,13 +103,23 @@ templ ProjectMiniCard(projectID, title, subtitle, imagePath string, tags []strin
 	</div>
 }
 
-templ ProjectPage(project models.Project) {
-    <div id="project-container">
-        <h1 class="category-title">{ project.Title }</h1>
-        <h2 class="category-subtitle">{ project.Subtitle }</h2>
+templ Project(project models.Project) {
+	<div id="project-container">
+		<h1 class="category-title">{ project.Title }</h1>
+		<h2 class="category-subtitle">{ project.Subtitle }</h2>
 		if project.Repository != "Private" {
 			<p class="content-text"><i class="fa-brands fa-github"></i> Repository: <a href={ templ.SafeURL(project.Repository) } class="content-text hyperlink" target="_blank">{ project.Repository }</a></p>
 		}
-        @templ.Raw(project.Body)
-    </div>
+		@templ.Raw(project.Body)
+	</div>
+}
+
+templ ProjectPage(project models.Project, container bool) {
+	if container {
+		@Project(project)
+	} else {
+		@Base() {
+			@Project(project)
+		}
+	}
 }

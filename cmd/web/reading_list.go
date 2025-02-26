@@ -16,11 +16,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 )
 
-func ReadingListPageHandler(w http.ResponseWriter, r *http.Request, storageInstance models.Storage, tag, design string) {
+func ReadingListPageHandler(w http.ResponseWriter, r *http.Request, storageInstance models.Storage, currentTag, design string) {
 	var component templ.Component
 	var tags []string
 
-	readingList, err := ListBooks(storageInstance, tag)
+	readingList, err := ListBooks(storageInstance, currentTag)
 	if err != nil {
 		message := "Failed to fetch reading list"
 		http.Error(w, fmt.Sprintf("%s: %v", message, err), http.StatusInternalServerError)
@@ -33,10 +33,12 @@ func ReadingListPageHandler(w http.ResponseWriter, r *http.Request, storageInsta
 		tags = storage.GetTags(v, tags)
 	}
 
-	if tag != "" || design != "" {
+	if r.Header.Get("HX-Request") == "true" {
+		// Partial update
 		component = ReadingList(readingList, design)
 	} else {
-		component = ReadingListPage(readingList, tags, design)
+		// Page load
+		component = ReadingListPage(readingList, tags, currentTag, design)
 	}
 
 	err = component.Render(r.Context(), w)
@@ -56,7 +58,7 @@ func GetReadingListBook(w http.ResponseWriter, r *http.Request, storageInstance 
 
 	for _, book := range readingList {
 		if book.ID == bookID {
-			component := BookPage(book)
+			component := BookPage(book, w.Header().Get("HX-Request") == "true")
 			err = component.Render(r.Context(), w)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)
@@ -66,7 +68,7 @@ func GetReadingListBook(w http.ResponseWriter, r *http.Request, storageInstance 
 	}
 }
 
-func ListBooks(storageInstance models.Storage, tag string) ([]models.ReadingList, error) {
+func ListBooks(storageInstance models.Storage, currentTag string) ([]models.ReadingList, error) {
 	var readingList []models.ReadingList
 
 	// Get all readingList from the storage
@@ -88,7 +90,7 @@ func ListBooks(storageInstance models.Storage, tag string) ([]models.ReadingList
 			return nil, err
 		}
 
-		if slices.Contains(book.Tags, tag) || tag == "all" || tag == "" {
+		if slices.Contains(book.Tags, currentTag) || currentTag == "all" || currentTag == "" {
 			readingList = append(readingList, *book)
 		}
 	}
@@ -129,4 +131,3 @@ func GetBook(key string, id int, storageInstance models.Storage) (*models.Readin
 	book.ID = strconv.Itoa(id)
 	return &book, nil
 }
-

@@ -58,7 +58,6 @@ func GetArticleHandler(w http.ResponseWriter, r *http.Request, storageInstance m
 
 	for _, article := range articles {
 		if article.ID == articleID {
-
 			component := ArticlePage(article, r.Header.Get("HX-Request") == "true")
 			err = component.Render(r.Context(), w)
 			if err != nil {
@@ -70,7 +69,7 @@ func GetArticleHandler(w http.ResponseWriter, r *http.Request, storageInstance m
 
 }
 
-func ListArticles(storageInstance models.Storage, tag string) ([]models.Article, error) {
+func ListArticles(storageInstance models.Storage, currentTag string) ([]models.Article, error) {
 	var articles []models.Article
 
 	// Get all articles from the storage
@@ -92,7 +91,7 @@ func ListArticles(storageInstance models.Storage, tag string) ([]models.Article,
 			return nil, err
 		}
 
-		if slices.Contains(article.Tags, tag) || tag == "all" || tag == "" {
+		if slices.Contains(article.Tags, currentTag) || currentTag == "all" || currentTag == "" {
 			articles = append(articles, *article)
 		}
 	}

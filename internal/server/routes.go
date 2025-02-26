@@ -25,7 +25,6 @@ func (s *Server) RegisterRoutes() http.Handler {
 	mux.Handle("/assets/", fileServer)
 
 	// Home Routes
-
 	mux.Handle("/", templ.Handler(web.HomeForm()))
 	mux.Handle("/home", templ.Handler(web.HomeForm()))
 	mux.Handle("/web", templ.Handler(web.HomeForm()))
@@ -105,6 +104,9 @@ func (s *Server) corsMiddleware(next http.Handler) http.Handler {
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH")
 		w.Header().Set("Access-Control-Allow-Headers", "Accept, Authorization, Content-Type, X-CSRF-Token")
 		w.Header().Set("Access-Control-Allow-Credentials", "false") // Set to "true" if credentials are required
+		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+		w.Header().Set("Pragma", "no-cache")
+		w.Header().Set("Expires", "0")
 
 		// Handle preflight OPTIONS requests
 		if r.Method == http.MethodOptions {

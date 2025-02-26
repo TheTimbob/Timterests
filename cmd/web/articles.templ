@@ -1,48 +1,48 @@
 package web
 
-import (
-	"timterests/internal/models"
-)
+import "timterests/internal/models"
 
 templ ArticlesListPage(articles []models.Article, tags []string, currentTag, design string) {
 	@Base() {
 		<div id="articles-container" class="category-container">
-		    <div class="flex justify-between items-center mb-4">
+			<div class="flex justify-between items-center mb-4">
 				<h1 class="category-title">Articles</h1>
 				<div>
-					<select 
+					<select
 						class="filter-select"
-						hx-get="/articles" 
+						hx-get="/articles"
 						hx-target="#articles-list"
-                        hx-include="[name=design]"
+						hx-include="[name=design]"
 						hx-trigger="change"
-                        hx-push-url="true"
-                        hx-preserve="true"
-						name="tag">
-							<option value="all">All</option>
-							for _, tag := range tags {
-                                if tag == currentTag {
-                                    <option value={ tag } selected>{ tag }</option>
-                                } else {
-								    <option value={ tag }>{ tag }</option>
-                                }
+						hx-replace-url="true"
+						name="tag"
+					>
+						<option value="all">All</option>
+						for _, tag := range tags {
+							if tag == currentTag {
+								<option value={ tag } selected>{ tag }</option>
+							} else {
+								<option value={ tag }>{ tag }</option>
 							}
+						}
 					</select>
 					<select
 						class="filter-select"
-						hx-get="/articles" 
+						hx-get="/articles"
 						hx-target="#articles-list"
-                        hx-include="[name=tag]"
+						hx-include="[name=tag]"
 						hx-trigger="change"
-                        hx-push-url="true"
-                        hx-preserve="true"
-						name="design">
-                            if design == "list" {
-                                <option value="list" selected>List</option>
-                            } else {
-                                <option value="list">List</option>
-                            }
-						</select>
+						hx-replace-url="true"
+						name="design"
+					>
+						if design == "grid" {
+							<option value="list">List</option>
+							<option value="grid" selected>Grid</option>
+						} else {
+							<option value="list" selected>List</option>
+							<option value="grid">Grid</option>
+						}
+					</select>
 				</div>
 			</div>
 			@ArticlesList(articles, design)
@@ -51,7 +51,7 @@ templ ArticlesListPage(articles []models.Article, tags []string, currentTag, des
 }
 
 templ ArticlesList(articles []models.Article, design string) {
-    <ul id="articles-list">
+	<ul id="articles-list">
 		if design == "grid" {
 			for i := 0; i < len(articles); i += 3 {
 				<li class="grid-list-element">
@@ -67,11 +67,11 @@ templ ArticlesList(articles []models.Article, design string) {
 				</li>
 			}
 		}
-    </ul>
+	</ul>
 }
 
 templ ArticleCard(articleID, title, subtitle, date, body string, tags []string) {
-	<div class="card-container" hx-get={"/article?id=" + articleID} hx-target=" #main-content" hx-swap="innerHTML" hx-push-url="true" tabindex="0">
+	<div class="card-container" hx-get={ "/article?id=" + articleID } hx-target=" #main-content" hx-swap="innerHTML" hx-push-url="true" tabindex="0">
 		<div>
 			<div class="card-title-container">
 				<h1 class="card-title">{ title }</h1>
@@ -89,7 +89,7 @@ templ ArticleCard(articleID, title, subtitle, date, body string, tags []string) 
 }
 
 templ ArticleMiniCard(articleID, title, date string, tags []string) {
-	<div class="mini-card-container" hx-get={"/article?id=" + articleID} hx-target=" #main-content" hx-swap="innerHTML" hx-push-url="true" tabindex="0">
+	<div class="mini-card-container" hx-get={ "/article?id=" + articleID } hx-target=" #main-content" hx-swap="innerHTML" hx-push-url="true" tabindex="0">
 		<div>
 			<div class="card-title-container">
 				<h1 class="card-subtitle">{ title }</h1>
@@ -103,20 +103,19 @@ templ ArticleMiniCard(articleID, title, date string, tags []string) {
 }
 
 templ Article(article models.Article) {
-    <div id="article-container">
-        <h1 class="category-title">{ article.Title }</h1>
-        <h2 class="category-subtitle">{ article.Subtitle }</h2>
-        @templ.Raw(article.Body)
-    </div>
+	<div id="article-container">
+		<h1 class="category-title">{ article.Title }</h1>
+		<h2 class="category-subtitle">{ article.Subtitle }</h2>
+		@templ.Raw(article.Body)
+	</div>
 }
 
 templ ArticlePage(article models.Article, container bool) {
-    if container {
-        @Article(article)
-    } else {
-         @Base() {
-            @Article(article)
-        }
-
-    }
+	if container {
+		@Article(article)
+	} else {
+		@Base() {
+			@Article(article)
+		}
+	}
 }

@@ -16,11 +16,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 )
 
-func ProjectsPageHandler(w http.ResponseWriter, r *http.Request, storageInstance models.Storage, tag, design string) {
+func ProjectsPageHandler(w http.ResponseWriter, r *http.Request, storageInstance models.Storage, currentTag, design string) {
 	var component templ.Component
 	var tags []string
 
-	projects, err := ListProjects(storageInstance, tag)
+	projects, err := ListProjects(storageInstance, currentTag)
 	if err != nil {
 		message := "Failed to fetch projects"
 		http.Error(w, fmt.Sprintf("%s: %v", message, err), http.StatusInternalServerError)
@@ -33,10 +33,12 @@ func ProjectsPageHandler(w http.ResponseWriter, r *http.Request, storageInstance
 		tags = storage.GetTags(v, tags)
 	}
 
-	if tag != "" || design != "" {
+	if r.Header.Get("HX-Request") == "true" {
+		// Partial update
 		component = ProjectsList(projects, design)
 	} else {
-		component = ProjectsListPage(projects, tags, design)
+		// Page load
+		component = ProjectsListPage(projects, tags, currentTag, design)
 	}
 
 	err = component.Render(r.Context(), w)
@@ -56,7 +58,7 @@ func GetProjectHandler(w http.ResponseWriter, r *http.Request, storageInstance m
 
 	for _, project := range projects {
 		if project.ID == projectID {
-			component := ProjectPage(project)
+			component := ProjectPage(project, r.Header.Get("HX-Request") == "true")
 			err = component.Render(r.Context(), w)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)
@@ -67,7 +69,7 @@ func GetProjectHandler(w http.ResponseWriter, r *http.Request, storageInstance m
 
 }
 
-func ListProjects(storageInstance models.Storage, tag string) ([]models.Project, error) {
+func ListProjects(storageInstance models.Storage, currentTag string) ([]models.Project, error) {
 	var projects []models.Project
 
 	// Get all projects from the storage
@@ -90,7 +92,7 @@ func ListProjects(storageInstance models.Storage, tag string) ([]models.Project,
 			return nil, err
 		}
 
-		if slices.Contains(project.Tags, tag) || tag == "all" || tag == "" {
+		if slices.Contains(project.Tags, currentTag) || currentTag == "all" || currentTag == "" {
 			projects = append(projects, *project)
 		}
 	}

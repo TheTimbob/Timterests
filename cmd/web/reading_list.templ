@@ -1,32 +1,49 @@
 package web
 
-import (
-	"timterests/internal/models"
-)
+import "timterests/internal/models"
 
-templ ReadingListPage(readingLists []models.ReadingList, tags []string, design string) {
+templ ReadingListPage(readingLists []models.ReadingList, tags []string, currentTag, design string) {
 	@Base() {
 		<div id="reading-list-container" class="category-container">
 			<div class="flex justify-between items-center mb-4">
 				<h1 class="category-title">Reading List</h1>
-                <div>
-                    <select class="filter-select" hx-get="/reading-list" hx-target="#reading-list" hx-trigger="change"
-                        name="tag">
-                        <option value="all">All</option>
-                        for _, tag := range tags {
-                            <option value={ tag }>{ tag }</option>
-                        }
-                    </select>
-                    <select
-                        class="filter-select"
-                        hx-get="/reading-list" 
-                        hx-target="#reading-list"
-                        hx-trigger="change"
-                        name="design">
-                            <option value="list">List</option>
-                            <option value="grid">Grid</option>
-                    </select>
-                </div>
+				<div>
+					<select
+						class="filter-select"
+						hx-get="/reading-list"
+						hx-target="#reading-list"
+						hx-include="[name=design]"
+						hx-trigger="change"
+						hx-replace-url="true"
+						name="tag"
+					>
+						<option value="all">All</option>
+						for _, tag := range tags {
+							if tag == currentTag {
+								<option value={ tag } selected>{ tag }</option>
+							} else {
+								<option value={ tag }>{ tag }</option>
+							}
+						}
+					</select>
+					<select
+						class="filter-select"
+						hx-get="/reading-list"
+						hx-target="#reading-list"
+						hx-include="[name=tag]"
+						hx-trigger="change"
+						hx-replace-url="true"
+						name="design"
+					>
+						if design == "grid" {
+							<option value="list">List</option>
+							<option value="grid" selected>Grid</option>
+						} else {
+							<option value="list" selected>List</option>
+							<option value="grid">Grid</option>
+						}
+					</select>
+				</div>
 			</div>
 			@ReadingList(readingLists, design)
 		</div>
@@ -35,7 +52,7 @@ templ ReadingListPage(readingLists []models.ReadingList, tags []string, design s
 
 templ ReadingList(readingList []models.ReadingList, design string) {
 	<ul id="reading-list">
-    	if design == "grid" {
+		if design == "grid" {
 			for i := 0; i < len(readingList); i += 3 {
 				<li class="grid-list-element">
 					for j := i; j < i+3 && j < len(readingList); j++ {
@@ -44,20 +61,20 @@ templ ReadingList(readingList []models.ReadingList, design string) {
 				</li>
 			}
 		} else {
-            for _, book := range readingList {
-                <li>
-                    @ReadingListCard(book.ID, book.Title, book.Subtitle, book.Body,
-                    book.Image, book.Tags)
-                </li>
-            }
-        }
+			for _, book := range readingList {
+				<li>
+					@ReadingListCard(book.ID, book.Title, book.Subtitle, book.Body,
+						book.Image, book.Tags)
+				</li>
+			}
+		}
 	</ul>
 }
 
 templ ReadingListCard(readingListID, title, subtitle, body, imagePath string, tags []string) {
-	<div class="card-container" hx-get={"/book?id=" + readingListID} hx-target=" #main-content" hx-swap="innerHTML" tabindex="0">
-		<img src={ string(templ.SafeURL(imagePath)) } alt="Book image" class="card-image">
-        <div class="ml-4">
+	<div class="card-container" hx-get={ "/book?id=" + readingListID } hx-target=" #main-content" hx-swap="innerHTML" hx-push-url="true" tabindex="0">
+		<img src={ string(templ.SafeURL(imagePath)) } alt="Book image" class="card-image"/>
+		<div class="ml-4">
 			<div class="card-title-container">
 				<h1 class="card-title">{ title }</h1>
 				<h2 class="card-subtitle">{ subtitle }</h2>
@@ -73,8 +90,8 @@ templ ReadingListCard(readingListID, title, subtitle, body, imagePath string, ta
 }
 
 templ ReadingListMiniCard(bookID, title, author, imagePath string, tags []string) {
-	<div class="mini-card-container" hx-get={"/book?id=" + bookID} hx-target=" #main-content" hx-swap="innerHTML" tabindex="0">
-		<img src={ string(templ.SafeURL(imagePath)) } alt="Book image" class="card-image">
+	<div class="mini-card-container" hx-get={ "/book?id=" + bookID } hx-target=" #main-content" hx-swap="innerHTML" tabindex="0">
+		<img src={ string(templ.SafeURL(imagePath)) } alt="Book image" class="card-image"/>
 		<div class="ml-2">
 			<div class="card-title-container">
 				<h2 class="card-subtitle">{ title }</h2>
@@ -89,8 +106,7 @@ templ ReadingListMiniCard(bookID, title, author, imagePath string, tags []string
 	</div>
 }
 
-
-templ BookPage(readingList models.ReadingList) {
+templ Book(readingList models.ReadingList) {
 	<div id="reading-list-container">
 		<h1 class="category-title">{ readingList.Title }</h1>
 		<h2 class="category-subtitle">{ readingList.Subtitle }</h2>
@@ -100,7 +116,17 @@ templ BookPage(readingList models.ReadingList) {
 		<p>Website: <a href={ templ.SafeURL(readingList.Website) } class="hyperlink" target="_blank">{ readingList.Website }</a></p>
 		<p>Status: { readingList.Status }</p>
 		@templ.Raw(readingList.Body)
-		<br>
+		<br/>
 		<div>I am not affiliated with, nor do I own any rights to, the books listed in my reading list. All purchase links are non-affiliate and provided solely for informational purposes.</div>
 	</div>
+}
+
+templ BookPage(readingList models.ReadingList, container bool) {
+	if container {
+		@Book(readingList)
+	} else {
+		@Base() {
+			@Book(readingList)
+		}
+	}
 }
