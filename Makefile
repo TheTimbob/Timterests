@@ -20,7 +20,7 @@ templ-install:
 build: templ-install
 	@echo "Building..."
 	@templ generate
-	
+
 	@CGO_ENABLED=1 go build -o main cmd/api/main.go
 
 # Run the application

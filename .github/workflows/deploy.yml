@@ -51,7 +51,7 @@ jobs:
             --service-name ${{ secrets.AWS_LIGHTSAIL_CONTAINER_SERVICE }} \
             --containers '{
               "${{ secrets.AWS_LIGHTSAIL_CONTAINER_NAME }}": {
-                "image": "'"$NEW_IMAGE"'", 
+                "image": "'"$NEW_IMAGE"'",
                 "ports": {"${{ vars.PORT }}": "HTTP"},
                 "environment": {
                   "APP_ENV": "${{ vars.APP_ENV }}",
