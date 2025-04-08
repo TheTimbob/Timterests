@@ -36,7 +36,7 @@ func ArticlesPageHandler(w http.ResponseWriter, r *http.Request, storageInstance
 	if currentTag != "" || design != "" {
 		component = ArticlesList(articles, design)
 	} else {
-		component = ArticlesListPage(articles, tags, currentTag, design)
+		component = ArticlesListPage(articles, tags, design)
 	}
 
 	err = component.Render(r.Context(), w)
@@ -56,8 +56,7 @@ func GetArticleHandler(w http.ResponseWriter, r *http.Request, storageInstance m
 
 	for _, article := range articles {
 		if article.ID == articleID {
-			render := true
-			component := ArticlePage(article, render)
+			component := ArticlePage(article)
 			err = component.Render(r.Context(), w)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)

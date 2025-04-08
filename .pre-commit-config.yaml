@@ -1,4 +1,11 @@
 repos:
+  - repo: local
+    hooks:
+      - id: make-build
+        name: make build
+        entry: make build
+        language: system
+
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:

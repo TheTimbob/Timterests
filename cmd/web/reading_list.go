@@ -36,7 +36,7 @@ func ReadingListPageHandler(w http.ResponseWriter, r *http.Request, storageInsta
 	if currentTag != "" || design != "" {
 		component = ReadingList(readingList, design)
 	} else {
-		component = ReadingListPage(readingList, tags, currentTag, design)
+		component = ReadingListPage(readingList, tags, design)
 	}
 
 	err = component.Render(r.Context(), w)
@@ -56,8 +56,7 @@ func GetReadingListBook(w http.ResponseWriter, r *http.Request, storageInstance 
 
 	for _, book := range readingList {
 		if book.ID == bookID {
-			render := true
-			component := BookPage(book, render)
+			component := BookPage(book)
 			err = component.Render(r.Context(), w)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)

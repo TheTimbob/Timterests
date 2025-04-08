@@ -36,7 +36,7 @@ func ProjectsPageHandler(w http.ResponseWriter, r *http.Request, storageInstance
 	if currentTag != "" || design != "" {
 		component = ProjectsList(projects, design)
 	} else {
-		component = ProjectsListPage(projects, tags, currentTag, design)
+		component = ProjectsListPage(projects, tags, design)
 	}
 
 	err = component.Render(r.Context(), w)
@@ -56,8 +56,7 @@ func GetProjectHandler(w http.ResponseWriter, r *http.Request, storageInstance m
 
 	for _, project := range projects {
 		if project.ID == projectID {
-			render := true
-			component := ProjectPage(project, render)
+			component := ProjectPage(project)
 			err = component.Render(r.Context(), w)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)
