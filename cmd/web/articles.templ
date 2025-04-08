@@ -10,9 +10,9 @@ templ ArticlesListPage(articles []models.Article, tags []string, design string) 
 		    <div class="flex justify-between items-center mb-4">
 				<h1 class="category-title">Articles</h1>
 				<div>
-					<select 
+					<select
 						class="filter-select"
-						hx-get="/articles" 
+						hx-get="/articles"
 						hx-target="#articles-list"
 						hx-trigger="change"
 						name="tag">
@@ -23,7 +23,7 @@ templ ArticlesListPage(articles []models.Article, tags []string, design string) 
 					</select>
 					<select
 						class="filter-select"
-						hx-get="/articles" 
+						hx-get="/articles"
 						hx-target="#articles-list"
 						hx-trigger="change"
 						name="design">

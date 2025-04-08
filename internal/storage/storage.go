@@ -109,7 +109,11 @@ func DownloadFile(ctx context.Context, storage models.Storage, objectKey string,
 		return err
 	}
 
-	defer result.Body.Close()
+	defer func() {
+		if err := result.Body.Close(); err != nil {
+			log.Printf("error closing response body: %v", err)
+		}
+	}()
 
 	file, err := os.Create(fileName)
 
@@ -118,7 +122,11 @@ func DownloadFile(ctx context.Context, storage models.Storage, objectKey string,
 		return err
 	}
 
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			log.Printf("error closing file: %v", err)
+		}
+	}()
 
 	body, err := io.ReadAll(result.Body)
 
@@ -191,7 +199,7 @@ func BodyToHTML(str string) (string, error) {
 	str = strings.ReplaceAll(str, "<p>", `<p class="content-text">`)
 	str = strings.ReplaceAll(str, "<h2>", `<h2 class="category-subtitle">`)
 	str = strings.ReplaceAll(str, "<a ", `<a class="hyperlink"`)
-    str = strings.ReplaceAll(str, "<li>", `<li class="content-text">- `)
+	str = strings.ReplaceAll(str, "<li>", `<li class="content-text">- `)
 
 	return str, err
 }

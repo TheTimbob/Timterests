@@ -9,45 +9,45 @@ type Storage struct {
 
 type Document struct {
 	ID       string
-	Title    string   `yaml:"title"`
-	Subtitle string   `yaml:"subtitle"`
-	Body     string   `yaml:"body"`
-}
-
-type About struct {
 	Title    string `yaml:"title"`
 	Subtitle string `yaml:"subtitle"`
 	Body     string `yaml:"body"`
-    Tags     []string `yaml:"tags"`
+}
+
+type About struct {
+	Title    string   `yaml:"title"`
+	Subtitle string   `yaml:"subtitle"`
+	Body     string   `yaml:"body"`
+	Tags     []string `yaml:"tags"`
 }
 
 type Project struct {
 	Document   `yaml:",inline"`
-	Repository string `yaml:"repository"`
-	Image      string `yaml:"image-path"`
-    Tags     []string `yaml:"tags"`
+	Repository string   `yaml:"repository"`
+	Image      string   `yaml:"image-path"`
+	Tags       []string `yaml:"tags"`
 }
 
 type Article struct {
 	Document `yaml:",inline"`
-	Date     string `yaml:"date"`
-    Tags     []string `yaml:"tags"`
+	Date     string   `yaml:"date"`
+	Tags     []string `yaml:"tags"`
 }
 
 type ReadingList struct {
-	Document `yaml:",inline"`
-	Image     string `yaml:"image-path"`
-    Author    string `yaml:"author"`
-    Published string `yaml:"published"`
-    ISBN      string `yaml:"isbn"`
-    Website   string `yaml:"website"`
-    Status    string `yaml:"status"`
-    Tags      []string `yaml:"tags"`
+	Document  `yaml:",inline"`
+	Image     string   `yaml:"image-path"`
+	Author    string   `yaml:"author"`
+	Published string   `yaml:"published"`
+	ISBN      string   `yaml:"isbn"`
+	Website   string   `yaml:"website"`
+	Status    string   `yaml:"status"`
+	Tags      []string `yaml:"tags"`
 }
 
 type Letter struct {
 	Document `yaml:",inline"`
-    Date     string `yaml:"date"`
-    Occasion string `yaml:"occasion"`
-    Password string `yaml:"password"`
+	Date     string `yaml:"date"`
+	Occasion string `yaml:"occasion"`
+	Password string `yaml:"password"`
 }

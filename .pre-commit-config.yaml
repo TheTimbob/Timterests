@@ -22,6 +22,8 @@ repos:
     rev: v4.0.0-alpha.8
     hooks:
       - id: prettier
+        files: \.(html|css|md)$
+        post_hook: "rm -rf node_modules/.cache"
 
   - repo: https://github.com/markdownlint/markdownlint
     rev: v0.12.0
