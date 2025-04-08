@@ -50,7 +50,10 @@ func (s *Server) RegisterRoutes() http.Handler {
 		web.GetArticleHandler(w, r, *s.storage, articleID)
 	}))
 	mux.Handle("/articles/list", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		web.ListArticles(*s.storage, "all")
+		if _, err := web.ListArticles(*s.storage, "all"); err != nil {
+			http.Error(w, "Failed to list articles", http.StatusInternalServerError)
+			return
+		}
 	}))
 
 	// Projects Routes
@@ -64,7 +67,10 @@ func (s *Server) RegisterRoutes() http.Handler {
 		web.GetProjectHandler(w, r, *s.storage, projectID)
 	}))
 	mux.Handle("/projects/list", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		web.ListProjects(*s.storage, "all")
+		if _, err := web.ListProjects(*s.storage, "all"); err != nil {
+			http.Error(w, "Failed to list articles", http.StatusInternalServerError)
+			return
+		}
 	}))
 
 	// Reading List Routes
@@ -78,7 +84,10 @@ func (s *Server) RegisterRoutes() http.Handler {
 		web.GetReadingListBook(w, r, *s.storage, articleID)
 	}))
 	mux.Handle("/reading-list/list", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		web.ListProjects(*s.storage, "all")
+		if _, err := web.ListBooks(*s.storage, "all"); err != nil {
+			http.Error(w, "Failed to list articles", http.StatusInternalServerError)
+			return
+		}
 	}))
 
 	// Letter Routes
@@ -91,7 +100,10 @@ func (s *Server) RegisterRoutes() http.Handler {
 		web.GetLetterHandler(w, r, *s.storage, letterID, password)
 	}))
 	mux.Handle("/letters/list", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		web.ListLetters(*s.storage)
+		if _, err := web.ListLetters(*s.storage); err != nil {
+			http.Error(w, "Failed to list letters.", http.StatusInternalServerError)
+			return
+		}
 	}))
 
 	// Wrap the mux with CORS middleware

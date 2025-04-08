@@ -16,11 +16,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 )
 
-func ArticlesPageHandler(w http.ResponseWriter, r *http.Request, storageInstance models.Storage, tag, design string) {
+func ArticlesPageHandler(w http.ResponseWriter, r *http.Request, storageInstance models.Storage, currentTag, design string) {
 	var component templ.Component
 	var tags []string
 
-	articles, err := ListArticles(storageInstance, tag)
+	articles, err := ListArticles(storageInstance, currentTag)
 	if err != nil {
 		message := "Failed to fetch articles"
 		http.Error(w, fmt.Sprintf("%s: %v", message, err), http.StatusInternalServerError)
@@ -28,13 +28,13 @@ func ArticlesPageHandler(w http.ResponseWriter, r *http.Request, storageInstance
 	}
 
 	for i := range articles {
-        articles[i].Body = storage.RemoveHTMLTags(articles[i].Body)
+		articles[i].Body = storage.RemoveHTMLTags(articles[i].Body)
 		v := reflect.ValueOf(articles[i])
 		tags = storage.GetTags(v, tags)
 	}
 
-	if tag != "" || design != "" {
-        component = ArticlesList(articles, design)
+	if currentTag != "" || design != "" {
+		component = ArticlesList(articles, design)
 	} else {
 		component = ArticlesListPage(articles, tags, design)
 	}

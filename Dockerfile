@@ -24,5 +24,3 @@ COPY --from=build /app/favicon.ico /app/favicon.ico
 
 EXPOSE ${PORT}
 ENTRYPOINT ["./main"]
-
-

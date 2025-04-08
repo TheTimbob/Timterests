@@ -16,11 +16,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 )
 
-func ProjectsPageHandler(w http.ResponseWriter, r *http.Request, storageInstance models.Storage, tag, design string) {
+func ProjectsPageHandler(w http.ResponseWriter, r *http.Request, storageInstance models.Storage, currentTag, design string) {
 	var component templ.Component
 	var tags []string
 
-	projects, err := ListProjects(storageInstance, tag)
+	projects, err := ListProjects(storageInstance, currentTag)
 	if err != nil {
 		message := "Failed to fetch projects"
 		http.Error(w, fmt.Sprintf("%s: %v", message, err), http.StatusInternalServerError)
@@ -33,7 +33,7 @@ func ProjectsPageHandler(w http.ResponseWriter, r *http.Request, storageInstance
 		tags = storage.GetTags(v, tags)
 	}
 
-	if tag != "" || design != "" {
+	if currentTag != "" || design != "" {
 		component = ProjectsList(projects, design)
 	} else {
 		component = ProjectsListPage(projects, tags, design)

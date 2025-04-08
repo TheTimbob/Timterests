@@ -16,11 +16,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 )
 
-func ReadingListPageHandler(w http.ResponseWriter, r *http.Request, storageInstance models.Storage, tag, design string) {
+func ReadingListPageHandler(w http.ResponseWriter, r *http.Request, storageInstance models.Storage, currentTag, design string) {
 	var component templ.Component
 	var tags []string
 
-	readingList, err := ListBooks(storageInstance, tag)
+	readingList, err := ListBooks(storageInstance, currentTag)
 	if err != nil {
 		message := "Failed to fetch reading list"
 		http.Error(w, fmt.Sprintf("%s: %v", message, err), http.StatusInternalServerError)
@@ -33,7 +33,7 @@ func ReadingListPageHandler(w http.ResponseWriter, r *http.Request, storageInsta
 		tags = storage.GetTags(v, tags)
 	}
 
-	if tag != "" || design != "" {
+	if currentTag != "" || design != "" {
 		component = ReadingList(readingList, design)
 	} else {
 		component = ReadingListPage(readingList, tags, design)
@@ -129,4 +129,3 @@ func GetBook(key string, id int, storageInstance models.Storage) (*models.Readin
 	book.ID = strconv.Itoa(id)
 	return &book, nil
 }
-

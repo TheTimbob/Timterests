@@ -1,87 +1,88 @@
 .dark-mode-switch {
-    display: inline;
-    position: relative;
-    float: right;
+  display: inline;
+  position: relative;
+  float: right;
 }
 
 .dark-mode-switch-input {
-    clip: rect(1px, 1px, 1px, 1px);
-    clip-path: inset(50%);
-    height: 1px;
-    width: 1px;
-    margin: -1px;
-    overflow: hidden;
-    padding: 0;
-    position: absolute;
+  clip: rect(1px, 1px, 1px, 1px);
+  clip-path: inset(50%);
+  height: 1px;
+  width: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
 }
 
 .dark-mode-switch-label {
-    position: relative;
-    display: inline-block;
-    width: 60px;
-    height: 30px;
-    background-color: #2B2B2B;
-    border: 5px solid #5B5B5B;
-    border-radius: 9999px;
-    cursor: pointer;
-    transition: all 0.4s cubic-bezier(.46,.03,.52,.96);
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 30px;
+  background-color: #2b2b2b;
+  border: 5px solid #5b5b5b;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.46, 0.03, 0.52, 0.96);
 }
 
 .dark-mode-switch-indicator {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) translateX(-72%);
+  display: block;
+  width: 20px;
+  height: 20px;
+  background-color: #a9a9a9;
+  border-radius: 9999px;
+  box-shadow: 10px 0px 0 0 rgba(#000000, 0.2) inset;
+
+  &::before,
+  &::after {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) translateX(-72%);
+    content: "";
     display: block;
-    width: 20px;
-    height: 20px;
-    background-color: #A9A9A9;
+    background-color: #2b2b2b;
     border-radius: 9999px;
-    box-shadow: 10px 0px 0 0 rgba(#000000, 0.2) inset;
+  }
 
-    &::before,
-    &::after {
-        position: absolute;
-        content: '';
-        display: block;
-        background-color: #2B2B2B;
-        border-radius: 9999px;
-    }
-
-    &::after {
-        bottom: 5px;
-        right: -2px;
-        width: 15px;
-        height: 15px;
-        background-color: #2B2B2B;
-        opacity: 0.8;
-    }
+  &::after {
+    bottom: 5px;
+    right: -2px;
+    width: 15px;
+    height: 15px;
+    background-color: #2b2b2b;
+    opacity: 0.8;
+  }
 }
 
 .dark-mode-switch-input:checked + .dark-mode-switch-label {
-    background-color: #8FB5F5;
-    border-color: #347CF8;
+  background-color: #8fb5f5;
+  border-color: #347cf8;
 
-    .dark-mode-switch-indicator {
-        background-color: #ECD21F;
-        box-shadow: none;
-        transform: translate(-50%, -50%) translateX(72%);
+  .dark-mode-switch-indicator {
+    background-color: #ecd21f;
+    box-shadow: none;
+    transform: translate(-50%, -50%) translateX(72%);
 
-        &::before,
-        &::after {
-            display: none;
-        }
+    &::before,
+    &::after {
+      display: none;
     }
+  }
 }
 
 .dark-mode-switch-indicator {
-    &,
-    &::before,
-    &::after {
-        transition: all 0.4s cubic-bezier(.46,.03,.52,.96);
-    }
+  &,
+  &::before,
+  &::after {
+    transition: all 0.4s cubic-bezier(0.46, 0.03, 0.52, 0.96);
+  }
 }
 
-.no-transition, .no-transition * {
-    transition: none !important;
+.no-transition,
+.no-transition * {
+  transition: none !important;
 }
