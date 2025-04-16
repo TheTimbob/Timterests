@@ -18,6 +18,12 @@ import (
 func LettersPageHandler(w http.ResponseWriter, r *http.Request, storageInstance models.Storage) {
 	var component templ.Component
 
+    // Check if user is authenticated
+    if !storage.IsAuthenticated(r) {
+        http.Redirect(w, r, "/login", http.StatusSeeOther)
+        return
+    }
+
 	letters, err := ListLetters(storageInstance)
 	if err != nil {
 		message := "Failed to fetch letters"
@@ -38,13 +44,13 @@ func LettersPageHandler(w http.ResponseWriter, r *http.Request, storageInstance 
 	}
 }
 
-func GetLetterHandler(w http.ResponseWriter, r *http.Request, storageInstance models.Storage, letterID, password string) {
+func GetLetterHandler(w http.ResponseWriter, r *http.Request, storageInstance models.Storage, letterID string) {
 
-	password_hash, err := GenerateHash(password)
-	if err != nil {
-		http.Error(w, "Failed to generate password hash", http.StatusInternalServerError)
-		return
-	}
+    // Check if user is authenticated
+    if !storage.IsAuthenticated(r) {
+        http.Redirect(w, r, "/login", http.StatusSeeOther)
+        return
+    }
 
 	letters, err := ListLetters(storageInstance)
 	if err != nil {
@@ -54,12 +60,6 @@ func GetLetterHandler(w http.ResponseWriter, r *http.Request, storageInstance mo
 
 	for _, letter := range letters {
 		if letter.ID == letterID {
-
-			if !ValidatePassword(letter.Password, password_hash) {
-				http.Error(w, "Invalid password", http.StatusUnauthorized)
-				return
-			}
-
 			component := LetterPage(letter)
 			err = component.Render(r.Context(), w)
 			if err != nil {

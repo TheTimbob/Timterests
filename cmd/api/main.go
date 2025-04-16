@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"timterests/internal/server"
+	"timterests/internal/storage"
 )
 
 func gracefulShutdown(apiServer *http.Server, done chan bool) {
@@ -38,6 +39,12 @@ func gracefulShutdown(apiServer *http.Server, done chan bool) {
 
 func main() {
 
+    // Initialize the database
+    if err := storage.InitDB(); err != nil {
+        log.Fatalf("Failed to initialize database: %v", err)
+    }
+
+    // Initialize the server
 	server := server.NewServer()
 
 	// Create a done channel to signal when the shutdown is complete

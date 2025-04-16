@@ -30,6 +30,7 @@ repos:
     hooks:
       - id: prettier
         files: \.(html|css|md)$
+        language_version: system
         post_hook: "rm -rf node_modules/.cache"
 
   - repo: https://github.com/markdownlint/markdownlint

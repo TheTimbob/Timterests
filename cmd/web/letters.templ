@@ -26,14 +26,13 @@ templ LettersList(letters []models.Letter) {
 }
 
 templ LetterCard(letterID, title, subtitle, date, body string) {
-	<div class="card-container" tabindex="0" >
+	<div class="card-container" hx-get={"/letter?id=" + letterID} hx-target=" #main-content" hx-swap="innerHTML" tabindex="0" >
 		<div>
 			<div class="card-title-container">
 				<h1 class="card-title">{ title }</h1>
 				<h2 class="card-subtitle">{ subtitle }</h2>
+				<p class="card-body">{ body }</p>
 			</div>
-			<input type="password" name="password" class="letter-password" />
-			<button type="submit" hx-get={"/letter?id=" + letterID } hx-include="[name='password']" hx-target=" #main-content" hx-swap="innerHTML">Submit</button>
 		</div>
 	</div>
 }

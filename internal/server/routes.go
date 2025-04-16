@@ -39,6 +39,9 @@ func (s *Server) RegisterRoutes() http.Handler {
 		web.AboutHandler(w, r, *s.storage)
 	}))
 
+    // Login Routes
+    mux.Handle("/login", http.HandlerFunc(web.LoginHandler))
+
 	// Article Routes
 	mux.Handle("/articles", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		design := r.URL.Query().Get("design")
@@ -96,8 +99,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	}))
 	mux.Handle("/letter", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		letterID := r.URL.Query().Get("id")
-		password := r.URL.Query().Get("password")
-		web.GetLetterHandler(w, r, *s.storage, letterID, password)
+		web.GetLetterHandler(w, r, *s.storage, letterID)
 	}))
 	mux.Handle("/letters/list", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if _, err := web.ListLetters(*s.storage); err != nil {
