@@ -39,8 +39,8 @@ func (s *Server) RegisterRoutes() http.Handler {
 		web.AboutHandler(w, r, *s.storage)
 	}))
 
-    // Login Routes
-    mux.Handle("/login", http.HandlerFunc(web.LoginHandler))
+	// Login Routes
+	mux.Handle("/login", http.HandlerFunc(web.LoginHandler))
 
 	// Article Routes
 	mux.Handle("/articles", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -95,7 +95,9 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	// Letter Routes
 	mux.Handle("/letters", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		web.LettersPageHandler(w, r, *s.storage)
+		design := r.URL.Query().Get("design")
+		tag := r.URL.Query().Get("tag")
+		web.LettersPageHandler(w, r, *s.storage, tag, design)
 	}))
 	mux.Handle("/letter", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		letterID := r.URL.Query().Get("id")

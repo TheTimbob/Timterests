@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"path"
+	"reflect"
 	"strconv"
 	"timterests/internal/models"
 	"timterests/internal/storage"
@@ -14,8 +15,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 )
 
-func LettersPageHandler(w http.ResponseWriter, r *http.Request, storageInstance models.Storage) {
+func LettersPageHandler(w http.ResponseWriter, r *http.Request, storageInstance models.Storage, currentTag, design string) {
 	var component templ.Component
+	var tags []string
 
 	// Check if user is authenticated
 	if !IsAuthenticated(r) {
@@ -32,9 +34,15 @@ func LettersPageHandler(w http.ResponseWriter, r *http.Request, storageInstance 
 
 	for i := range letters {
 		letters[i].Body = storage.RemoveHTMLTags(letters[i].Body)
+		v := reflect.ValueOf(letters[i])
+		tags = storage.GetTags(v, tags)
 	}
 
-	component = LettersListPage(letters)
+	if currentTag != "" || design != "" {
+		component = LettersList(letters, design)
+	} else {
+		component = LettersListPage(letters, tags, design)
+	}
 
 	err = component.Render(r.Context(), w)
 	if err != nil {
