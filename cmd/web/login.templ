@@ -1,0 +1,20 @@
+package web
+
+templ LoginPage() {
+	@Base() {
+		@LoginContainer()
+	}
+}
+
+templ LoginContainer() {
+	<div id="login-container" class="category-container">
+		<h1 class="category-title">Login</h1>
+		<form method="POST" action="/login">
+			<label for="email" class="category-subtitle">Email:</label>
+			<input type="text" id="email" name="email" class="login-input">
+			<label for="password" class="category-subtitle">Password:</label>
+			<input type="password" id="password" name="password" class="login-input">
+			<input type="submit" class="button" value="Login">
+		</form>
+	</div>
+}

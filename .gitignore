@@ -1,9 +1,10 @@
-# Binaries for programs and plugins
+# Binaries and file types for programs and plugins
 *.exe
 *.exe~
 *.dll
 *.so
 *.dylib
+*.db
 
 # Test binary, built with "go test -c"
 *.test
@@ -28,6 +29,9 @@ tmp/
 # Project build
 main
 *templ.go
+
+# Node modules
+node_modules
 
 # OS X generated file
 .DS_Store

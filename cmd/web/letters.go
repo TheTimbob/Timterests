@@ -12,11 +12,16 @@ import (
 
 	"github.com/a-h/templ"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"golang.org/x/crypto/bcrypt"
 )
 
 func LettersPageHandler(w http.ResponseWriter, r *http.Request, storageInstance models.Storage) {
 	var component templ.Component
+
+	// Check if user is authenticated
+	if !IsAuthenticated(r) {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
 
 	letters, err := ListLetters(storageInstance)
 	if err != nil {
@@ -38,11 +43,12 @@ func LettersPageHandler(w http.ResponseWriter, r *http.Request, storageInstance 
 	}
 }
 
-func GetLetterHandler(w http.ResponseWriter, r *http.Request, storageInstance models.Storage, letterID, password string) {
+func GetLetterHandler(w http.ResponseWriter, r *http.Request, storageInstance models.Storage, letterID string) {
 
-	password_hash, err := GenerateHash(password)
-	if err != nil {
-		http.Error(w, "Failed to generate password hash", http.StatusInternalServerError)
+	// Check if user is authenticated
+	if !IsAuthenticated(r) {
+		log.Printf("User not authenticated, redirecting to login")
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
 
@@ -54,12 +60,6 @@ func GetLetterHandler(w http.ResponseWriter, r *http.Request, storageInstance mo
 
 	for _, letter := range letters {
 		if letter.ID == letterID {
-
-			if !ValidatePassword(letter.Password, password_hash) {
-				http.Error(w, "Invalid password", http.StatusUnauthorized)
-				return
-			}
-
 			component := LetterPage(letter)
 			err = component.Render(r.Context(), w)
 			if err != nil {
@@ -125,23 +125,4 @@ func GetLetter(key string, id int, storageInstance models.Storage) (*models.Lett
 	letter.Body = body
 	letter.ID = strconv.Itoa(id)
 	return &letter, nil
-}
-
-func ValidatePassword(letter_password, password_hash string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(password_hash), []byte(letter_password))
-
-	if err != nil {
-		log.Printf("Password comparison failed: %v", err)
-		return false
-	}
-	return true
-}
-
-func GenerateHash(password string) (string, error) {
-	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	if err != nil {
-		log.Fatalf("Error generating password hash: %v", err)
-		return "", err
-	}
-	return string(hash), nil
 }
