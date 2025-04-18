@@ -30,6 +30,9 @@ tmp/
 main
 *templ.go
 
+# Node modules
+node_modules
+
 # OS X generated file
 .DS_Store
 

@@ -44,8 +44,6 @@ func InitDB() error {
 		if err != nil {
 			return fmt.Errorf("failed to create users table: %v", err)
 		}
-	} else {
-		fmt.Println("Users table already exists.")
 	}
 
 	return nil
