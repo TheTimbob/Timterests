@@ -65,14 +65,11 @@ templ LetterCard(letterID, title, subtitle, date, body string, tags []string) {
 				<h2 class="card-subtitle">{ subtitle }</h2>
 				<p class="card-body">{ body }</p>
 			</div>
-			<p class="card-body">{ body }</p>
 			<div class="tag-container">
 				for _, tag := range tags {
 					<p class="card-tag">{ tag }</p>
 				}
 			</div>
-			<input type="password" name="password" class="letter-password" />
-			<button type="submit" hx-get={"/letter?id=" + letterID } hx-include="[name='password']" hx-target=" #main-content" hx-swap="innerHTML">Submit</button>
 		</div>
 	</div>
 }
