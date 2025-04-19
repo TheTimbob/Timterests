@@ -52,7 +52,7 @@ func ReadingListPageHandler(w http.ResponseWriter, r *http.Request, storageInsta
 	err = component.Render(r.Context(), w)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		log.Fatalf("Error rendering in ReadingListHandler: %e", err)
+		log.Printf("Error rendering in ReadingListHandler: %e", err)
 	}
 }
 
@@ -70,7 +70,7 @@ func GetReadingListBook(w http.ResponseWriter, r *http.Request, storageInstance 
 			err = component.Render(r.Context(), w)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)
-				log.Fatalf("Error rendering in GetReadingListBook: %e", err)
+				log.Printf("Error rendering in GetReadingListBook: %e", err)
 			}
 		}
 	}
@@ -113,24 +113,24 @@ func GetBook(key string, id int, storageInstance storage.Storage) (*ReadingList,
 
 	file, err := storage.GetFile(key, localFilePath, storageInstance)
 	if err != nil {
-		log.Fatalf("Failed to read file: %v", err)
+		log.Printf("Failed to read file: %v", err)
 		return nil, err
 	}
 
 	if err := storage.DecodeFile(file, &book); err != nil {
-		log.Fatalf("Failed to decode file: %v", err)
+		log.Printf("Failed to decode file: %v", err)
 		return nil, err
 	}
 
 	body, err := storage.BodyToHTML(book.Body)
 	if err != nil {
-		log.Fatalf("Failed to parse the body into HTML: %v", err)
+		log.Printf("Failed to parse the body into HTML: %v", err)
 		return nil, err
 	}
 
 	localImagePath, err := storage.GetImageFromS3(storageInstance, book.Image)
 	if err != nil {
-		log.Fatalf("Failed to download image: %v", err)
+		log.Printf("Failed to download image: %v", err)
 		return nil, err
 	}
 

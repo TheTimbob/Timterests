@@ -48,7 +48,7 @@ func ProjectsPageHandler(w http.ResponseWriter, r *http.Request, storageInstance
 	err = component.Render(r.Context(), w)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		log.Fatalf("Error rendering in ProjectPosts: %e", err)
+		log.Printf("Error rendering in ProjectPosts: %e", err)
 	}
 }
 
@@ -66,7 +66,7 @@ func GetProjectHandler(w http.ResponseWriter, r *http.Request, storageInstance s
 			err = component.Render(r.Context(), w)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)
-				log.Fatalf("Error rendering in GetProjectsHandler: %e", err)
+				log.Printf("Error rendering in GetProjectsHandler: %e", err)
 			}
 		}
 	}
@@ -92,7 +92,7 @@ func ListProjects(storageInstance storage.Storage, tag string) ([]Project, error
 
 		project, err := GetProject(key, id, storageInstance)
 		if err != nil {
-			log.Fatalf("Failed to get project: %v", err)
+			log.Printf("Failed to get project: %v", err)
 			return nil, err
 		}
 
@@ -111,18 +111,18 @@ func GetProject(key string, id int, storageInstance storage.Storage) (*Project, 
 
 	file, err := storage.GetFile(key, localFilePath, storageInstance)
 	if err != nil {
-		log.Fatalf("Failed to read file: %v", err)
+		log.Printf("Failed to read file: %v", err)
 		return nil, err
 	}
 
 	if err := storage.DecodeFile(file, &project); err != nil {
-		log.Fatalf("Failed to decode file: %v", err)
+		log.Printf("Failed to decode file: %v", err)
 		return nil, err
 	}
 
 	body, err := storage.BodyToHTML(project.Body)
 	if err != nil {
-		log.Fatalf("Failed to convert body to HTML: %v", err)
+		log.Printf("Failed to convert body to HTML: %v", err)
 		return nil, err
 	}
 

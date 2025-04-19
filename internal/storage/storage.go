@@ -163,14 +163,13 @@ func GetFile(key, localPath string, storage Storage) (*os.File, error) {
 }
 
 func DecodeFile(file *os.File, out interface{}) error {
-
-	// Decode the yaml file into a document object
+	// Decode the YAML file into a document object
 	decoder := yaml.NewDecoder(file)
-
 	// Out should be a pointer to a struct
 	if err := decoder.Decode(out); err != nil {
-		log.Printf("Failed to decode file: %v", err)
-		return err
+		// Consider using a lower logging level or removing log output
+		log.Printf("failed to decode file: %v", err)
+		return fmt.Errorf("decode error: %w", err)
 	}
 	return nil
 }

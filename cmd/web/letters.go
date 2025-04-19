@@ -53,7 +53,7 @@ func LettersPageHandler(w http.ResponseWriter, r *http.Request, storageInstance 
 	err = component.Render(r.Context(), w)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		log.Fatalf("Error rendering in LettersPosts: %e", err)
+		log.Printf("Error rendering in LettersPosts: %e", err)
 	}
 }
 
@@ -78,7 +78,7 @@ func GetLetterHandler(w http.ResponseWriter, r *http.Request, storageInstance st
 			err = component.Render(r.Context(), w)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)
-				log.Fatalf("Error rendering in GetLettereByIDHandler: %e", err)
+				log.Printf("Error rendering in GetLettereByIDHandler: %e", err)
 			}
 		}
 	}
@@ -121,19 +121,16 @@ func GetLetter(key string, id int, storageInstance storage.Storage) (*Letter, er
 	// Retrieve file content
 	file, err := storage.GetFile(key, localFilePath, storageInstance)
 	if err != nil {
-		log.Fatalf("Failed to read file: %v", err)
-		return nil, err
+		return nil, fmt.Errorf("failed to read file %s: %w", key, err)
 	}
 
 	if err := storage.DecodeFile(file, &letter); err != nil {
-		log.Fatalf("Failed to decode file: %v", err)
-		return nil, err
+		return nil, fmt.Errorf("failed to decode file %s: %w", key, err)
 	}
 
 	body, err := storage.BodyToHTML(letter.Body)
 	if err != nil {
-		log.Fatalf("Failed to parse the body text into HTML: %v", err)
-		return nil, err
+		return nil, fmt.Errorf("failed to parse the body text into HTML: %w", err)
 	}
 
 	letter.Body = body

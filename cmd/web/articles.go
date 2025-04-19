@@ -47,7 +47,7 @@ func ArticlesPageHandler(w http.ResponseWriter, r *http.Request, storageInstance
 	err = component.Render(r.Context(), w)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		log.Fatalf("Error rendering in ArticlesPosts: %e", err)
+		log.Printf("Error rendering in ArticlesPosts: %e", err)
 	}
 }
 
@@ -65,7 +65,7 @@ func GetArticleHandler(w http.ResponseWriter, r *http.Request, storageInstance s
 			err = component.Render(r.Context(), w)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)
-				log.Fatalf("Error rendering in GetArticleByIDHandler: %e", err)
+				log.Printf("Error rendering in GetArticleByIDHandler: %e", err)
 			}
 		}
 	}
@@ -110,18 +110,18 @@ func GetArticle(key string, id int, storageInstance storage.Storage) (*Article, 
 	// Retrieve file content
 	file, err := storage.GetFile(key, localFilePath, storageInstance)
 	if err != nil {
-		log.Fatalf("Failed to read file: %v", err)
+		log.Printf("Failed to read file: %v", err)
 		return nil, err
 	}
 
 	if err := storage.DecodeFile(file, &article); err != nil {
-		log.Fatalf("Failed to decode file: %v", err)
+		log.Printf("Failed to decode file: %v", err)
 		return nil, err
 	}
 
 	body, err := storage.BodyToHTML(article.Body)
 	if err != nil {
-		log.Fatalf("Failed to parse the body text into HTML: %v", err)
+		log.Printf("Failed to parse the body text into HTML: %v", err)
 		return nil, err
 	}
 
