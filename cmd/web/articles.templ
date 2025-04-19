@@ -1,10 +1,6 @@
 package web
 
-import (
-	"timterests/internal/models"
-)
-
-templ ArticlesListPage(articles []models.Article, tags []string, design string) {
+templ ArticlesListPage(articles []Article, tags []string, design string) {
 	@Base() {
 		<div id="articles-container" class="category-container">
 		    <div class="flex justify-between items-center mb-4">
@@ -37,7 +33,7 @@ templ ArticlesListPage(articles []models.Article, tags []string, design string) 
 	}
 }
 
-templ ArticlesList(articles []models.Article, design string) {
+templ ArticlesList(articles []Article, design string) {
     <ul id="articles-list">
 		if design == "grid" {
 			for i := 0; i < len(articles); i += 3 {
@@ -89,7 +85,7 @@ templ ArticleMiniCard(articleID, title, date string, tags []string) {
 	</div>
 }
 
-templ ArticlePage(article models.Article) {
+templ ArticlePage(article Article) {
     <div id="article-container">
         <h1 class="category-title">{ article.Title }</h1>
         <h2 class="category-subtitle">{ article.Subtitle }</h2>

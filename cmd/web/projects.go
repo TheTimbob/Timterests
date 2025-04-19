@@ -9,14 +9,20 @@ import (
 	"reflect"
 	"slices"
 	"strconv"
-	"timterests/internal/models"
 	"timterests/internal/storage"
+	"timterests/internal/types"
 
 	"github.com/a-h/templ"
 	"github.com/aws/aws-sdk-go-v2/aws"
 )
 
-func ProjectsPageHandler(w http.ResponseWriter, r *http.Request, storageInstance models.Storage, currentTag, design string) {
+type Project struct {
+	types.Document `yaml:",inline"`
+	Repository     string `yaml:"repository"`
+	Image          string `yaml:"image-path"`
+}
+
+func ProjectsPageHandler(w http.ResponseWriter, r *http.Request, storageInstance storage.Storage, currentTag, design string) {
 	var component templ.Component
 	var tags []string
 
@@ -46,7 +52,7 @@ func ProjectsPageHandler(w http.ResponseWriter, r *http.Request, storageInstance
 	}
 }
 
-func GetProjectHandler(w http.ResponseWriter, r *http.Request, storageInstance models.Storage, projectID string) {
+func GetProjectHandler(w http.ResponseWriter, r *http.Request, storageInstance storage.Storage, projectID string) {
 
 	projects, err := ListProjects(storageInstance, "all")
 	if err != nil {
@@ -67,8 +73,8 @@ func GetProjectHandler(w http.ResponseWriter, r *http.Request, storageInstance m
 
 }
 
-func ListProjects(storageInstance models.Storage, tag string) ([]models.Project, error) {
-	var projects []models.Project
+func ListProjects(storageInstance storage.Storage, tag string) ([]Project, error) {
+	var projects []Project
 
 	// Get all projects from the storage
 	prefix := "projects/"
@@ -98,8 +104,8 @@ func ListProjects(storageInstance models.Storage, tag string) ([]models.Project,
 	return projects, nil
 }
 
-func GetProject(key string, id int, storageInstance models.Storage) (*models.Project, error) {
-	var project models.Project
+func GetProject(key string, id int, storageInstance storage.Storage) (*Project, error) {
+	var project Project
 	fileName := path.Base(key)
 	localFilePath := path.Join("s3", fileName)
 

@@ -5,12 +5,17 @@ import (
 	"log"
 	"net/http"
 	"path"
-	"timterests/internal/models"
 	"timterests/internal/storage"
 )
 
-func AboutHandler(w http.ResponseWriter, r *http.Request, storageInstance models.Storage) {
-	var about models.About
+type About struct {
+	Title    string `yaml:"title"`
+	Subtitle string `yaml:"subtitle"`
+	Body     string `yaml:"body"`
+}
+
+func AboutHandler(w http.ResponseWriter, r *http.Request, storageInstance storage.Storage) {
+	var about About
 
 	// Get all articles from the storage
 	prefix := "about/"

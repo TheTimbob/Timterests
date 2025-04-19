@@ -9,14 +9,24 @@ import (
 	"reflect"
 	"slices"
 	"strconv"
-	"timterests/internal/models"
 	"timterests/internal/storage"
+	"timterests/internal/types"
 
 	"github.com/a-h/templ"
 	"github.com/aws/aws-sdk-go-v2/aws"
 )
 
-func ReadingListPageHandler(w http.ResponseWriter, r *http.Request, storageInstance models.Storage, currentTag, design string) {
+type ReadingList struct {
+	types.Document `yaml:",inline"`
+	Image          string `yaml:"image-path"`
+	Author         string `yaml:"author"`
+	Published      string `yaml:"published"`
+	ISBN           string `yaml:"isbn"`
+	Website        string `yaml:"website"`
+	Status         string `yaml:"status"`
+}
+
+func ReadingListPageHandler(w http.ResponseWriter, r *http.Request, storageInstance storage.Storage, currentTag, design string) {
 	var component templ.Component
 	var tags []string
 
@@ -34,7 +44,7 @@ func ReadingListPageHandler(w http.ResponseWriter, r *http.Request, storageInsta
 	}
 
 	if currentTag != "" || design != "" {
-		component = ReadingList(readingList, design)
+		component = ReadingListList(readingList, design)
 	} else {
 		component = ReadingListPage(readingList, tags, design)
 	}
@@ -46,7 +56,7 @@ func ReadingListPageHandler(w http.ResponseWriter, r *http.Request, storageInsta
 	}
 }
 
-func GetReadingListBook(w http.ResponseWriter, r *http.Request, storageInstance models.Storage, bookID string) {
+func GetReadingListBook(w http.ResponseWriter, r *http.Request, storageInstance storage.Storage, bookID string) {
 
 	readingList, err := ListBooks(storageInstance, "all")
 	if err != nil {
@@ -66,8 +76,8 @@ func GetReadingListBook(w http.ResponseWriter, r *http.Request, storageInstance 
 	}
 }
 
-func ListBooks(storageInstance models.Storage, tag string) ([]models.ReadingList, error) {
-	var readingList []models.ReadingList
+func ListBooks(storageInstance storage.Storage, tag string) ([]ReadingList, error) {
+	var readingList []ReadingList
 
 	// Get all readingList from the storage
 	prefix := "reading-list/"
@@ -96,8 +106,8 @@ func ListBooks(storageInstance models.Storage, tag string) ([]models.ReadingList
 	return readingList, nil
 }
 
-func GetBook(key string, id int, storageInstance models.Storage) (*models.ReadingList, error) {
-	var book models.ReadingList
+func GetBook(key string, id int, storageInstance storage.Storage) (*ReadingList, error) {
+	var book ReadingList
 	fileName := path.Base(key)
 	localFilePath := path.Join("s3", fileName)
 
