@@ -20,6 +20,7 @@ WORKDIR /app
 
 COPY --from=build /app/main /app/main
 COPY --from=build /app/s3 /app/s3
+COPY --from=build /app/database /app/database
 COPY --from=build /app/favicon.ico /app/favicon.ico
 
 EXPOSE ${PORT}

@@ -71,4 +71,15 @@ watch:
             fi; \
         fi
 
+# Deploy to AWS
+deploy:
+	@echo "Deploying..."
+	@if [ -f "utils/aws-deploy.sh" ]; then \
+		./utils/aws-deploy.sh; \
+	else \
+		echo "Deployment script not found."; \
+		exit 1; \
+	fi
+
+
 .PHONY: all build run test clean watch templ-install

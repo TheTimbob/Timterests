@@ -31,9 +31,15 @@ repos:
       - id: prettier
         files: \.(html|css|md)$
         language_version: system
-        post_hook: "rm -rf node_modules/.cache"
 
   - repo: https://github.com/markdownlint/markdownlint
     rev: v0.12.0
     hooks:
       - id: markdownlint
+
+  - repo: local
+    hooks:
+    - id: clean-prettier-cache
+      name: final project clean.
+      entry: bash -c 'rm -rf node_modules/.cache'
+      language: system
