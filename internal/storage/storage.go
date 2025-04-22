@@ -15,7 +15,6 @@ import (
 	"slices"
 	"sort"
 	"strings"
-	"timterests/internal/models"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -26,8 +25,13 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// Initializes a new models.Storage instance.
-func NewStorage() (*models.Storage, error) {
+type Storage struct {
+	BucketName string
+	S3Client   *s3.Client
+}
+
+// Initializes a new Storage instance.
+func NewStorage() (*Storage, error) {
 	bucketName := os.Getenv("AWS_BUCKET_NAME")
 	region := os.Getenv("AWS_REGION")
 
@@ -42,14 +46,14 @@ func NewStorage() (*models.Storage, error) {
 
 	client := s3.NewFromConfig(cfg)
 
-	return &models.Storage{
+	return &Storage{
 		BucketName: bucketName,
 		S3Client:   client,
 	}, nil
 }
 
 // Lists the objects in a bucket with a specific prefix.
-func ListObjects(ctx context.Context, storage models.Storage, prefix string) ([]types.Object, error) {
+func ListObjects(ctx context.Context, storage Storage, prefix string) ([]types.Object, error) {
 	var err error
 	var output *s3.ListObjectsV2Output
 	var objects []types.Object
@@ -87,7 +91,7 @@ func ListObjects(ctx context.Context, storage models.Storage, prefix string) ([]
 }
 
 // Gets an object from a bucket and stores it in a local file.
-func DownloadFile(ctx context.Context, storage models.Storage, objectKey string, fileName string) error {
+func DownloadFile(ctx context.Context, storage Storage, objectKey string, fileName string) error {
 
 	if _, err := os.Stat(fileName); err == nil {
 		return nil
@@ -140,7 +144,7 @@ func DownloadFile(ctx context.Context, storage models.Storage, objectKey string,
 }
 
 // Reads a file from the local file system.
-func GetFile(key, localPath string, storage models.Storage) (*os.File, error) {
+func GetFile(key, localPath string, storage Storage) (*os.File, error) {
 	var file *os.File
 
 	// Download the file
@@ -159,19 +163,18 @@ func GetFile(key, localPath string, storage models.Storage) (*os.File, error) {
 }
 
 func DecodeFile(file *os.File, out interface{}) error {
-
-	// Decode the yaml file into a document object
+	// Decode the YAML file into a document object
 	decoder := yaml.NewDecoder(file)
-
 	// Out should be a pointer to a struct
 	if err := decoder.Decode(out); err != nil {
-		log.Printf("Failed to decode file: %v", err)
-		return err
+		// Consider using a lower logging level or removing log output
+		log.Printf("failed to decode file: %v", err)
+		return fmt.Errorf("decode error: %w", err)
 	}
 	return nil
 }
 
-func GetImageFromS3(storageInstance models.Storage, imagePath string) (string, error) {
+func GetImageFromS3(storageInstance Storage, imagePath string) (string, error) {
 	localImagePath := path.Join("s3", filepath.Base(imagePath))
 	err := DownloadFile(context.Background(), storageInstance, imagePath, localImagePath)
 	if err != nil {
@@ -232,7 +235,7 @@ func RemoveHTMLTags(s string) string {
 	return re.ReplaceAllString(s, "")
 }
 
-func Health(storage models.Storage) map[string]string {
+func Health(storage Storage) map[string]string {
 	health := make(map[string]string)
 
 	_, err := storage.S3Client.ListBuckets(context.Background(), &s3.ListBucketsInput{})

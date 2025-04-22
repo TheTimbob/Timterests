@@ -9,14 +9,20 @@ import (
 	"reflect"
 	"slices"
 	"strconv"
-	"timterests/internal/models"
 	"timterests/internal/storage"
+	"timterests/internal/types"
 
 	"github.com/a-h/templ"
 	"github.com/aws/aws-sdk-go-v2/aws"
 )
 
-func ProjectsPageHandler(w http.ResponseWriter, r *http.Request, storageInstance models.Storage, currentTag, design string) {
+type Project struct {
+	types.Document `yaml:",inline"`
+	Repository     string `yaml:"repository"`
+	Image          string `yaml:"image-path"`
+}
+
+func ProjectsPageHandler(w http.ResponseWriter, r *http.Request, storageInstance storage.Storage, currentTag, design string) {
 	var component templ.Component
 	var tags []string
 
@@ -42,11 +48,11 @@ func ProjectsPageHandler(w http.ResponseWriter, r *http.Request, storageInstance
 	err = component.Render(r.Context(), w)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		log.Fatalf("Error rendering in ProjectPosts: %e", err)
+		log.Printf("Error rendering in ProjectPosts: %e", err)
 	}
 }
 
-func GetProjectHandler(w http.ResponseWriter, r *http.Request, storageInstance models.Storage, projectID string) {
+func GetProjectHandler(w http.ResponseWriter, r *http.Request, storageInstance storage.Storage, projectID string) {
 
 	projects, err := ListProjects(storageInstance, "all")
 	if err != nil {
@@ -60,15 +66,15 @@ func GetProjectHandler(w http.ResponseWriter, r *http.Request, storageInstance m
 			err = component.Render(r.Context(), w)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)
-				log.Fatalf("Error rendering in GetProjectsHandler: %e", err)
+				log.Printf("Error rendering in GetProjectsHandler: %e", err)
 			}
 		}
 	}
 
 }
 
-func ListProjects(storageInstance models.Storage, tag string) ([]models.Project, error) {
-	var projects []models.Project
+func ListProjects(storageInstance storage.Storage, tag string) ([]Project, error) {
+	var projects []Project
 
 	// Get all projects from the storage
 	prefix := "projects/"
@@ -86,7 +92,7 @@ func ListProjects(storageInstance models.Storage, tag string) ([]models.Project,
 
 		project, err := GetProject(key, id, storageInstance)
 		if err != nil {
-			log.Fatalf("Failed to get project: %v", err)
+			log.Printf("Failed to get project: %v", err)
 			return nil, err
 		}
 
@@ -98,25 +104,25 @@ func ListProjects(storageInstance models.Storage, tag string) ([]models.Project,
 	return projects, nil
 }
 
-func GetProject(key string, id int, storageInstance models.Storage) (*models.Project, error) {
-	var project models.Project
+func GetProject(key string, id int, storageInstance storage.Storage) (*Project, error) {
+	var project Project
 	fileName := path.Base(key)
 	localFilePath := path.Join("s3", fileName)
 
 	file, err := storage.GetFile(key, localFilePath, storageInstance)
 	if err != nil {
-		log.Fatalf("Failed to read file: %v", err)
+		log.Printf("Failed to read file: %v", err)
 		return nil, err
 	}
 
 	if err := storage.DecodeFile(file, &project); err != nil {
-		log.Fatalf("Failed to decode file: %v", err)
+		log.Printf("Failed to decode file: %v", err)
 		return nil, err
 	}
 
 	body, err := storage.BodyToHTML(project.Body)
 	if err != nil {
-		log.Fatalf("Failed to convert body to HTML: %v", err)
+		log.Printf("Failed to convert body to HTML: %v", err)
 		return nil, err
 	}
 

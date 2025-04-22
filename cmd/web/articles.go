@@ -9,14 +9,19 @@ import (
 	"reflect"
 	"slices"
 	"strconv"
-	"timterests/internal/models"
 	"timterests/internal/storage"
+	"timterests/internal/types"
 
 	"github.com/a-h/templ"
 	"github.com/aws/aws-sdk-go-v2/aws"
 )
 
-func ArticlesPageHandler(w http.ResponseWriter, r *http.Request, storageInstance models.Storage, currentTag, design string) {
+type Article struct {
+	types.Document `yaml:",inline"`
+	Date           string `yaml:"date"`
+}
+
+func ArticlesPageHandler(w http.ResponseWriter, r *http.Request, storageInstance storage.Storage, currentTag, design string) {
 	var component templ.Component
 	var tags []string
 
@@ -42,11 +47,11 @@ func ArticlesPageHandler(w http.ResponseWriter, r *http.Request, storageInstance
 	err = component.Render(r.Context(), w)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		log.Fatalf("Error rendering in ArticlesPosts: %e", err)
+		log.Printf("Error rendering in ArticlesPosts: %e", err)
 	}
 }
 
-func GetArticleHandler(w http.ResponseWriter, r *http.Request, storageInstance models.Storage, articleID string) {
+func GetArticleHandler(w http.ResponseWriter, r *http.Request, storageInstance storage.Storage, articleID string) {
 
 	articles, err := ListArticles(storageInstance, "all")
 	if err != nil {
@@ -60,15 +65,15 @@ func GetArticleHandler(w http.ResponseWriter, r *http.Request, storageInstance m
 			err = component.Render(r.Context(), w)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)
-				log.Fatalf("Error rendering in GetArticleByIDHandler: %e", err)
+				log.Printf("Error rendering in GetArticleByIDHandler: %e", err)
 			}
 		}
 	}
 
 }
 
-func ListArticles(storageInstance models.Storage, tag string) ([]models.Article, error) {
-	var articles []models.Article
+func ListArticles(storageInstance storage.Storage, tag string) ([]Article, error) {
+	var articles []Article
 
 	// Get all articles from the storage
 	prefix := "articles/"
@@ -97,26 +102,26 @@ func ListArticles(storageInstance models.Storage, tag string) ([]models.Article,
 	return articles, nil
 }
 
-func GetArticle(key string, id int, storageInstance models.Storage) (*models.Article, error) {
-	var article models.Article
+func GetArticle(key string, id int, storageInstance storage.Storage) (*Article, error) {
+	var article Article
 	fileName := path.Base(key)
 	localFilePath := path.Join("s3", fileName)
 
 	// Retrieve file content
 	file, err := storage.GetFile(key, localFilePath, storageInstance)
 	if err != nil {
-		log.Fatalf("Failed to read file: %v", err)
+		log.Printf("Failed to read file: %v", err)
 		return nil, err
 	}
 
 	if err := storage.DecodeFile(file, &article); err != nil {
-		log.Fatalf("Failed to decode file: %v", err)
+		log.Printf("Failed to decode file: %v", err)
 		return nil, err
 	}
 
 	body, err := storage.BodyToHTML(article.Body)
 	if err != nil {
-		log.Fatalf("Failed to parse the body text into HTML: %v", err)
+		log.Printf("Failed to parse the body text into HTML: %v", err)
 		return nil, err
 	}
 

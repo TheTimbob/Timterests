@@ -8,14 +8,20 @@ import (
 	"path"
 	"reflect"
 	"strconv"
-	"timterests/internal/models"
 	"timterests/internal/storage"
+	"timterests/internal/types"
 
 	"github.com/a-h/templ"
 	"github.com/aws/aws-sdk-go-v2/aws"
 )
 
-func LettersPageHandler(w http.ResponseWriter, r *http.Request, storageInstance models.Storage, currentTag, design string) {
+type Letter struct {
+	types.Document `yaml:",inline"`
+	Date           string `yaml:"date"`
+	Occasion       string `yaml:"occasion"`
+}
+
+func LettersPageHandler(w http.ResponseWriter, r *http.Request, storageInstance storage.Storage, currentTag, design string) {
 	var component templ.Component
 	var tags []string
 
@@ -47,11 +53,11 @@ func LettersPageHandler(w http.ResponseWriter, r *http.Request, storageInstance 
 	err = component.Render(r.Context(), w)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		log.Fatalf("Error rendering in LettersPosts: %e", err)
+		log.Printf("Error rendering in LettersPosts: %e", err)
 	}
 }
 
-func GetLetterHandler(w http.ResponseWriter, r *http.Request, storageInstance models.Storage, letterID string) {
+func GetLetterHandler(w http.ResponseWriter, r *http.Request, storageInstance storage.Storage, letterID string) {
 
 	// Check if user is authenticated
 	if !IsAuthenticated(r) {
@@ -72,15 +78,15 @@ func GetLetterHandler(w http.ResponseWriter, r *http.Request, storageInstance mo
 			err = component.Render(r.Context(), w)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)
-				log.Fatalf("Error rendering in GetLettereByIDHandler: %e", err)
+				log.Printf("Error rendering in GetLettereByIDHandler: %e", err)
 			}
 		}
 	}
 
 }
 
-func ListLetters(storageInstance models.Storage) ([]models.Letter, error) {
-	var letters []models.Letter
+func ListLetters(storageInstance storage.Storage) ([]Letter, error) {
+	var letters []Letter
 
 	// Get all letters from the storage
 	prefix := "letters/"
@@ -107,27 +113,24 @@ func ListLetters(storageInstance models.Storage) ([]models.Letter, error) {
 	return letters, nil
 }
 
-func GetLetter(key string, id int, storageInstance models.Storage) (*models.Letter, error) {
-	var letter models.Letter
+func GetLetter(key string, id int, storageInstance storage.Storage) (*Letter, error) {
+	var letter Letter
 	fileName := path.Base(key)
 	localFilePath := path.Join("s3", fileName)
 
 	// Retrieve file content
 	file, err := storage.GetFile(key, localFilePath, storageInstance)
 	if err != nil {
-		log.Fatalf("Failed to read file: %v", err)
-		return nil, err
+		return nil, fmt.Errorf("failed to read file %s: %w", key, err)
 	}
 
 	if err := storage.DecodeFile(file, &letter); err != nil {
-		log.Fatalf("Failed to decode file: %v", err)
-		return nil, err
+		return nil, fmt.Errorf("failed to decode file %s: %w", key, err)
 	}
 
 	body, err := storage.BodyToHTML(letter.Body)
 	if err != nil {
-		log.Fatalf("Failed to parse the body text into HTML: %v", err)
-		return nil, err
+		return nil, fmt.Errorf("failed to parse the body text into HTML: %w", err)
 	}
 
 	letter.Body = body

@@ -1,10 +1,6 @@
 package web
 
-import (
-	"timterests/internal/models"
-)
-
-templ ReadingListPage(readingLists []models.ReadingList, tags []string, design string) {
+templ ReadingListPage(readingLists []ReadingList, tags []string, design string) {
 	@Base() {
 		<div id="reading-list-container" class="category-container">
 			<div class="flex justify-between items-center mb-4">
@@ -28,12 +24,12 @@ templ ReadingListPage(readingLists []models.ReadingList, tags []string, design s
                     </select>
                 </div>
 			</div>
-			@ReadingList(readingLists, design)
+			@ReadingListList(readingLists, design)
 		</div>
 	}
 }
 
-templ ReadingList(readingList []models.ReadingList, design string) {
+templ ReadingListList(readingList []ReadingList, design string) {
 	<ul id="reading-list">
     	if design == "grid" {
 			for i := 0; i < len(readingList); i += 3 {
@@ -90,7 +86,7 @@ templ ReadingListMiniCard(bookID, title, author, imagePath string, tags []string
 }
 
 
-templ BookPage(readingList models.ReadingList) {
+templ BookPage(readingList ReadingList) {
 	<div id="reading-list-container">
 		<h1 class="category-title">{ readingList.Title }</h1>
 		<h2 class="category-subtitle">{ readingList.Subtitle }</h2>

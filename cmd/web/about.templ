@@ -1,10 +1,6 @@
 package web
 
-import (
-    "timterests/internal/models"
-)
-
-templ AboutForm(about models.About) {
+templ AboutForm(about About) {
 	@Base() {
 		<div id="about-container">
             <h1 class="category-title">{ about.Title }</h1>

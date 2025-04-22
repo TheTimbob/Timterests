@@ -9,14 +9,24 @@ import (
 	"reflect"
 	"slices"
 	"strconv"
-	"timterests/internal/models"
 	"timterests/internal/storage"
+	"timterests/internal/types"
 
 	"github.com/a-h/templ"
 	"github.com/aws/aws-sdk-go-v2/aws"
 )
 
-func ReadingListPageHandler(w http.ResponseWriter, r *http.Request, storageInstance models.Storage, currentTag, design string) {
+type ReadingList struct {
+	types.Document `yaml:",inline"`
+	Image          string `yaml:"image-path"`
+	Author         string `yaml:"author"`
+	Published      string `yaml:"published"`
+	ISBN           string `yaml:"isbn"`
+	Website        string `yaml:"website"`
+	Status         string `yaml:"status"`
+}
+
+func ReadingListPageHandler(w http.ResponseWriter, r *http.Request, storageInstance storage.Storage, currentTag, design string) {
 	var component templ.Component
 	var tags []string
 
@@ -34,7 +44,7 @@ func ReadingListPageHandler(w http.ResponseWriter, r *http.Request, storageInsta
 	}
 
 	if currentTag != "" || design != "" {
-		component = ReadingList(readingList, design)
+		component = ReadingListList(readingList, design)
 	} else {
 		component = ReadingListPage(readingList, tags, design)
 	}
@@ -42,11 +52,11 @@ func ReadingListPageHandler(w http.ResponseWriter, r *http.Request, storageInsta
 	err = component.Render(r.Context(), w)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		log.Fatalf("Error rendering in ReadingListHandler: %e", err)
+		log.Printf("Error rendering in ReadingListHandler: %e", err)
 	}
 }
 
-func GetReadingListBook(w http.ResponseWriter, r *http.Request, storageInstance models.Storage, bookID string) {
+func GetReadingListBook(w http.ResponseWriter, r *http.Request, storageInstance storage.Storage, bookID string) {
 
 	readingList, err := ListBooks(storageInstance, "all")
 	if err != nil {
@@ -60,14 +70,14 @@ func GetReadingListBook(w http.ResponseWriter, r *http.Request, storageInstance 
 			err = component.Render(r.Context(), w)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)
-				log.Fatalf("Error rendering in GetReadingListBook: %e", err)
+				log.Printf("Error rendering in GetReadingListBook: %e", err)
 			}
 		}
 	}
 }
 
-func ListBooks(storageInstance models.Storage, tag string) ([]models.ReadingList, error) {
-	var readingList []models.ReadingList
+func ListBooks(storageInstance storage.Storage, tag string) ([]ReadingList, error) {
+	var readingList []ReadingList
 
 	// Get all readingList from the storage
 	prefix := "reading-list/"
@@ -96,31 +106,31 @@ func ListBooks(storageInstance models.Storage, tag string) ([]models.ReadingList
 	return readingList, nil
 }
 
-func GetBook(key string, id int, storageInstance models.Storage) (*models.ReadingList, error) {
-	var book models.ReadingList
+func GetBook(key string, id int, storageInstance storage.Storage) (*ReadingList, error) {
+	var book ReadingList
 	fileName := path.Base(key)
 	localFilePath := path.Join("s3", fileName)
 
 	file, err := storage.GetFile(key, localFilePath, storageInstance)
 	if err != nil {
-		log.Fatalf("Failed to read file: %v", err)
+		log.Printf("Failed to read file: %v", err)
 		return nil, err
 	}
 
 	if err := storage.DecodeFile(file, &book); err != nil {
-		log.Fatalf("Failed to decode file: %v", err)
+		log.Printf("Failed to decode file: %v", err)
 		return nil, err
 	}
 
 	body, err := storage.BodyToHTML(book.Body)
 	if err != nil {
-		log.Fatalf("Failed to parse the body into HTML: %v", err)
+		log.Printf("Failed to parse the body into HTML: %v", err)
 		return nil, err
 	}
 
 	localImagePath, err := storage.GetImageFromS3(storageInstance, book.Image)
 	if err != nil {
-		log.Fatalf("Failed to download image: %v", err)
+		log.Printf("Failed to download image: %v", err)
 		return nil, err
 	}
 
