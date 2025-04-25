@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"path"
 	"reflect"
+	"sort"
 	"strconv"
 	"timterests/internal/storage"
 	"timterests/internal/types"
@@ -109,6 +110,10 @@ func ListLetters(storageInstance storage.Storage) ([]Letter, error) {
 
 		letters = append(letters, *letter)
 	}
+
+	sort.Slice(letters, func(i, j int) bool {
+		return letters[i].Date > letters[j].Date
+	})
 
 	return letters, nil
 }
