@@ -8,6 +8,7 @@ import (
 	"path"
 	"reflect"
 	"slices"
+	"sort"
 	"strconv"
 	"timterests/internal/storage"
 	"timterests/internal/types"
@@ -98,6 +99,10 @@ func ListArticles(storageInstance storage.Storage, tag string) ([]Article, error
 			articles = append(articles, *article)
 		}
 	}
+
+	sort.Slice(articles, func(i, j int) bool {
+		return articles[i].Date > articles[j].Date
+	})
 
 	return articles, nil
 }
