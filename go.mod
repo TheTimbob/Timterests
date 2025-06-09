@@ -1,11 +1,11 @@
 module timterests
 
-go 1.23
+go 1.23.0
 
-toolchain go1.23.4
+toolchain go1.24.2
 
 require (
-	github.com/a-h/templ v0.3.819
+	github.com/a-h/templ v0.3.898
 	github.com/aws/aws-sdk-go-v2 v1.32.7
 	github.com/aws/aws-sdk-go-v2/config v1.28.7
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.71.1

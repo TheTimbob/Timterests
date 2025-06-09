@@ -58,7 +58,9 @@ templ ReadingListCard(readingListID, title, subtitle, body, imagePath string, ta
 				<h1 class="card-title">{ title }</h1>
 				<h2 class="card-subtitle">{ subtitle }</h2>
 			</div>
-			<p class="card-body">@templ.Raw(body)</p>
+			<p class="card-body">
+                @templ.Raw(body)
+            </p>
 			<div class="tags-container">
 				for _, tag := range tags {
 					<p class="card-tag">{ tag }</p>

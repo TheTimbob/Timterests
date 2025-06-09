@@ -60,7 +60,9 @@ templ ArticleCard(articleID, title, subtitle, date, body string, tags []string) 
 				<h1 class="card-title">{ title }</h1>
 				<h2 class="card-subtitle">{ subtitle }</h2>
 			</div>
-			<p class="card-body">@templ.Raw(body)</p>
+			<p class="card-body">
+                @templ.Raw(body)
+            </p>
 			<p class="card-date">{ date }</p>
 			<div class="tag-container">
 				for _, tag := range tags {

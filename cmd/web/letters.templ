@@ -59,7 +59,9 @@ templ LetterCard(letterID, title, subtitle, date, body string, tags []string) {
 			<div class="card-title-container">
 				<h1 class="card-title">{ title }</h1>
 				<h2 class="card-subtitle">{ subtitle }</h2>
-				<p class="card-body">@templ.Raw(body)</p>
+				<p class="card-body">
+                    @templ.Raw(body)
+                </p>
 			</div>
 			<div class="tag-container">
 				for _, tag := range tags {
