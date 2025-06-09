@@ -19,7 +19,7 @@ body::before {
 }
 
 .banner-header {
-  @apply bg-gradient-to-r from-green-800 to-green-400 bg-gradient-to-r dark:bg-gradient-to-l text-white dark:text-black p-3 shadow-lg;
+  @apply bg-gradient-to-r from-green-800 to-green-400 dark:bg-gradient-to-l text-white dark:text-black p-3 shadow-lg;
 }
 
 .banner-title {
@@ -31,7 +31,7 @@ body::before {
 }
 
 .banner-footer {
-  @apply bg-gradient-to-r from-green-400 to-green-800 bg-gradient-to-r dark:bg-gradient-to-l p-2 shadow-lg text-right border-t flex flex-wrap justify-end space-y-1 md:space-y-0;
+  @apply bg-gradient-to-r from-green-400 to-green-800 dark:bg-gradient-to-l p-2 shadow-lg text-right border-t flex flex-wrap justify-end space-y-1 md:space-y-0;
 }
 
 .category-title {
