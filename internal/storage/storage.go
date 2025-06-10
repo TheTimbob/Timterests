@@ -82,7 +82,7 @@ func ListObjects(ctx context.Context, storage Storage, prefix string) ([]types.O
 		}
 	}
 
-	// Sort objects by date from most current to least current
+	// Default sort objects by date, from most current to least current
 	sort.Slice(objects, func(i, j int) bool {
 		return objects[i].LastModified.After(*objects[j].LastModified)
 	})
@@ -92,10 +92,6 @@ func ListObjects(ctx context.Context, storage Storage, prefix string) ([]types.O
 
 // Gets an object from a bucket and stores it in a local file.
 func DownloadFile(ctx context.Context, storage Storage, objectKey string, fileName string) error {
-
-	if _, err := os.Stat(fileName); err == nil {
-		return nil
-	}
 
 	result, err := storage.S3Client.GetObject(ctx, &s3.GetObjectInput{
 		Bucket: aws.String(storage.BucketName),

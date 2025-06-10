@@ -3,7 +3,7 @@ package web
 templ ArticlesListPage(articles []Article, tags []string, design string) {
 	@Base() {
 		<div id="articles-container" class="category-container">
-		    <div class="flex justify-between items-center mb-4">
+		    <div class="flex justify-between items-center mb-2">
 				<h1 class="category-title">Articles</h1>
 				<div>
 					<select
@@ -36,9 +36,9 @@ templ ArticlesListPage(articles []Article, tags []string, design string) {
 templ ArticlesList(articles []Article, design string) {
     <ul id="articles-list">
 		if design == "grid" {
-			for i := 0; i < len(articles); i += 3 {
+			for i := 0; i < len(articles); i += 4 {
 				<li class="grid-list-element">
-					for j := i; j < i+3 && j < len(articles); j++ {
+					for j := i; j < i+4 && j < len(articles); j++ {
 						@ArticleMiniCard(articles[j].ID, articles[j].Title, articles[j].Date, articles[j].Tags)
 					}
 				</li>
@@ -60,7 +60,9 @@ templ ArticleCard(articleID, title, subtitle, date, body string, tags []string) 
 				<h1 class="card-title">{ title }</h1>
 				<h2 class="card-subtitle">{ subtitle }</h2>
 			</div>
-			<p class="card-body">{ body }</p>
+			<p class="card-body">
+                @templ.Raw(body)
+            </p>
 			<p class="card-date">{ date }</p>
 			<div class="tag-container">
 				for _, tag := range tags {

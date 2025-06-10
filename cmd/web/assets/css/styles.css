@@ -19,7 +19,7 @@ body::before {
 }
 
 .banner-header {
-  @apply bg-gradient-to-r from-green-800 to-green-400 bg-gradient-to-r dark:bg-gradient-to-l text-white dark:text-black p-4 shadow-lg;
+  @apply bg-gradient-to-r from-green-800 to-green-400 dark:bg-gradient-to-l text-white dark:text-black p-3 shadow-lg;
 }
 
 .banner-title {
@@ -27,23 +27,23 @@ body::before {
 }
 
 .banner-subtitle {
-  @apply mt-2 text-sm md:text-lg;
+  @apply mt-1 text-sm md:text-lg;
 }
 
 .banner-footer {
-  @apply bg-gradient-to-r from-green-400 to-green-800 bg-gradient-to-r dark:bg-gradient-to-l  p-3 shadow-lg text-right border-t flex flex-wrap justify-end space-y-2 md:space-y-0;
+  @apply bg-gradient-to-r from-green-400 to-green-800 dark:bg-gradient-to-l p-2 shadow-lg text-right border-t flex flex-wrap justify-end space-y-1 md:space-y-0;
 }
 
 .category-title {
-  @apply text-4xl font-extrabold text-gray-900 dark:text-gray-200 my-4 inline-block;
+  @apply text-3xl font-extrabold text-gray-900 dark:text-gray-200 my-2 inline-block;
 }
 
 .category-subtitle {
-  @apply text-xl font-bold text-gray-900 dark:text-gray-200 my-2;
+  @apply text-xl font-bold text-gray-900 dark:text-gray-200 my-1;
 }
 
 .nav-header {
-  @apply shadow-md flex flex-wrap justify-around p-2;
+  @apply shadow-md flex flex-wrap justify-around p-1;
 }
 
 .nav-link {
@@ -55,39 +55,39 @@ body::before {
 }
 
 .main-content {
-  @apply container mx-auto my-5 p-4 rounded shadow-lg flex-grow overflow-y-scroll bg-gray-100 dark:bg-gray-600 bg-opacity-80 dark:bg-opacity-80;
+  @apply container mx-auto my-2 p-3 rounded shadow-lg flex-grow overflow-y-auto bg-gray-100 dark:bg-gray-600 bg-opacity-80 dark:bg-opacity-80;
 }
 
 .card-container {
-  @apply container mx-auto m-8 p-4 bg-gray-100 dark:bg-gray-700 rounded shadow-lg hover:bg-green-100 dark:hover:bg-green-700 hover:shadow-2xl truncate flex flex-row items-start;
+  @apply mx-auto mb-3 p-3 bg-gray-100 dark:bg-gray-700 rounded shadow hover:bg-green-100 dark:hover:bg-green-700 hover:shadow-lg truncate flex flex-row items-start transition-all;
 }
 
 .grid-list-element {
-  @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4;
+  @apply grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-3;
 }
 
 .mini-card-container {
-  @apply container w-full p-2 bg-gray-100 dark:bg-gray-700 rounded shadow-lg hover:bg-green-100 dark:hover:bg-green-700 hover:shadow-2xl truncate flex flex-row items-start;
+  @apply w-full p-2 bg-gray-100 dark:bg-gray-700 rounded shadow hover:bg-green-100 dark:hover:bg-green-700 hover:shadow-lg truncate flex flex-row items-start transition-all;
 }
 
 .card-title {
-  @apply text-2xl font-extrabold text-gray-900 dark:text-gray-200 my-4 mr-2 inline truncate;
+  @apply text-xl font-extrabold text-gray-900 dark:text-gray-200 my-1 mr-2 inline truncate;
 }
 
 .card-subtitle {
-  @apply text-lg font-bold text-gray-900 dark:text-gray-200 my-4 mr-4 inline truncate;
+  @apply text-base font-bold text-gray-900 dark:text-gray-200 my-1 mr-4 inline truncate;
 }
 
 .card-date {
-  @apply text-sm my-4 font-bold text-gray-700 dark:text-gray-300;
+  @apply text-xs my-1 font-bold text-gray-700 dark:text-gray-300;
 }
 
 .card-body {
-  @apply my-4 mr-4 text-sm text-gray-700 dark:text-gray-300 truncate;
+  @apply my-2 mr-4 text-sm text-gray-700 dark:text-gray-300 truncate;
 }
 
 .card-tag {
-  @apply text-sm mr-2 my-1 py-1 px-2 font-bold bg-green-300 text-gray-700 rounded-full inline;
+  @apply text-xs mr-1 my-0.5 py-0.5 px-1.5 font-bold bg-green-300 text-gray-700 rounded-full inline;
 }
 
 .tag-container {
@@ -95,11 +95,11 @@ body::before {
 }
 
 .content-text {
-  @apply text-lg my-4 text-gray-900 dark:text-gray-200;
+  @apply text-base my-2 text-gray-900 dark:text-gray-200;
 }
 
 .copywrite-text {
-  @apply my-4 text-gray-200 dark:text-gray-800;
+  @apply my-2 text-gray-200 dark:text-gray-800;
 }
 
 .hyperlink {
@@ -107,17 +107,17 @@ body::before {
 }
 
 .button {
-  @apply bg-green-500 text-black dark:text-white font-bold py-2 px-4 rounded hover:bg-green-700 transition-colors duration-300;
+  @apply bg-green-500 text-black dark:text-white font-bold py-1 px-3 rounded hover:bg-green-700 transition-colors duration-300;
 }
 
 .login-input {
-  @apply w-full max-w-lg text-lg block text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-700 rounded-md py-2 px-4 mb-4;
+  @apply w-full max-w-lg text-base block text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-700 rounded-md py-2 px-3 mb-3;
 }
 
 .filter-select {
-  @apply bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-700 rounded-md py-2 px-4;
+  @apply bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-700 rounded-md py-1 px-2 text-sm;
 }
 
 .card-image {
-  @apply h-32 aspect-square object-cover rounded-lg;
+  @apply h-24 aspect-square object-cover rounded;
 }

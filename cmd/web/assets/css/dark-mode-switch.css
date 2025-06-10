@@ -25,6 +25,7 @@
   border-radius: 9999px;
   cursor: pointer;
   transition: all 0.4s cubic-bezier(0.46, 0.03, 0.52, 0.96);
+  overflow: hidden;
 }
 
 .dark-mode-switch-indicator {
@@ -46,6 +47,10 @@
     display: block;
     background-color: #2b2b2b;
     border-radius: 9999px;
+    transition:
+      opacity 0.4s cubic-bezier(0.46, 0.03, 0.52, 0.96),
+      right 0.4s cubic-bezier(0.46, 0.03, 0.52, 0.96),
+      bottom 0.4s cubic-bezier(0.46, 0.03, 0.52, 0.96);
   }
 
   &::after {
@@ -54,7 +59,7 @@
     width: 15px;
     height: 15px;
     background-color: #2b2b2b;
-    opacity: 0.8;
+    opacity: 1;
   }
 }
 
@@ -64,12 +69,15 @@
 
   .dark-mode-switch-indicator {
     background-color: #ecd21f;
-    box-shadow: none;
+    box-shadow: 0 0 12px #f5d63d;
     transform: translate(-50%, -50%) translateX(72%);
 
-    &::before,
+    &::before {
+      opacity: 0;
+    }
     &::after {
-      display: none;
+      opacity: 0;
+      right: -10px;
     }
   }
 }

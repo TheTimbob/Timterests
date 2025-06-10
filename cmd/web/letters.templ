@@ -3,7 +3,7 @@ package web
 templ LettersListPage(letters []Letter, tags []string, design string) {
 	@Base() {
 		<div id="letters-container" class="category-container">
-		    <div class="flex justify-between items-center mb-4">
+		    <div class="flex justify-between items-center mb-2">
 				<h1 class="category-title">Letters</h1>
 				<div>
 					<select
@@ -36,9 +36,9 @@ templ LettersListPage(letters []Letter, tags []string, design string) {
 templ LettersList(letters []Letter, design string) {
     <ul id="letters-list">
 		if design == "grid" {
-			for i := 0; i < len(letters); i += 3 {
+			for i := 0; i < len(letters); i += 4 {
 				<li class="grid-list-element">
-					for j := i; j < i+3 && j < len(letters); j++ {
+					for j := i; j < i+4 && j < len(letters); j++ {
 						@LetterMiniCard(letters[j].ID, letters[j].Title, letters[j].Date, letters[j].Tags)
 					}
 				</li>
@@ -59,7 +59,9 @@ templ LetterCard(letterID, title, subtitle, date, body string, tags []string) {
 			<div class="card-title-container">
 				<h1 class="card-title">{ title }</h1>
 				<h2 class="card-subtitle">{ subtitle }</h2>
-				<p class="card-body">{ body }</p>
+				<p class="card-body">
+                    @templ.Raw(body)
+                </p>
 			</div>
 			<div class="tag-container">
 				for _, tag := range tags {
