@@ -59,8 +59,8 @@ jobs:
                   "AWS_BUCKET_NAME": "${{ secrets.AWS_BUCKET_NAME }}",
                   "AWS_ACCESS_KEY_ID": "${{ secrets.LIGHTSAIL_ACCESS_KEY_ID }}",
                   "AWS_SECRET_ACCESS_KEY": "${{ secrets.LIGHTSAIL_SECRET_ACCESS_KEY }}",
-                  "SESSION_NAME": "${{ secret.SESSION_NAME }}",
-                  "SESSION_KEY": "${{ secret.SESSION_KEY }}",
+                  "SESSION_NAME": "${{ secrets.SESSION_NAME }}",
+                  "SESSION_KEY": "${{ secrets.SESSION_KEY }}",
                   "PORT": "${{ vars.PORT }}"
                 }
               }
