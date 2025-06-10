@@ -1,4 +1,18 @@
-// JavaScript for toggling theme
+// Get stored theme or system preference
+function getStoredTheme() {
+  return localStorage.getItem("theme") ||
+    (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+}
+
+// Apply theme immediately (runs before DOM is ready)
+(function() {
+  const theme = getStoredTheme();
+  if (theme === "dark") {
+    document.documentElement.classList.add("dark");
+  }
+})();
+
+// Toggle theme function
 function toggleTheme() {
   const html = document.documentElement;
   const darkModeSwitch = document.getElementById("dark-mode-switch");
@@ -12,29 +26,25 @@ function toggleTheme() {
   }
 }
 
-// Add event listener for theme switch
-document.addEventListener("DOMContentLoaded", function () {
+// Initialize theme switch
+function initThemeSwitch() {
   const darkModeSwitch = document.getElementById("dark-mode-switch");
+  if (!darkModeSwitch) return;
 
-  // Load stored theme or system preference on page load
-  const storedTheme =
-    localStorage.getItem("theme") ||
-    (window.matchMedia("(prefers-color-scheme: dark)").matches
-      ? "dark"
-      : "light");
+  const storedTheme = getStoredTheme();
+
+  // Apply theme
   document.documentElement.classList.toggle("dark", storedTheme === "dark");
 
-  // Temporarily disable transitions to prevent noticable button change
-  document.documentElement.classList.add("no-transition");
-
-  //Sync switch
+  // Sync switch state
   darkModeSwitch.checked = storedTheme === "light";
 
-  // Re-enable transitions after a short delay
-  setTimeout(() => {
-    document.documentElement.classList.remove("no-transition");
-  }, 100);
-
-  // Add event listener to toggle theme
+  // Add event listener (remove first to prevent duplicates)
+  darkModeSwitch.removeEventListener("change", toggleTheme);
   darkModeSwitch.addEventListener("change", toggleTheme);
-});
+}
+
+// Initialize on page load and navigation
+document.addEventListener("DOMContentLoaded", initThemeSwitch);
+window.addEventListener("pageshow", initThemeSwitch);
+document.addEventListener("htmx:afterSwap", initThemeSwitch);

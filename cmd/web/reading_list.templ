@@ -6,7 +6,12 @@ templ ReadingListPage(readingLists []ReadingList, tags []string, design string) 
 			<div class="flex justify-between items-center mb-2">
 				<h1 class="category-title">Reading List</h1>
                 <div>
-                    <select class="filter-select" hx-get="/reading-list" hx-target="#reading-list" hx-trigger="change"
+                    <select
+                        class="filter-select"
+                        hx-get="/reading-list"
+                        hx-target="#reading-list"
+                        hx-trigger="change"
+                        hx-include="[name='design']"
                         name="tag">
                         <option value="all">All</option>
                         for _, tag := range tags {
@@ -18,6 +23,7 @@ templ ReadingListPage(readingLists []ReadingList, tags []string, design string) 
                         hx-get="/reading-list"
                         hx-target="#reading-list"
                         hx-trigger="change"
+                        hx-include="[name='tag']"
                         name="design">
                             <option value="list">List</option>
                             <option value="grid">Grid</option>
