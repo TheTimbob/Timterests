@@ -11,6 +11,7 @@ templ LettersListPage(letters []Letter, tags []string, design string) {
 						hx-get="/letters"
 						hx-target="#letters-list"
 						hx-trigger="change"
+                        hx-include="[name='design']"
 						name="tag">
 							<option value="all">All</option>
 							for _, tag := range tags {
@@ -22,6 +23,7 @@ templ LettersListPage(letters []Letter, tags []string, design string) {
 						hx-get="/letters"
 						hx-target="#letters-list"
 						hx-trigger="change"
+                        hx-include="[name='tag']"
 						name="design">
 							<option value="list">List</option>
 							<option value="grid">Grid</option>
