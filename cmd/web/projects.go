@@ -53,7 +53,7 @@ func ProjectsPageHandler(w http.ResponseWriter, r *http.Request, storageInstance
 }
 
 func GetProjectHandler(w http.ResponseWriter, r *http.Request, storageInstance storage.Storage, projectID string) {
-
+	var component templ.Component = nil
 	projects, err := ListProjects(storageInstance, "all")
 	if err != nil {
 		http.Error(w, "Failed to fetch projects", http.StatusInternalServerError)
@@ -62,7 +62,11 @@ func GetProjectHandler(w http.ResponseWriter, r *http.Request, storageInstance s
 
 	for _, project := range projects {
 		if project.ID == projectID {
-			component := ProjectPage(project)
+			if r.Header.Get("HX-Request") == "true" {
+				component = ProjectDisplay(project)
+			} else {
+				component = ProjectPage(project)
+			}
 			err = component.Render(r.Context(), w)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)

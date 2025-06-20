@@ -63,7 +63,7 @@ templ ReadingListList(readingList []ReadingList, design string) {
 }
 
 templ ReadingListCard(readingListID, title, subtitle, body, imagePath string, tags []string) {
-	<div class="card-container" hx-get={"/book?id=" + readingListID} hx-target=" #main-content" hx-swap="innerHTML" tabindex="0">
+	<div class="card-container" hx-get={"/book?id=" + readingListID} hx-target=" #main-content" hx-swap="innerHTML" hx-replace-url="true" tabindex="0">
 		<img src={ string(templ.SafeURL(imagePath)) } alt="Book image" class="card-image">
         <div class="ml-4">
 			<div class="card-title-container">
@@ -83,7 +83,7 @@ templ ReadingListCard(readingListID, title, subtitle, body, imagePath string, ta
 }
 
 templ ReadingListMiniCard(bookID, title, author, imagePath string, tags []string) {
-	<div class="mini-card-container" hx-get={"/book?id=" + bookID} hx-target=" #main-content" hx-swap="innerHTML" tabindex="0">
+	<div class="mini-card-container" hx-get={"/book?id=" + bookID} hx-target=" #main-content" hx-swap="innerHTML" hx-replace-url="true" tabindex="0">
 		<img src={ string(templ.SafeURL(imagePath)) } alt="Book image" class="card-image">
 		<div class="ml-2">
 			<div class="card-title-container">
@@ -100,12 +100,18 @@ templ ReadingListMiniCard(bookID, title, author, imagePath string, tags []string
 }
 
 templ ReadingListLink(articleID, title string) {
-    <div class="hyperlink" hx-get={"/book?id=" + articleID} hx-target="#main-content" hx-swap="innerHTML" tabindex="0">
+    <div class="hyperlink" hx-get={"/book?id=" + articleID} hx-target="#main-content" hx-swap="innerHTML" hx-replace-url="true" tabindex="0">
         <p>{ title }</p>
     </div>
 }
 
 templ BookPage(readingList ReadingList) {
+    @Base() {
+        @BookDisplay(readingList)
+    }
+}
+
+templ BookDisplay(readingList ReadingList) {
 	<div id="reading-list-container">
 		<h1 class="category-title">{ readingList.Title }</h1>
 		<h2 class="category-subtitle">{ readingList.Subtitle }</h2>

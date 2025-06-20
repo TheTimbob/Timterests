@@ -63,7 +63,7 @@ templ ArticlesList(articles []Article, design string) {
 }
 
 templ ArticleCard(articleID, title, subtitle, date, body string, tags []string) {
-	<div class="card-container" hx-get={"/article?id=" + articleID} hx-target=" #main-content" hx-swap="innerHTML" tabindex="0">
+	<div class="card-container" hx-get={"/article?id=" + articleID} hx-target=" #main-content" hx-swap="innerHTML" hx-replace-url="true" tabindex="0">
 		<div>
 			<div class="card-title-container">
 				<h1 class="card-title">{ title }</h1>
@@ -83,7 +83,7 @@ templ ArticleCard(articleID, title, subtitle, date, body string, tags []string) 
 }
 
 templ ArticleMiniCard(articleID, title, date string, tags []string) {
-	<div class="mini-card-container" hx-get={"/article?id=" + articleID} hx-target=" #main-content" hx-swap="innerHTML" tabindex="0">
+	<div class="mini-card-container" hx-get={"/article?id=" + articleID} hx-target=" #main-content" hx-swap="innerHTML" hx-replace-url="true" tabindex="0">
 		<div>
 			<div class="card-title-container">
 				<h1 class="card-subtitle">{ title }</h1>
@@ -97,12 +97,18 @@ templ ArticleMiniCard(articleID, title, date string, tags []string) {
 }
 
 templ ArticleLink(articleID, title, date string) {
-    <div class="hyperlink" hx-get={"/article?id=" + articleID} hx-target="#main-content" hx-swap="innerHTML" tabindex="0">
+    <div class="hyperlink" hx-get={"/article?id=" + articleID} hx-target="#main-content" hx-swap="innerHTML" hx-replace-url="true" tabindex="0">
         <p>{ date } - { title } </p>
     </div>
 }
 
 templ ArticlePage(article Article) {
+    @Base() {
+        @ArticleDisplay(article)
+    }
+}
+
+templ ArticleDisplay(article Article) {
     <div id="article-container">
         <h1 class="category-title">{ article.Title }</h1>
         <h2 class="category-subtitle">{ article.Subtitle }</h2>

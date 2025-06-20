@@ -53,7 +53,7 @@ func ArticlesPageHandler(w http.ResponseWriter, r *http.Request, storageInstance
 }
 
 func GetArticleHandler(w http.ResponseWriter, r *http.Request, storageInstance storage.Storage, articleID string) {
-
+	var component templ.Component = nil
 	articles, err := ListArticles(storageInstance, "all")
 	if err != nil {
 		http.Error(w, "Failed to fetch articles", http.StatusInternalServerError)
@@ -62,7 +62,11 @@ func GetArticleHandler(w http.ResponseWriter, r *http.Request, storageInstance s
 
 	for _, article := range articles {
 		if article.ID == articleID {
-			component := ArticlePage(article)
+			if r.Header.Get("HX-Request") == "true" {
+				component = ArticleDisplay(article)
+			} else {
+				component = ArticlePage(article)
+			}
 			err = component.Render(r.Context(), w)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)

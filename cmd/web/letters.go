@@ -59,6 +59,7 @@ func LettersPageHandler(w http.ResponseWriter, r *http.Request, storageInstance 
 }
 
 func GetLetterHandler(w http.ResponseWriter, r *http.Request, storageInstance storage.Storage, letterID string) {
+	var component templ.Component = nil
 
 	// Check if user is authenticated
 	if !IsAuthenticated(r) {
@@ -75,7 +76,11 @@ func GetLetterHandler(w http.ResponseWriter, r *http.Request, storageInstance st
 
 	for _, letter := range letters {
 		if letter.ID == letterID {
-			component := LetterPage(letter)
+			if r.Header.Get("HX-Request") == "true" {
+				component = LetterDisplay(letter)
+			} else {
+				component = LetterPage(letter)
+			}
 			err = component.Render(r.Context(), w)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)

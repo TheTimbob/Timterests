@@ -57,7 +57,7 @@ func ReadingListPageHandler(w http.ResponseWriter, r *http.Request, storageInsta
 }
 
 func GetReadingListBook(w http.ResponseWriter, r *http.Request, storageInstance storage.Storage, bookID string) {
-
+	var component templ.Component = nil
 	readingList, err := ListBooks(storageInstance, "all")
 	if err != nil {
 		http.Error(w, "Failed to fetch books", http.StatusInternalServerError)
@@ -66,7 +66,11 @@ func GetReadingListBook(w http.ResponseWriter, r *http.Request, storageInstance 
 
 	for _, book := range readingList {
 		if book.ID == bookID {
-			component := BookPage(book)
+			if r.Header.Get("HX-Request") == "true" {
+				component = BookDisplay(book)
+			} else {
+				component = BookPage(book)
+			}
 			err = component.Render(r.Context(), w)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)

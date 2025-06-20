@@ -63,7 +63,7 @@ templ LettersList(letters []Letter, design string) {
 }
 
 templ LetterCard(letterID, title, subtitle, date, body string, tags []string) {
-	<div class="card-container" hx-get={"/letter?id=" + letterID} hx-target=" #main-content" hx-swap="innerHTML" tabindex="0" >
+	<div class="card-container" hx-get={"/letter?id=" + letterID} hx-target=" #main-content" hx-swap="innerHTML" hx-replace-url="true" tabindex="0" >
 		<div>
 			<div class="card-title-container">
 				<h1 class="card-title">{ title }</h1>
@@ -82,7 +82,7 @@ templ LetterCard(letterID, title, subtitle, date, body string, tags []string) {
 }
 
 templ LetterMiniCard(letterID, title, date string, tags []string) {
-	<div class="mini-card-container" hx-get={"/letter?id=" + letterID} hx-target=" #main-content" hx-swap="innerHTML" tabindex="0">
+	<div class="mini-card-container" hx-get={"/letter?id=" + letterID} hx-target=" #main-content" hx-swap="innerHTML" hx-replace-url="true" tabindex="0">
 		<div>
 			<div class="card-title-container">
 				<h1 class="card-subtitle">{ title }</h1>
@@ -96,12 +96,18 @@ templ LetterMiniCard(letterID, title, date string, tags []string) {
 }
 
 templ LetterLink(articleID, title, date string) {
-    <div class="hyperlink" hx-get={"/letter?id=" + articleID} hx-target="#main-content" hx-swap="innerHTML" tabindex="0">
+    <div class="hyperlink" hx-get={"/letter?id=" + articleID} hx-target="#main-content" hx-swap="innerHTML" hx-replace-url="true" tabindex="0">
         <p>{ date } - { title } </p>
     </div>
 }
 
-templ LetterPage(letter Letter) {
+templ LetterPage(letter Letter){
+    @Base() {
+        @LetterDisplay(letter)
+    }
+}
+
+templ LetterDisplay(letter Letter) {
     <div id="letter-container">
         <h1 class="category-title">{ letter.Title }</h1>
         <h2 class="category-subtitle">{ letter.Subtitle }</h2>
