@@ -27,6 +27,7 @@ templ ReadingListPage(readingLists []ReadingList, tags []string, design string) 
                         name="design">
                             <option value="list">List</option>
                             <option value="grid">Grid</option>
+                            <option value="links">Links</option>
                     </select>
                 </div>
 			</div>
@@ -45,11 +46,16 @@ templ ReadingListList(readingList []ReadingList, design string) {
 					}
 				</li>
 			}
+        } else if design == "links" {
+            for _, book := range readingList {
+                <li>
+                    @ReadingListLink(book.ID, book.Title)
+                </li>
+            }
 		} else {
             for _, book := range readingList {
                 <li>
-                    @ReadingListCard(book.ID, book.Title, book.Subtitle, book.Body,
-                    book.Image, book.Tags)
+                    @ReadingListCard(book.ID, book.Title, book.Subtitle, book.Body, book.Image, book.Tags)
                 </li>
             }
         }
@@ -93,6 +99,11 @@ templ ReadingListMiniCard(bookID, title, author, imagePath string, tags []string
 	</div>
 }
 
+templ ReadingListLink(articleID, title string) {
+    <div class="hyperlink" hx-get={"/book?id=" + articleID} hx-target="#main-content" hx-swap="innerHTML" tabindex="0">
+        <p>{ title }</p>
+    </div>
+}
 
 templ BookPage(readingList ReadingList) {
 	<div id="reading-list-container">

@@ -27,6 +27,7 @@ templ LettersListPage(letters []Letter, tags []string, design string) {
 						name="design">
 							<option value="list">List</option>
 							<option value="grid">Grid</option>
+                            <option value="links">Links</option>
 					</select>
 				</div>
 			</div>
@@ -45,6 +46,12 @@ templ LettersList(letters []Letter, design string) {
 					}
 				</li>
 			}
+        } else if design == "links" {
+            for _, letter := range letters {
+                <li>
+                    @LetterLink(letter.ID, letter.Title, letter.Date)
+                </li>
+            }
 		} else {
         	for _, letter := range letters {
 				<li>
@@ -86,6 +93,12 @@ templ LetterMiniCard(letterID, title, date string, tags []string) {
 			}
 		</div>
 	</div>
+}
+
+templ LetterLink(articleID, title, date string) {
+    <div class="hyperlink" hx-get={"/letter?id=" + articleID} hx-target="#main-content" hx-swap="innerHTML" tabindex="0">
+        <p>{ date } - { title } </p>
+    </div>
 }
 
 templ LetterPage(letter Letter) {
