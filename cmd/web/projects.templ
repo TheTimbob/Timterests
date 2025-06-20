@@ -27,6 +27,7 @@ templ ProjectsListPage(projects []Project, tags []string, design string) {
 						name="design">
 							<option value="list">List</option>
 							<option value="grid">Grid</option>
+                            <option value="links">Links</option>
 					</select>
 				</div>
 			</div>
@@ -45,6 +46,12 @@ templ ProjectsList(projects []Project, design string) {
 					}
 				</li>
 			}
+        } else if design == "links" {
+            for _, project := range projects {
+                <li>
+                    @ProjectLink(project.ID, project.Title)
+                </li>
+            }
 		} else {
 			for _, project := range projects {
 			<li>
@@ -88,6 +95,12 @@ templ ProjectMiniCard(projectID, title, subtitle, imagePath string, tags []strin
 			</div>
 		</div>
 	</div>
+}
+
+templ ProjectLink(articleID, title string) {
+    <div class="hyperlink" hx-get={"/project?id=" + articleID} hx-target="#main-content" hx-swap="innerHTML" tabindex="0">
+        <p>{ title }</p>
+    </div>
 }
 
 templ ProjectPage(project Project) {

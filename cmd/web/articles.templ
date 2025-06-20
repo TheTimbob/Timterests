@@ -27,6 +27,7 @@ templ ArticlesListPage(articles []Article, tags []string, design string) {
 						name="design">
 							<option value="list">List</option>
 							<option value="grid">Grid</option>
+                            <option value="links">Links</option>
 						</select>
 				</div>
 			</div>
@@ -45,7 +46,13 @@ templ ArticlesList(articles []Article, design string) {
 					}
 				</li>
 			}
-		} else {
+		} else if design == "links" {
+            for _, article := range articles {
+                <li>
+                    @ArticleLink(article.ID, article.Title, article.Date)
+                </li>
+            }
+        } else {
 			for _, article := range articles {
 				<li>
 					@ArticleCard(article.ID, article.Title, article.Subtitle, article.Date, article.Body, article.Tags)
@@ -87,6 +94,12 @@ templ ArticleMiniCard(articleID, title, date string, tags []string) {
 			}
 		</div>
 	</div>
+}
+
+templ ArticleLink(articleID, title, date string) {
+    <div class="hyperlink" hx-get={"/article?id=" + articleID} hx-target="#main-content" hx-swap="innerHTML" tabindex="0">
+        <p>{ date } - { title } </p>
+    </div>
 }
 
 templ ArticlePage(article Article) {
