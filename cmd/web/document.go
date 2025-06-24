@@ -8,39 +8,51 @@ import (
 	"reflect"
 	"slices"
 	"strconv"
+	"strings"
 	"timterests/internal/storage"
-	"timterests/internal/types"
 
 	"github.com/a-h/templ"
 	"github.com/aws/aws-sdk-go-v2/aws"
 )
 
-func ListPageHandler[T types.DocumentItem](storageInstance storage.Storage, currentTag, design, prefix string) (templ.Component, error) {
+type Item interface {
+	Article | Letter | Project | ReadingList
+	GetID() string
+	GetBody() string
+	GetTitle() string
+	GetSubtitle() string
+	GetTags() []string
+}
+
+func GetListPageComponent[T Item](storageInstance storage.Storage, currentTag, typeStr, design string) (templ.Component, error) {
 	var component templ.Component
 	var tags []string
 
-	items, err := GetItemsList[T](storageInstance, currentTag, prefix)
+	items, err := GetItemsList[T](storageInstance, currentTag, typeStr)
 	if err != nil {
 		return nil, err
 	}
 
 	for i := range items {
-		items[i].SetBody(storage.RemoveHTMLTags(items[i].GetBody()))
-		v := reflect.ValueOf(items[i])
+		body := storage.RemoveHTMLTags(items[i].GetBody())
+		SetField(items[i], "Body", body)
+		v := reflect.ValueOf(&items[i]).Elem()
 		tags = storage.GetTags(v, tags)
 	}
 
+	title := GenerateTitle(typeStr)
+	get := "/" + typeStr
 	if currentTag != "" || design != "" {
-		component = List(items, design, prefix)
+		component = List(items, design, get)
 	} else {
-		component = ListPage(items, design, prefix, "Articles")
+		component = ListPage(items, design, get, title)
 	}
 
 	return component, nil
 }
 
-func ItemPageHandler[T types.DocumentItem](storageInstance storage.Storage, itemID, prefix string, page bool) (templ.Component, error) {
-	items, err := GetItemsList[T](storageInstance, "all", prefix)
+func GetItemComponent[T Item](storageInstance storage.Storage, itemID, typeStr string, page bool) (templ.Component, error) {
+	items, err := GetItemsList[T](storageInstance, "all", typeStr)
 	if err != nil {
 		return nil, err
 	}
@@ -59,8 +71,9 @@ func ItemPageHandler[T types.DocumentItem](storageInstance storage.Storage, item
 	return nil, fmt.Errorf("item with ID %s not found", itemID)
 }
 
-func GetItemsList[T types.DocumentItem](storageInstance storage.Storage, tag, prefix string) ([]T, error) {
+func GetItemsList[T Item](storageInstance storage.Storage, tag, typeStr string) ([]T, error) {
 	var items []T
+	prefix := typeStr + "s/"
 
 	itemFiles, err := storage.ListObjects(context.Background(), storageInstance, prefix)
 	if err != nil {
@@ -73,12 +86,11 @@ func GetItemsList[T types.DocumentItem](storageInstance storage.Storage, tag, pr
 			continue
 		}
 
-		i, err := GetItem[T](key, id, storageInstance)
+		item, err := GetItem[T](key, id, storageInstance)
 		if err != nil {
 			return nil, err
 		}
 
-		item := *i
 		if slices.Contains(item.GetTags(), tag) || tag == "all" || tag == "" {
 			items = append(items, item)
 		}
@@ -87,7 +99,7 @@ func GetItemsList[T types.DocumentItem](storageInstance storage.Storage, tag, pr
 	return items, nil
 }
 
-func GetItem[T types.DocumentItem](key string, id int, storageInstance storage.Storage) (*T, error) {
+func GetItem[T Item](key string, id int, storageInstance storage.Storage) (T, error) {
 	var item T
 	fileName := path.Base(key)
 	localFilePath := path.Join("s3", fileName)
@@ -95,21 +107,38 @@ func GetItem[T types.DocumentItem](key string, id int, storageInstance storage.S
 	file, err := storage.GetFile(key, localFilePath, storageInstance)
 	if err != nil {
 		log.Printf("Failed to read file: %v", err)
-		return nil, err
+		return item, err
 	}
 
 	if err := storage.DecodeFile(file, &item); err != nil {
 		log.Printf("Failed to decode file: %v", err)
-		return nil, err
+		return item, err
 	}
 
 	body, err := storage.BodyToHTML(item.GetBody())
 	if err != nil {
 		log.Printf("Failed to parse the body text into HTML: %v", err)
-		return nil, err
+		return item, err
 	}
 
-	item.SetBody(body)
-	item.SetID(strconv.Itoa(id))
-	return &item, nil
+	SetField(item, "Body", body)
+	SetField(item, "ID", strconv.Itoa(id))
+	return item, nil
+}
+
+func GenerateTitle(typeStr string) string {
+	if len(typeStr) == 0 {
+		return typeStr
+	}
+	firstChar := string(typeStr[0])
+	remainingChars := typeStr[1:]
+	return strings.ToUpper(firstChar) + remainingChars
+}
+
+func SetField[T Item](item T, fieldName, value string) {
+	v := reflect.ValueOf(&item).Elem()
+	field := v.FieldByName(fieldName)
+	if field.IsValid() && field.CanSet() {
+		field.SetString(value)
+	}
 }

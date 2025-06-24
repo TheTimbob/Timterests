@@ -22,6 +22,26 @@ type Letter struct {
 	Occasion       string `yaml:"occasion"`
 }
 
+func (l Letter) GetID() string {
+	return l.ID
+}
+
+func (l Letter) GetBody() string {
+	return l.Body
+}
+
+func (l Letter) GetTitle() string {
+	return l.Title
+}
+
+func (l Letter) GetSubtitle() string {
+	return l.Subtitle
+}
+
+func (l Letter) GetTags() []string {
+	return l.Tags
+}
+
 func LettersPageHandler(w http.ResponseWriter, r *http.Request, storageInstance storage.Storage, currentTag, design string) {
 	var component templ.Component
 	var tags []string

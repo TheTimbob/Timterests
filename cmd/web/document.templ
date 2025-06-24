@@ -1,10 +1,6 @@
 package web
 
-import (
-    "timterests/internal/types"
-)
-
-templ ListPage[T types.DocumentItem](items []T, design, get, title string) {
+templ ListPage[T Item](items []T, design, get, title string) {
     @Base() {
         <div id="container" class="category-container">
             <div class="flex justify-between items-center mb-2">
@@ -23,18 +19,18 @@ templ ListPage[T types.DocumentItem](items []T, design, get, title string) {
                     </select>
                 </div>
             </div>
-            @List[T](items, design, get)
+            @List(items, design, get)
         </div>
     }
 }
 
-templ List[T types.DocumentItem](items []T, design, get string) {
+templ List[T Item](items []T, design, get string) {
     <ul id="list">
         if design == "grid" {
             for i := 0; i < len(items); i += 4 {
                 <li class="grid-list-element">
                     for j := i; j < i+4 && j < len(items); j++ {
-                        @MiniCard[T](items[j], get + "?id=" + items[j].GetID())
+                        @MiniCard(items[j], get + "?id=" + items[j].GetID())
                     }
                 </li>
             }
@@ -47,14 +43,14 @@ templ List[T types.DocumentItem](items []T, design, get string) {
         } else {
             for _, item := range items {
                 <li>
-                    @Card[T](item, get + "?id=" + item.GetID())
+                    @Card(item, get + "?id=" + item.GetID())
                 </li>
             }
         }
     </ul>
 }
 
-templ Card[T types.DocumentItem](item T, get string) {
+templ Card[T Item](item T, get string) {
     <div class="card-container" hx-get={ get } hx-target="#main-content" hx-swap="innerHTML" hx-replace-url="true" tabindex="0">
         <div>
             <div class="card-title-container">
@@ -73,7 +69,7 @@ templ Card[T types.DocumentItem](item T, get string) {
     </div>
 }
 
-templ MiniCard[T types.DocumentItem](item T, get string) {
+templ MiniCard[T Item](item T, get string) {
     <div class="mini-card-container" hx-get={ get } hx-target="#main-content" hx-swap="innerHTML" hx-replace-url="true" tabindex="0">
         <div>
             <div class="card-title-container">
@@ -94,13 +90,13 @@ templ Link(title string, get string) {
     </div>
 }
 
-templ Page[T types.DocumentItem](item T) {
+templ Page[T Item](item T) {
     @Base() {
-        @Display[T](item)
+        @Display(item)
     }
 }
 
-templ Display[T types.DocumentItem](item T) {
+templ Display[T Item](item T) {
     <div id="container">
         <h1 class="category-title">{ item.GetTitle() }</h1>
         <h2 class="category-subtitle">{ item.GetSubtitle() }</h2>

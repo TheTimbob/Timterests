@@ -26,6 +26,26 @@ type ReadingList struct {
 	Status         string `yaml:"status"`
 }
 
+func (r ReadingList) GetID() string {
+	return r.ID
+}
+
+func (r ReadingList) GetBody() string {
+	return r.Body
+}
+
+func (r ReadingList) GetTitle() string {
+	return r.Title
+}
+
+func (r ReadingList) GetSubtitle() string {
+	return r.Subtitle
+}
+
+func (r ReadingList) GetTags() []string {
+	return r.Tags
+}
+
 func ReadingListPageHandler(w http.ResponseWriter, r *http.Request, storageInstance storage.Storage, currentTag, design string) {
 	var component templ.Component
 	var tags []string

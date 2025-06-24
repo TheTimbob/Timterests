@@ -12,8 +12,28 @@ type Article struct {
 	Date           string `yaml:"date"`
 }
 
+func (a Article) GetID() string {
+	return a.ID
+}
+
+func (a Article) GetBody() string {
+	return a.Body
+}
+
+func (a Article) GetTitle() string {
+	return a.Title
+}
+
+func (a Article) GetSubtitle() string {
+	return a.Subtitle
+}
+
+func (a Article) GetTags() []string {
+	return a.Tags
+}
+
 func ArticlesPageHandler(w http.ResponseWriter, r *http.Request, storageInstance storage.Storage, currentTag, design string) {
-	component, err := ListPageHandler[*Article](storageInstance, currentTag, "/articles", design)
+	component, err := GetListPageComponent[Article](storageInstance, currentTag, "article", design)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		log.Printf("Error rendering in ArticlesPosts: %e", err)
@@ -27,11 +47,14 @@ func ArticlesPageHandler(w http.ResponseWriter, r *http.Request, storageInstance
 }
 
 func GetArticleHandler(w http.ResponseWriter, r *http.Request, storageInstance storage.Storage, articleID string) {
-	component, err := ItemPageHandler[*Article](storageInstance, articleID, "/articles", true)
+
+	page := r.Header.Get("HX-Request") != "true"
+	component, err := GetItemComponent[Article](storageInstance, articleID, "article", page)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		log.Printf("Error rendering in GetArticleByIDHandler: %e", err)
 	}
+
 	err = component.Render(r.Context(), w)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
