@@ -53,7 +53,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 		web.GetArticleHandler(w, r, *s.storage, articleID)
 	}))
 	mux.Handle("/articles/list", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if _, err := web.GetItemsList[web.Article](*s.storage, "all", "/articles"); err != nil {
+		if _, err := web.ListArticles(*s.storage, "all"); err != nil {
 			http.Error(w, "Failed to list articles", http.StatusInternalServerError)
 			return
 		}

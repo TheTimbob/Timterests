@@ -1,34 +1,17 @@
 package web
 
+import (
+    "timterests/cmd/web/components"
+)
+
 templ ProjectsListPage(projects []Project, tags []string, design string) {
 	@Base() {
 		<div id="projects-container" class="category-container">
 		    <div class="flex justify-between items-center mb-2">
 				<h1 class="category-title">Projects</h1>
 				<div>
-					<select
-						class="filter-select"
-						hx-get="/projects"
-						hx-target="#projects-list"
-						hx-trigger="change"
-                        hx-include="[name='design']"
-						name="tag">
-						<option value="all">All</option>
-						for _, tag := range tags {
-							<option value={ tag }>{ tag }</option>
-						}
-					</select>
-					<select
-						class="filter-select"
-						hx-get="/projects"
-						hx-target="#projects-list"
-						hx-trigger="change"
-                        hx-include="[name='tag']"
-						name="design">
-							<option value="list">List</option>
-							<option value="grid">Grid</option>
-                            <option value="links">Links</option>
-					</select>
+					@components.FilterTags("/projects", tags)
+                    @components.FilterDesign("/projects")
 				</div>
 			</div>
 			@ProjectsList(projects, design)
@@ -42,65 +25,24 @@ templ ProjectsList(projects []Project, design string) {
 			for i := 0; i < len(projects); i += 4 {
 				<li class="grid-list-element">
 					for j := i; j < i+4 && j < len(projects); j++ {
-						@ProjectMiniCard(projects[j].ID, projects[j].Title, projects[j].Subtitle, projects[j].Image, projects[j].Tags)
+						@components.MiniCard(projects[j].Title, "", projects[j].Image, "/project?id=" + projects[j].ID, projects[j].Tags)
 					}
 				</li>
 			}
         } else if design == "links" {
             for _, project := range projects {
                 <li>
-                    @ProjectLink(project.ID, project.Title)
+                    @components.Link(project.Title, "", "/project?id=" + project.ID)
                 </li>
             }
 		} else {
 			for _, project := range projects {
 			<li>
-				@ProjectCard(project.ID, project.Title, project.Subtitle, project.Body, project.Image, project.Tags)
+				@components.Card(project.Title, project.Subtitle, "", project.Body, project.Image, "/project?id=" + project.ID, project.Tags)
 			</li>
 			}
 		}
 	</ul>
-}
-
-templ ProjectCard(projectID, title, subtitle, body, imagePath string, tags []string) {
-    <div class="card-container" hx-get={"/project?id=" + projectID} hx-target="#main-content" hx-swap="innerHTML" hx-replace-url="true" tabindex="0">
-        <img src={ string(templ.SafeURL(imagePath)) } alt="Project image" class="card-image">
-		<div class="ml-4">
-            <div class="card-title-container">
-                <h1 class="card-title">{ title }</h1>
-                <h2 class="card-subtitle">{ subtitle }</h2>
-            </div>
-            <p class="card-body">
-                @templ.Raw(body)
-            </p>
-			for _, tag := range tags {
-				<p class="card-tag">{ tag }</p>
-			}
-        </div>
-    </div>
-}
-
-templ ProjectMiniCard(projectID, title, subtitle, imagePath string, tags []string) {
-	<div class="mini-card-container" hx-get={"/project?id=" + projectID} hx-target=" #main-content" hx-swap="innerHTML" hx-replace-url="true" tabindex="0">
-		<img src={ string(templ.SafeURL(imagePath)) } alt="Project image" class="card-image">
-		<div class="ml-2">
-			<div class="card-title-container">
-				<h2 class="card-subtitle">{ title }</h2>
-				<p>{ subtitle }</p>
-			</div>
-			<div class="tag-container">
-				for _, tag := range tags {
-					<p class="card-tag">{ tag }</p>
-				}
-			</div>
-		</div>
-	</div>
-}
-
-templ ProjectLink(articleID, title string) {
-    <div class="hyperlink" hx-get={"/project?id=" + articleID} hx-target="#main-content" hx-swap="innerHTML" hx-replace-url="true" tabindex="0">
-        <p>{ title }</p>
-    </div>
 }
 
 templ ProjectPage(project Project) {

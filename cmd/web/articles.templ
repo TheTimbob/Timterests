@@ -1,0 +1,60 @@
+package web
+
+import (
+    "timterests/cmd/web/components"
+)
+
+templ ArticlesListPage(articles []Article, tags []string, design string) {
+	@Base() {
+		<div id="articles-container" class="category-container">
+		    <div class="flex justify-between items-center mb-2">
+				<h1 class="category-title">Articles</h1>
+				<div>
+					@components.FilterTags("/articles", tags)
+                    @components.FilterDesign("/articles")
+				</div>
+			</div>
+			@ArticlesList(articles, design)
+		</div>
+	}
+}
+
+templ ArticlesList(articles []Article, design string) {
+    <ul id="page-list">
+		if design == "grid" {
+			for i := 0; i < len(articles); i += 4 {
+				<li class="grid-list-element">
+					for j := i; j < i+4 && j < len(articles); j++ {
+						@components.MiniCard(articles[j].Title, articles[j].Date, "", "/article?id=" + articles[j].ID, articles[j].Tags)
+					}
+				</li>
+			}
+		} else if design == "links" {
+            for _, article := range articles {
+                <li>
+                    @components.Link(article.Title, article.Date, "/article?id=" + article.ID)
+                </li>
+            }
+        } else {
+			for _, article := range articles {
+				<li>
+					@components.Card(article.Title, article.Subtitle, article.Date, article.Body, "", "/article?id=" + article.ID, article.Tags)
+				</li>
+			}
+		}
+    </ul>
+}
+
+templ ArticlePage(article Article) {
+    @Base() {
+        @ArticleDisplay(article)
+    }
+}
+
+templ ArticleDisplay(article Article) {
+    <div id="article-container">
+        <h1 class="category-title">{ article.Title }</h1>
+        <h2 class="category-subtitle">{ article.Subtitle }</h2>
+        @templ.Raw(article.Body)
+    </div>
+}
