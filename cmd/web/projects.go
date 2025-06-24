@@ -22,25 +22,11 @@ type Project struct {
 	Image          string `yaml:"image-path"`
 }
 
-func (p Project) GetID() string {
-	return p.ID
-}
-
-func (p Project) GetBody() string {
-	return p.Body
-}
-
-func (p Project) GetTitle() string {
-	return p.Title
-}
-
-func (p Project) GetSubtitle() string {
-	return p.Subtitle
-}
-
-func (p Project) GetTags() []string {
-	return p.Tags
-}
+func (p Project) GetID() string       { return p.ID }
+func (p Project) GetBody() string     { return p.Body }
+func (p Project) GetTitle() string    { return p.Title }
+func (p Project) GetSubtitle() string { return p.Subtitle }
+func (p Project) GetTags() []string   { return p.Tags }
 
 func ProjectsPageHandler(w http.ResponseWriter, r *http.Request, storageInstance storage.Storage, currentTag, design string) {
 	var component templ.Component
