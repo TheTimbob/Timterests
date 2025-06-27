@@ -1,0 +1,30 @@
+package components
+
+templ FilterTags(get string, tags []string) {
+    <select
+        class="filter-select"
+        hx-get={ get }
+        hx-target="#page-list"
+        hx-trigger="change"
+        hx-include="[name='design']"
+        name="tag">
+            <option value="all">All</option>
+            for _, tag := range tags {
+                <option value={ tag }>{ tag }</option>
+            }
+    </select>
+}
+
+templ FilterDesign(get string) {
+    <select
+        class="filter-select"
+        hx-get={ get }
+        hx-target="#page-list"
+        hx-trigger="change"
+        hx-include="[name='tag']"
+        name="design">
+            <option value="list">List</option>
+            <option value="grid">Grid</option>
+            <option value="links">Links</option>
+    </select>
+}
