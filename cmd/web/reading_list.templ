@@ -1,35 +1,16 @@
 package web
 
+import (
+    "timterests/cmd/web/components"
+)
+
 templ ReadingListPage(readingLists []ReadingList, tags []string, design string) {
 	@Base() {
 		<div id="reading-list-container" class="category-container">
 			<div class="flex justify-between items-center mb-2">
 				<h1 class="category-title">Reading List</h1>
-                <div>
-                    <select
-                        class="filter-select"
-                        hx-get="/reading-list"
-                        hx-target="#reading-list"
-                        hx-trigger="change"
-                        hx-include="[name='design']"
-                        name="tag">
-                        <option value="all">All</option>
-                        for _, tag := range tags {
-                            <option value={ tag }>{ tag }</option>
-                        }
-                    </select>
-                    <select
-                        class="filter-select"
-                        hx-get="/reading-list"
-                        hx-target="#reading-list"
-                        hx-trigger="change"
-                        hx-include="[name='tag']"
-                        name="design">
-                            <option value="list">List</option>
-                            <option value="grid">Grid</option>
-                            <option value="links">Links</option>
-                    </select>
-                </div>
+                @components.FilterTags("/reading-list", tags)
+                @components.FilterDesign("/reading-list")
 			</div>
 			@ReadingListList(readingLists, design)
 		</div>
@@ -42,67 +23,24 @@ templ ReadingListList(readingList []ReadingList, design string) {
 			for i := 0; i < len(readingList); i += 4 {
 				<li class="grid-list-element">
 					for j := i; j < i+4 && j < len(readingList); j++ {
-						@ReadingListMiniCard(readingList[j].ID, readingList[j].Title, readingList[j].Author, readingList[j].Image, readingList[j].Tags)
+						@components.MiniCard(readingList[j].Title, "", readingList[j].Author, readingList[j].Image, readingList[j].Tags)
 					}
 				</li>
 			}
         } else if design == "links" {
             for _, book := range readingList {
                 <li>
-                    @ReadingListLink(book.ID, book.Title)
+                    @components.Link(book.Title, book.Author, "/book?id=" + book.ID)
                 </li>
             }
 		} else {
             for _, book := range readingList {
                 <li>
-                    @ReadingListCard(book.ID, book.Title, book.Subtitle, book.Body, book.Image, book.Tags)
+                    @components.Card(book.Title, book.Subtitle, "", book.Body, book.Image, "/book?id=" + book.ID, book.Tags)
                 </li>
             }
         }
 	</ul>
-}
-
-templ ReadingListCard(readingListID, title, subtitle, body, imagePath string, tags []string) {
-	<div class="card-container" hx-get={"/book?id=" + readingListID} hx-target=" #main-content" hx-swap="innerHTML" hx-replace-url="true" tabindex="0">
-		<img src={ string(templ.SafeURL(imagePath)) } alt="Book image" class="card-image">
-        <div class="ml-4">
-			<div class="card-title-container">
-				<h1 class="card-title">{ title }</h1>
-				<h2 class="card-subtitle">{ subtitle }</h2>
-			</div>
-			<p class="card-body">
-                @templ.Raw(body)
-            </p>
-			<div class="tags-container">
-				for _, tag := range tags {
-					<p class="card-tag">{ tag }</p>
-				}
-			</div>
-		</div>
-	</div>
-}
-
-templ ReadingListMiniCard(bookID, title, author, imagePath string, tags []string) {
-	<div class="mini-card-container" hx-get={"/book?id=" + bookID} hx-target=" #main-content" hx-swap="innerHTML" hx-replace-url="true" tabindex="0">
-		<img src={ string(templ.SafeURL(imagePath)) } alt="Book image" class="card-image">
-		<div class="ml-2">
-			<div class="card-title-container">
-				<h2 class="card-subtitle">{ title }</h2>
-				<p>{ author }</p>
-			</div>
-			<div class="tag-container">
-				for _, tag := range tags {
-					<p class="card-tag">{ tag }</p>
-				}
-			</div>
-		</div>
-	</div>
-}
-
-templ ReadingListLink(articleID, title string) {
-    <div class="hyperlink" hx-get={"/book?id=" + articleID} hx-target="#main-content" hx-swap="innerHTML" hx-replace-url="true" tabindex="0">
-        <p>{ title }</p>
-    </div>
 }
 
 templ BookPage(readingList ReadingList) {

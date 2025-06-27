@@ -1,34 +1,17 @@
 package web
 
+import (
+    "timterests/cmd/web/components"
+)
+
 templ LettersListPage(letters []Letter, tags []string, design string) {
 	@Base() {
 		<div id="letters-container" class="category-container">
 		    <div class="flex justify-between items-center mb-2">
 				<h1 class="category-title">Letters</h1>
 				<div>
-					<select
-						class="filter-select"
-						hx-get="/letters"
-						hx-target="#letters-list"
-						hx-trigger="change"
-                        hx-include="[name='design']"
-						name="tag">
-							<option value="all">All</option>
-							for _, tag := range tags {
-								<option value={ tag }>{ tag }</option>
-							}
-					</select>
-					<select
-						class="filter-select"
-						hx-get="/letters"
-						hx-target="#letters-list"
-						hx-trigger="change"
-                        hx-include="[name='tag']"
-						name="design">
-							<option value="list">List</option>
-							<option value="grid">Grid</option>
-                            <option value="links">Links</option>
-					</select>
+                	@components.FilterTags("/letters", tags)
+                    @components.FilterDesign("/letters")
 				</div>
 			</div>
 			@LettersList(letters, design)
@@ -42,63 +25,24 @@ templ LettersList(letters []Letter, design string) {
 			for i := 0; i < len(letters); i += 4 {
 				<li class="grid-list-element">
 					for j := i; j < i+4 && j < len(letters); j++ {
-						@LetterMiniCard(letters[j].ID, letters[j].Title, letters[j].Date, letters[j].Tags)
+						@components.MiniCard(letters[j].Title, letters[j].Date, "", "/letter?id=" + letters[j].ID, letters[j].Tags)
 					}
 				</li>
 			}
         } else if design == "links" {
             for _, letter := range letters {
                 <li>
-                    @LetterLink(letter.ID, letter.Title, letter.Date)
+                    @components.Link(letter.Title, letter.Date, "/letter?id=" + letter.ID)
                 </li>
             }
 		} else {
         	for _, letter := range letters {
 				<li>
-    		        @LetterCard(letter.ID, letter.Title, letter.Subtitle, letter.Date, letter.Body, letter.Tags)
+    		        @components.Card(letter.Title, letter.Subtitle, letter.Date, letter.Body, "", "/letter?id=" + letter.ID, letter.Tags)
 				</li>
 			}
 		}
 	</ul>
-}
-
-templ LetterCard(letterID, title, subtitle, date, body string, tags []string) {
-	<div class="card-container" hx-get={"/letter?id=" + letterID} hx-target=" #main-content" hx-swap="innerHTML" hx-replace-url="true" tabindex="0" >
-		<div>
-			<div class="card-title-container">
-				<h1 class="card-title">{ title }</h1>
-				<h2 class="card-subtitle">{ subtitle }</h2>
-				<p class="card-body">
-                    @templ.Raw(body)
-                </p>
-			</div>
-			<div class="tag-container">
-				for _, tag := range tags {
-					<p class="card-tag">{ tag }</p>
-				}
-			</div>
-		</div>
-	</div>
-}
-
-templ LetterMiniCard(letterID, title, date string, tags []string) {
-	<div class="mini-card-container" hx-get={"/letter?id=" + letterID} hx-target=" #main-content" hx-swap="innerHTML" hx-replace-url="true" tabindex="0">
-		<div>
-			<div class="card-title-container">
-				<h1 class="card-subtitle">{ title }</h1>
-			</div>
-			<p class="card-date">{ date }</p>
-			for _, tag := range tags {
-				<p class="card-tag">{ tag }</p>
-			}
-		</div>
-	</div>
-}
-
-templ LetterLink(articleID, title, date string) {
-    <div class="hyperlink" hx-get={"/letter?id=" + articleID} hx-target="#main-content" hx-swap="innerHTML" hx-replace-url="true" tabindex="0">
-        <p>{ date } - { title } </p>
-    </div>
 }
 
 templ LetterPage(letter Letter){
