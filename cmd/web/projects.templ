@@ -63,7 +63,7 @@ templ ProjectsList(projects []Project, design string) {
 }
 
 templ ProjectCard(projectID, title, subtitle, body, imagePath string, tags []string) {
-    <div class="card-container" hx-get={"/project?id=" + projectID} hx-target="#main-content" hx-swap="innerHTML" tabindex="0">
+    <div class="card-container" hx-get={"/project?id=" + projectID} hx-target="#main-content" hx-swap="innerHTML" hx-replace-url="true" tabindex="0">
         <img src={ string(templ.SafeURL(imagePath)) } alt="Project image" class="card-image">
 		<div class="ml-4">
             <div class="card-title-container">
@@ -81,7 +81,7 @@ templ ProjectCard(projectID, title, subtitle, body, imagePath string, tags []str
 }
 
 templ ProjectMiniCard(projectID, title, subtitle, imagePath string, tags []string) {
-	<div class="mini-card-container" hx-get={"/project?id=" + projectID} hx-target=" #main-content" hx-swap="innerHTML" tabindex="0">
+	<div class="mini-card-container" hx-get={"/project?id=" + projectID} hx-target=" #main-content" hx-swap="innerHTML" hx-replace-url="true" tabindex="0">
 		<img src={ string(templ.SafeURL(imagePath)) } alt="Project image" class="card-image">
 		<div class="ml-2">
 			<div class="card-title-container">
@@ -98,12 +98,18 @@ templ ProjectMiniCard(projectID, title, subtitle, imagePath string, tags []strin
 }
 
 templ ProjectLink(articleID, title string) {
-    <div class="hyperlink" hx-get={"/project?id=" + articleID} hx-target="#main-content" hx-swap="innerHTML" tabindex="0">
+    <div class="hyperlink" hx-get={"/project?id=" + articleID} hx-target="#main-content" hx-swap="innerHTML" hx-replace-url="true" tabindex="0">
         <p>{ title }</p>
     </div>
 }
 
 templ ProjectPage(project Project) {
+    @Base() {
+        @ProjectDisplay(project)
+    }
+}
+
+templ ProjectDisplay(project Project) {
     <div id="project-container">
         <h1 class="category-title">{ project.Title }</h1>
         <h2 class="category-subtitle">{ project.Subtitle }</h2>
