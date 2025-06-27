@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"path"
 	"reflect"
 	"slices"
 	"strconv"
@@ -112,23 +111,9 @@ func ListBooks(storageInstance storage.Storage, tag string) ([]ReadingList, erro
 
 func GetBook(key string, id int, storageInstance storage.Storage) (*ReadingList, error) {
 	var book ReadingList
-	fileName := path.Base(key)
-	localFilePath := path.Join("s3", fileName)
-
-	file, err := storage.GetFile(key, localFilePath, storageInstance)
+	book.ID = strconv.Itoa(id)
+	err := storage.GetPreparedFile(key, &book, storageInstance)
 	if err != nil {
-		log.Printf("Failed to read file: %v", err)
-		return nil, err
-	}
-
-	if err := storage.DecodeFile(file, &book); err != nil {
-		log.Printf("Failed to decode file: %v", err)
-		return nil, err
-	}
-
-	body, err := storage.BodyToHTML(book.Body)
-	if err != nil {
-		log.Printf("Failed to parse the body into HTML: %v", err)
 		return nil, err
 	}
 
@@ -139,7 +124,5 @@ func GetBook(key string, id int, storageInstance storage.Storage) (*ReadingList,
 	}
 
 	book.Image = localImagePath
-	book.Body = body
-	book.ID = strconv.Itoa(id)
 	return &book, nil
 }

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"path"
 	"reflect"
 	"slices"
 	"strconv"
@@ -53,7 +52,6 @@ func ProjectsPageHandler(w http.ResponseWriter, r *http.Request, storageInstance
 }
 
 func GetProjectHandler(w http.ResponseWriter, r *http.Request, storageInstance storage.Storage, projectID string) {
-	var component templ.Component = nil
 	projects, err := ListProjects(storageInstance, "all")
 	if err != nil {
 		http.Error(w, "Failed to fetch projects", http.StatusInternalServerError)
@@ -62,6 +60,7 @@ func GetProjectHandler(w http.ResponseWriter, r *http.Request, storageInstance s
 
 	for _, project := range projects {
 		if project.ID == projectID {
+			var component templ.Component
 			if r.Header.Get("HX-Request") == "true" {
 				component = ProjectDisplay(project)
 			} else {
@@ -110,23 +109,9 @@ func ListProjects(storageInstance storage.Storage, tag string) ([]Project, error
 
 func GetProject(key string, id int, storageInstance storage.Storage) (*Project, error) {
 	var project Project
-	fileName := path.Base(key)
-	localFilePath := path.Join("s3", fileName)
-
-	file, err := storage.GetFile(key, localFilePath, storageInstance)
+	project.ID = strconv.Itoa(id)
+	err := storage.GetPreparedFile(key, &project, storageInstance)
 	if err != nil {
-		log.Printf("Failed to read file: %v", err)
-		return nil, err
-	}
-
-	if err := storage.DecodeFile(file, &project); err != nil {
-		log.Printf("Failed to decode file: %v", err)
-		return nil, err
-	}
-
-	body, err := storage.BodyToHTML(project.Body)
-	if err != nil {
-		log.Printf("Failed to convert body to HTML: %v", err)
 		return nil, err
 	}
 
@@ -135,9 +120,7 @@ func GetProject(key string, id int, storageInstance storage.Storage) (*Project, 
 		log.Printf("Failed to download image: %v", err)
 		return nil, err
 	}
-
 	project.Image = localImagePath
-	project.Body = body
-	project.ID = strconv.Itoa(id)
+
 	return &project, nil
 }

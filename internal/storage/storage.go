@@ -139,6 +139,26 @@ func DownloadFile(ctx context.Context, storage Storage, objectKey string, fileNa
 	return err
 }
 
+func GetPreparedFile(key string, document any, storage Storage) error {
+	fileName := path.Base(key)
+	localFilePath := path.Join("s3", fileName)
+
+	// Retrieve file content
+	file, err := GetFile(key, localFilePath, storage)
+	if err != nil {
+		return err
+	}
+
+	if err := DecodeFile(file, document); err != nil {
+		return err
+	}
+
+	if err := BodyToHTML(document); err != nil {
+		return err
+	}
+	return nil
+}
+
 // Reads a file from the local file system.
 func GetFile(key, localPath string, storage Storage) (*os.File, error) {
 	var file *os.File
@@ -158,7 +178,7 @@ func GetFile(key, localPath string, storage Storage) (*os.File, error) {
 	return file, nil
 }
 
-func DecodeFile(file *os.File, out interface{}) error {
+func DecodeFile(file *os.File, out any) error {
 	// Decode the YAML file into a document object
 	decoder := yaml.NewDecoder(file)
 	// Out should be a pointer to a struct
@@ -184,23 +204,44 @@ func GetImageFromS3(storageInstance Storage, imagePath string) (string, error) {
 }
 
 // Function to convert body text to HTML
-func BodyToHTML(str string) (string, error) {
+func BodyToHTML(document any) error {
 	var buf bytes.Buffer
 	md := goldmark.New(
 		goldmark.WithRendererOptions(
 			html.WithHardWraps(),
 		),
 	)
-	err := md.Convert([]byte(str), &buf)
 
-	str = buf.String()
+	// Get reflect value of the document
+	v := reflect.ValueOf(document)
+	if v.Kind() != reflect.Ptr || v.IsNil() {
+		return errors.New("document must be a non-nil pointer to a struct")
+	}
+	v = v.Elem()
 
-	str = strings.ReplaceAll(str, "<p>", `<p class="content-text">`)
-	str = strings.ReplaceAll(str, "<h2>", `<h2 class="category-subtitle">`)
-	str = strings.ReplaceAll(str, "<a ", `<a class="hyperlink"`)
-	str = strings.ReplaceAll(str, "<li>", `<li class="content-text">- `)
+	// Set the Body field to the modified HTML content
+	bodyField := v.FieldByName("Body")
+	body := bodyField.String()
 
-	return str, err
+	if err := md.Convert([]byte(body), &buf); err != nil {
+		log.Printf("failed to convert body to HTML: %v", err)
+		return fmt.Errorf("conversion error: %w", err)
+	}
+
+	body = buf.String()
+
+	body = strings.ReplaceAll(body, "<p>", `<p class="content-text">`)
+	body = strings.ReplaceAll(body, "<h2>", `<h2 class="category-subtitle">`)
+	body = strings.ReplaceAll(body, "<a ", `<a class="hyperlink"`)
+	body = strings.ReplaceAll(body, "<li>", `<li class="content-text">- `)
+
+	if bodyField.CanSet() {
+		bodyField.SetString(body)
+	} else {
+		return fmt.Errorf("body field cannot be set in the document struct")
+	}
+
+	return nil
 }
 
 func GetTags(v reflect.Value, tags []string) []string {

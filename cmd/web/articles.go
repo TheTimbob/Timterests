@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"path"
 	"reflect"
 	"slices"
 	"sort"
@@ -53,7 +52,6 @@ func ArticlesPageHandler(w http.ResponseWriter, r *http.Request, storageInstance
 }
 
 func GetArticleHandler(w http.ResponseWriter, r *http.Request, storageInstance storage.Storage, articleID string) {
-	var component templ.Component = nil
 	articles, err := ListArticles(storageInstance, "all")
 	if err != nil {
 		http.Error(w, "Failed to fetch articles", http.StatusInternalServerError)
@@ -62,6 +60,7 @@ func GetArticleHandler(w http.ResponseWriter, r *http.Request, storageInstance s
 
 	for _, article := range articles {
 		if article.ID == articleID {
+			var component templ.Component
 			if r.Header.Get("HX-Request") == "true" {
 				component = ArticleDisplay(article)
 			} else {
@@ -113,28 +112,11 @@ func ListArticles(storageInstance storage.Storage, tag string) ([]Article, error
 
 func GetArticle(key string, id int, storageInstance storage.Storage) (*Article, error) {
 	var article Article
-	fileName := path.Base(key)
-	localFilePath := path.Join("s3", fileName)
-
-	// Retrieve file content
-	file, err := storage.GetFile(key, localFilePath, storageInstance)
-	if err != nil {
-		log.Printf("Failed to read file: %v", err)
-		return nil, err
-	}
-
-	if err := storage.DecodeFile(file, &article); err != nil {
-		log.Printf("Failed to decode file: %v", err)
-		return nil, err
-	}
-
-	body, err := storage.BodyToHTML(article.Body)
-	if err != nil {
-		log.Printf("Failed to parse the body text into HTML: %v", err)
-		return nil, err
-	}
-
-	article.Body = body
 	article.ID = strconv.Itoa(id)
+	err := storage.GetPreparedFile(key, &article, storageInstance)
+	if err != nil {
+		return nil, err
+	}
+
 	return &article, nil
 }

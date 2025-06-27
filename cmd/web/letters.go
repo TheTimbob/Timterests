@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"path"
 	"reflect"
 	"sort"
 	"strconv"
@@ -59,8 +58,6 @@ func LettersPageHandler(w http.ResponseWriter, r *http.Request, storageInstance 
 }
 
 func GetLetterHandler(w http.ResponseWriter, r *http.Request, storageInstance storage.Storage, letterID string) {
-	var component templ.Component = nil
-
 	// Check if user is authenticated
 	if !IsAuthenticated(r) {
 		log.Printf("User not authenticated, redirecting to login")
@@ -76,6 +73,7 @@ func GetLetterHandler(w http.ResponseWriter, r *http.Request, storageInstance st
 
 	for _, letter := range letters {
 		if letter.ID == letterID {
+			var component templ.Component
 			if r.Header.Get("HX-Request") == "true" {
 				component = LetterDisplay(letter)
 			} else {
@@ -84,7 +82,7 @@ func GetLetterHandler(w http.ResponseWriter, r *http.Request, storageInstance st
 			err = component.Render(r.Context(), w)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)
-				log.Printf("Error rendering in GetLettereByIDHandler: %e", err)
+				log.Printf("Error rendering in GetLetterByIDHandler: %e", err)
 			}
 		}
 	}
@@ -125,25 +123,12 @@ func ListLetters(storageInstance storage.Storage) ([]Letter, error) {
 
 func GetLetter(key string, id int, storageInstance storage.Storage) (*Letter, error) {
 	var letter Letter
-	fileName := path.Base(key)
-	localFilePath := path.Join("s3", fileName)
-
-	// Retrieve file content
-	file, err := storage.GetFile(key, localFilePath, storageInstance)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read file %s: %w", key, err)
-	}
-
-	if err := storage.DecodeFile(file, &letter); err != nil {
-		return nil, fmt.Errorf("failed to decode file %s: %w", key, err)
-	}
-
-	body, err := storage.BodyToHTML(letter.Body)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse the body text into HTML: %w", err)
-	}
-
-	letter.Body = body
 	letter.ID = strconv.Itoa(id)
+
+	err := storage.GetPreparedFile(key, &letter, storageInstance)
+	if err != nil {
+		return nil, err
+	}
+
 	return &letter, nil
 }

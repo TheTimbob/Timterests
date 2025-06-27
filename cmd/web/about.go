@@ -4,7 +4,6 @@ import (
 	"context"
 	"log"
 	"net/http"
-	"path"
 	"timterests/internal/storage"
 )
 
@@ -26,31 +25,18 @@ func AboutHandler(w http.ResponseWriter, r *http.Request, storageInstance storag
 	}
 
 	key := *aboutFile[0].Key
-	fileName := path.Base(key)
-	localFilePath := path.Join("s3", fileName)
-
-	file, err := storage.GetFile(key, localFilePath, storageInstance)
+	err = storage.GetPreparedFile(key, &about, storageInstance)
 	if err != nil {
-		http.Error(w, "Failed to read about file", http.StatusInternalServerError)
+		http.Error(w, "Failed to prepare about info", http.StatusInternalServerError)
+		log.Printf("Error fetching about info: %v", err)
 		return
 	}
-
-	if err := storage.DecodeFile(file, &about); err != nil {
-		log.Println("Failed to decode file:", err)
-		return
-	}
-
-	body, err := storage.BodyToHTML(about.Body)
-	if err != nil {
-		return
-	}
-
-	about.Body = body
 
 	component := AboutForm(about)
 	err = component.Render(r.Context(), w)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		log.Printf("Error rendering in AboutHandler: %e", err)
+		return
 	}
 }
