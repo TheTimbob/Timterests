@@ -8,13 +8,10 @@ templ Card(title, subtitle, date, body, imagePath, get string, tags []string) {
             </div>
         }
         <div>
-			<div class="card-title-container">
-				<h1 class="card-title">{ title }</h1>
-				<h2 class="card-subtitle">{ subtitle }</h2>
-			</div>
-			<p class="card-body">
+            @CardTitleContainer(title, subtitle)
+			<div class="card-body">
                 @templ.Raw(body)
-            </p>
+            </div>
 			if date != "" {
                 <p class="card-date">{ date }</p>
             }
@@ -37,7 +34,7 @@ templ MiniCard(title, date, imagePath, get string, tags []string) {
         }
         <div>
 			<div class="card-title-container">
-				<h1 class="card-subtitle">{ title }</h1>
+				<h2 class="card-subtitle">{ title }</h2>
 			</div>
             if date != "" {
 			    <p class="card-date">{ date }</p>

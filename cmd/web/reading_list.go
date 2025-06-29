@@ -42,7 +42,7 @@ func ReadingListPageHandler(w http.ResponseWriter, r *http.Request, storageInsta
 		tags = storage.GetTags(v, tags)
 	}
 
-	if currentTag != "" || design != "" {
+	if r.Header.Get("HX-Request") == "true" {
 		component = ReadingListList(readingList, design)
 	} else {
 		component = ReadingListPage(readingList, tags, design)

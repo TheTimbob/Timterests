@@ -9,8 +9,10 @@ templ ReadingListPage(readingLists []ReadingList, tags []string, design string) 
 		<div id="reading-list-container" class="category-container">
 			<div class="flex justify-between items-center mb-2">
 				<h1 class="category-title">Reading List</h1>
-                @components.FilterTags("/reading-list", tags)
-                @components.FilterDesign("/reading-list")
+                <div>
+                    @components.FilterTags("/reading-list", tags)
+                    @components.FilterDesign("/reading-list")
+                </div>
 			</div>
 			@ReadingListList(readingLists, design)
 		</div>
