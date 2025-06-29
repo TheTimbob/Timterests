@@ -20,7 +20,7 @@ templ LettersListPage(letters []Letter, tags []string, design string) {
 }
 
 templ LettersList(letters []Letter, design string) {
-    <ul id="letters-list">
+    <ul id="page-list">
 		if design == "grid" {
 			for i := 0; i < len(letters); i += 4 {
 				<li class="grid-list-element">

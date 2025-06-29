@@ -1,53 +1,54 @@
 package components
 
 templ Card(title, subtitle, date, body, imagePath, get string, tags []string) {
-	<div class="card-container" hx-get={ get } hx-target="#main-content" hx-swap="innerHTML" hx-replace-url="true" tabindex="0">
-		if imagePath != "" {
-            <div class="mr-4">
-                <img src={ string(templ.SafeURL(imagePath)) } alt="Mini card image" class="card-image">
+	<div class="card-container" hx-get={ get } hx-target="#main-content" hx-swap="innerHTML" hx-push-url="true" tabindex="0">
+        if imagePath != "" {
+            <div class="card-image">
+                <img src={ string(templ.SafeURL(imagePath)) } alt="Card image">
             </div>
         }
-        <div>
+        <div class="w-full">
             @CardTitleContainer(title, subtitle)
-			<div class="card-body">
+            <div class="card-body">
                 @templ.Raw(body)
             </div>
-			if date != "" {
+            if date != "" {
                 <p class="card-date">{ date }</p>
             }
-			<div class="tag-container">
-				for _, tag := range tags {
-					<p class="card-tag">{ tag }</p>
-				}
-			</div>
-
-		</div>
+            <div class="tag-container">
+                for _, tag := range tags {
+                    <p class="card-tag">{ tag }</p>
+                }
+            </div>
+        </div>
 	</div>
 }
 
 templ MiniCard(title, date, imagePath, get string, tags []string) {
-	<div class="mini-card-container" hx-get={ get } hx-target="#main-content" hx-swap="innerHTML" hx-replace-url="true" tabindex="0">
+	<div class="mini-card-container" hx-get={ get } hx-target="#main-content" hx-swap="innerHTML" hx-push-url="true" tabindex="0">
 		if imagePath != "" {
             <div class="mr-2">
                 <img src={ string(templ.SafeURL(imagePath)) } alt="Mini card image" class="card-image">
             </div>
         }
-        <div>
+        <div class="w-full">
 			<div class="card-title-container">
 				<h2 class="card-subtitle">{ title }</h2>
 			</div>
             if date != "" {
 			    <p class="card-date">{ date }</p>
             }
-			for _, tag := range tags {
-				<p class="card-tag">{ tag }</p>
-			}
+            <div class="tag-container">
+                for _, tag := range tags {
+                    <p class="card-tag">{ tag }</p>
+                }
+            </div>
 		</div>
 	</div>
 }
 
 templ Link(title, date, get string) {
-    <div class="hyperlink" hx-get={ get } hx-target="#main-content" hx-swap="innerHTML" hx-replace-url="true" tabindex="0">
+    <div class="hyperlink" hx-get={ get } hx-target="#main-content" hx-swap="innerHTML" hx-push-url="true" tabindex="0">
         if date != "" {
             <p>{ date } - { title } </p>
         } else {

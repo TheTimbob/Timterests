@@ -9,16 +9,12 @@ templ HomeForm(latestArticle *Article, featuredProject *Project) {
 templ HomeContent(latestArticle *Article, featuredProject *Project) {
 	<div class="category-container">
         @Introduction()
-
         @ContentBreakdown()
-
 		<div class="section-grid-2">
             @LatestArticle(latestArticle)
             @FeaturedProject(featuredProject)
 		</div>
-
         @CurrentFocus()
-
         @HomeFooter()
 	</div>
 }
@@ -62,7 +58,7 @@ templ CurrentFocus() {
             </h2>
             <div class="section-grid-3">
                 <div class="text-center">
-                    <h1 class="card-title">Common</h1><br>
+                    <h1 class="card-title">Popular</h1><br>
                     <h2 class="card-subtitle">TypeScript, React, Python</h2>
                 </div>
                 <div class="text-center">

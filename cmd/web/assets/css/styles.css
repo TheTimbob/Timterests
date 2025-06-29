@@ -127,7 +127,7 @@ body::before {
 }
 
 .card-image {
-  @apply h-24 aspect-square object-cover rounded;
+  @apply h-24 aspect-square object-cover rounded mr-4;
 }
 
 .home-title {

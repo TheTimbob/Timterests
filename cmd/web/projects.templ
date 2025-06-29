@@ -20,7 +20,7 @@ templ ProjectsListPage(projects []Project, tags []string, design string) {
 }
 
 templ ProjectsList(projects []Project, design string) {
-	<ul id="projects-list">
+	<ul id="page-list">
 		if design == "grid" {
 			for i := 0; i < len(projects); i += 4 {
 				<li class="grid-list-element">
