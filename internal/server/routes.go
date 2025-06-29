@@ -7,8 +7,6 @@ import (
 
 	"timterests/cmd/web"
 	"timterests/internal/storage"
-
-	"github.com/a-h/templ"
 )
 
 func (s *Server) RegisterRoutes() http.Handler {
@@ -25,11 +23,18 @@ func (s *Server) RegisterRoutes() http.Handler {
 	mux.Handle("/assets/", fileServer)
 
 	// Home Routes
-
-	mux.Handle("/", templ.Handler(web.HomeForm()))
-	mux.Handle("/home", templ.Handler(web.HomeForm()))
-	mux.Handle("/web", templ.Handler(web.HomeForm()))
-	mux.Handle("/web/home", templ.Handler(web.HomeForm()))
+	mux.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		web.HomeHandler(w, r, *s.storage)
+	}))
+	mux.Handle("/home", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		web.HomeHandler(w, r, *s.storage)
+	}))
+	mux.Handle("/web", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		web.HomeHandler(w, r, *s.storage)
+	}))
+	mux.Handle("/web/home", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		web.HomeHandler(w, r, *s.storage)
+	}))
 
 	// Health check
 	mux.HandleFunc("/health", s.healthHandler)

@@ -38,7 +38,7 @@ func ArticlesPageHandler(w http.ResponseWriter, r *http.Request, storageInstance
 		tags = storage.GetTags(v, tags)
 	}
 
-	if currentTag != "" || design != "" {
+	if r.Header.Get("HX-Request") == "true" {
 		component = ArticlesList(articles, design)
 	} else {
 		component = ArticlesListPage(articles, tags, design)
@@ -119,4 +119,21 @@ func GetArticle(key string, id int, storageInstance storage.Storage) (*Article, 
 	}
 
 	return &article, nil
+}
+
+func GetLatestArticle(storageInstance storage.Storage) (*Article, error) {
+
+	articles, err := ListArticles(storageInstance, "all")
+	if err != nil {
+		return nil, err
+	}
+
+	if len(articles) > 0 {
+		// Articles are sorted, first article is the latest
+		latestArticle := articles[0]
+		latestArticle.Body = storage.RemoveHTMLTags(latestArticle.Body)
+		return &latestArticle, nil
+	}
+
+	return nil, nil
 }

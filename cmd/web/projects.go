@@ -38,7 +38,7 @@ func ProjectsPageHandler(w http.ResponseWriter, r *http.Request, storageInstance
 		tags = storage.GetTags(v, tags)
 	}
 
-	if currentTag != "" || design != "" {
+	if r.Header.Get("HX-Request") == "true" {
 		component = ProjectsList(projects, design)
 	} else {
 		component = ProjectsListPage(projects, tags, design)
@@ -123,4 +123,26 @@ func GetProject(key string, id int, storageInstance storage.Storage) (*Project, 
 	project.Image = localImagePath
 
 	return &project, nil
+}
+
+func GetFeaturedProject(storageInstance storage.Storage) (*Project, error) {
+
+	projects, err := ListProjects(storageInstance, "all")
+	if err != nil {
+		return nil, err
+	}
+
+	if len(projects) == 0 {
+		return nil, fmt.Errorf("no projects found")
+	}
+
+	featuredProjectTitle := "Timterests"
+	var featuredProject Project
+	for _, project := range projects {
+		if project.Title == featuredProjectTitle {
+			featuredProject = project
+		}
+	}
+	featuredProject.Body = storage.RemoveHTMLTags(featuredProject.Body)
+	return &featuredProject, nil
 }

@@ -1,10 +1,149 @@
 package web
 
-templ HomeForm() {
-	@Base() {
-		<div id="articles-container">
-            <h1 class="category-title">Home</h1>
-            <p class="content-text">Welcome home</p>
+templ HomeForm(latestArticle *Article, featuredProject *Project) {
+    @Base() {
+        @HomeContent(latestArticle, featuredProject)
+    }
+}
+
+templ HomeContent(latestArticle *Article, featuredProject *Project) {
+	<div class="category-container">
+        @Introduction()
+        @ContentBreakdown()
+		<div class="section-grid-2">
+            @LatestArticle(latestArticle)
+            @FeaturedProject(featuredProject)
+		</div>
+        @CurrentFocus()
+        @HomeFooter()
+	</div>
+}
+
+templ Introduction() {
+    <div class="text-center">
+        <h1 class="home-title">
+            Welcome to Timterests
+        </h1>
+        <p class="content-text max-w-3xl mx-auto">
+            A developer's journey through programming languages, frameworks, and technologies.
+            This is my personal repository of knowledge, discoveries, and interests that span
+            over 8 years of programming.
+        </p>
+    </div>
+}
+
+templ ContentBreakdown(){
+    <div class="section-grid-3">
+        <a href="/articles" class="card-container text-center">
+            <div class="card-title text-blue inline">Articles</div>
+            <div class="card-body">Technical Posts</div>
+        </a>
+        <a href="/projects" class="card-container text-center">
+            <div class="card-title text-green inline">Projects</div>
+            <div class="card-body">Project Showcase</div>
+        </a>
+        <a href="/reading-list" class="card-container text-center">
+            <div class="card-title text-purple inline">Reading</div>
+            <div class="card-body">Reading Recommendations</div>
+        </a>
+    </div>
+}
+
+templ CurrentFocus() {
+    <div class="card-container-static">
+        <div class="w-full">
+            <h2 class="card-title flex-center">
+                <i class="fa-solid fa-code text-purple icon-mr"></i>
+                Current Tech Focus
+            </h2>
+            <div class="section-grid-3">
+                <div class="text-center">
+                    <h1 class="card-title">Popular</h1><br>
+                    <h2 class="card-subtitle">TypeScript, React, Python</h2>
+                </div>
+                <div class="text-center">
+                    <h1 class="card-title">Hyped</h1><br>
+                    <h2 class="card-subtitle">Go, HTMX, Tailwind</h2>
+                </div>
+                <div class="text-center">
+                    <h1 class="card-title">Tools</h1><br>
+                    <h2 class="card-subtitle">NeoVim, Docker, GitHub Actions</h2>
+                </div>
+            </div>
         </div>
-	}
+    </div>
+}
+
+templ HomeFooter() {
+    <div class="text-center card-container-light rounded">
+    <h2 class="category-subtitle">Explore My Interests</h2>
+    <p class="content-text mx-auto">
+        Discover my thoughts on programming languages, development practices, and ideas.
+    </p>
+    <div class="flex-center gap-3 mt-4">
+        <a href="/articles" class="button">
+            Read Articles
+        </a>
+        <a href="/projects" class="button">
+            View Projects
+        </a>
+        <a href="/about" class="button">
+            About Me
+        </a>
+    </div>
+</div>
+}
+
+templ LatestArticle(latestArticle *Article) {
+    <div class="card-container" hx-get={ "/article?id=" + latestArticle.ID } hx-target="#main-content" hx-swap="innerHTML" hx-push-url="true">
+        <div class="w-full">
+            <h2 class="card-title flex-center">
+                <i class="fa-solid fa-newspaper text-blue icon-mr"></i>
+                Latest Article
+            </h2>
+            if latestArticle != nil {
+                <h2 class="card-subtitle">{ latestArticle.Title }</h2>
+                <div class="card-body">
+                    @templ.Raw(latestArticle.Body)
+                </div>
+                <div class="flex-between">
+                    <span class="card-date">{ latestArticle.Date }</span>
+                    <a href={ templ.SafeURL("/article?id=" + latestArticle.ID) } class="hyperlink card-body">
+                        Read more →
+                    </a>
+                </div>
+            } else {
+                    <div class="card-body">Article not available.</div>
+            }
+        </div>
+    </div>
+}
+
+templ FeaturedProject(featuredProject *Project) {
+    <div class="card-container" hx-get={ "/project?id=" + featuredProject.ID } hx-target="#main-content" hx-swap="innerHTML" hx-push-url="true">
+        <div class="w-full">
+            <h2 class="card-title flex-center">
+                <i class="fa-solid fa-diagram-project text-green icon-mr"></i>
+                Featured Project
+            </h2>
+            if featuredProject != nil {
+                <h2 class="card-subtitle">{ featuredProject.Title }</h2>
+                <div class="card-body">
+                    @templ.Raw(featuredProject.Body)
+                </div>
+                <div class="flex-between">
+                    <div class="tag-container">
+                        for _, tag := range featuredProject.Tags {
+                            <p class="card-tag">{ tag }</p>
+                        }
+                    </div>
+                    <a href={ templ.SafeURL("/project?id=" + featuredProject.ID) } class="hyperlink card-body">
+                        View project →
+                    </a>
+                </div>
+            } else {
+                <div class="card-body">Project not available.</div>
+            }
+        </div>
+    </div>
 }
