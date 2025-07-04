@@ -59,7 +59,15 @@ body::before {
 }
 
 .card-container {
-  @apply mx-auto mb-3 p-3 bg-gray-100 dark:bg-gray-700 rounded shadow hover:bg-green-100 dark:hover:bg-green-700 hover:shadow-lg truncate flex flex-row items-start transition-all;
+  @apply w-full mx-auto mb-3 p-3 bg-gray-100 dark:bg-gray-700 rounded shadow hover:bg-green-100 dark:hover:bg-green-700 hover:shadow-lg truncate flex flex-row items-start transition-all cursor-pointer;
+}
+
+.card-container-light {
+  @apply w-full mx-auto mb-3 p-3 bg-gray-50 dark:bg-gray-800 rounded shadow;
+}
+
+.card-container-static {
+  @apply w-full mx-auto mb-3 p-3 bg-gray-100 dark:bg-gray-700 rounded shadow truncate flex flex-row items-start transition-all;
 }
 
 .grid-list-element {
@@ -83,7 +91,7 @@ body::before {
 }
 
 .card-body {
-  @apply my-2 mr-4 text-sm text-gray-700 dark:text-gray-300 truncate;
+  @apply my-2 mr-4 text-sm text-gray-700 dark:text-gray-300 align-middle truncate;
 }
 
 .card-tag {
@@ -115,9 +123,45 @@ body::before {
 }
 
 .filter-select {
-  @apply bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-700 rounded-md py-1 px-2 text-sm;
+  @apply text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-700 rounded-md py-1 px-2 ml-2;
 }
 
 .card-image {
-  @apply h-24 aspect-square object-cover rounded;
+  @apply h-24 aspect-square object-cover rounded mr-4;
+}
+
+.home-title {
+  @apply text-4xl font-bold mb-4 text-gray-900 dark:text-gray-200;
+}
+
+.section-grid-2 {
+  @apply grid md:grid-cols-2 gap-8 mb-3;
+}
+
+.section-grid-3 {
+  @apply grid grid-cols-2 md:grid-cols-3 gap-3 mb-3;
+}
+
+.text-blue {
+  @apply text-blue-500;
+}
+
+.text-green {
+  @apply text-green-500;
+}
+
+.text-purple {
+  @apply text-purple-500;
+}
+
+.icon-mr {
+  @apply mr-2;
+}
+
+.flex-between {
+  @apply flex justify-between items-center;
+}
+
+.flex-center {
+  @apply flex justify-center items-center;
 }

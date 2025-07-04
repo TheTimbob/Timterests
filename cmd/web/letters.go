@@ -44,7 +44,7 @@ func LettersPageHandler(w http.ResponseWriter, r *http.Request, storageInstance 
 		tags = storage.GetTags(v, tags)
 	}
 
-	if currentTag != "" || design != "" {
+	if r.Header.Get("HX-Request") == "true" {
 		component = LettersList(letters, design)
 	} else {
 		component = LettersListPage(letters, tags, design)
