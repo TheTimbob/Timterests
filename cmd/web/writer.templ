@@ -9,9 +9,8 @@ templ WriterPage() {
 templ WriterDisplay() {
     <div id="writer-container" class="form-container">
         <h1 class="category-title">Create a Document</h1>
+        @DocumentTypeComponent()
         <form action="/write" method="post">
-            @DocumentTypeComponent()
-
             <label class="form-label" for="title">Title:</label>
             <input class="form-input" type="text" id="title" name="title" required>
             <label class="form-label" for="subtitle">Subtitle:</label>
@@ -19,8 +18,8 @@ templ WriterDisplay() {
             <div id="document-form">
                 @ArticleFormContent()
             </div>
-            <label class="form-label" for="content">Content:</label>
-            <textarea class="form-textarea" id="content" name="content" required></textarea>
+            <label class="form-label" for="body">Content:</label>
+            <textarea class="form-textarea" id="body" name="body" required></textarea>
             <button class="button" type="submit">Submit</button>
         </form>
     </div>
@@ -115,7 +114,7 @@ templ ProjectFormContent() {
     </div>
     <div class="form-field">
         <label class="form-label" for="tags">Tags:</label>
-        <input class="form-input" type="text" id="tags" name="tags" placeholder="comma-separated" required>
+        <input class="form-input" type="text" id="tags" name="tags" placeholder="Comma Separated" required>
     </div>
 }
 

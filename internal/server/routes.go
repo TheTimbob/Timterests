@@ -45,6 +45,11 @@ func (s *Server) RegisterRoutes() http.Handler {
 		web.WriterPageHandler(w, r, docType)
 	}))
 
+	// Handle form submission for writing documents
+	mux.Handle("/write", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		web.WriteDocumentHandler(w, r, *s.storage)
+	}))
+
 	// Health check
 	mux.HandleFunc("/health", s.healthHandler)
 
