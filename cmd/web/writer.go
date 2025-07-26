@@ -7,12 +7,14 @@ import (
 	"strings"
 	"time"
 
+	"timterests/internal/ai"
 	"timterests/internal/storage"
 
 	"github.com/a-h/templ"
 )
 
 const dateFormat = "01-02-2006"
+const instructionFile = "prompts/article.txt"
 
 func WriterPageHandler(w http.ResponseWriter, r *http.Request, docType string) {
 	var component templ.Component
@@ -79,4 +81,41 @@ func WriteDocumentHandler(w http.ResponseWriter, r *http.Request, storageInstanc
 		return
 	}
 	http.Redirect(w, r, "/writer", http.StatusSeeOther)
+}
+
+func WriterSuggestionHandler(w http.ResponseWriter, r *http.Request) {
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Failed to parse form", http.StatusBadRequest)
+		return
+	}
+
+	bodyContent := r.FormValue("body")
+	if strings.TrimSpace(bodyContent) == "" {
+		component := AISuggestionError("Please enter some content in the body field first.")
+		err := component.Render(r.Context(), w)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			log.Printf("Error rendering in WriterSuggestionHandler: %v", err)
+		}
+		return
+	}
+
+	suggestion, err := ai.GetGPTResponse(bodyContent, instructionFile)
+	if err != nil {
+		component := AISuggestionError(fmt.Sprintf("Failed to get AI suggestion: %v", err))
+
+		err = component.Render(r.Context(), w)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			log.Printf("Error rendering in WriterSuggestionHandler: %v", err)
+		}
+		return
+	}
+
+	component := AISuggestionResponse(suggestion)
+	err = component.Render(r.Context(), w)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 }

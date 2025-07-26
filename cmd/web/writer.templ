@@ -10,7 +10,7 @@ templ WriterDisplay() {
     <div id="writer-container" class="form-container">
         <h1 class="category-title">Create a Document</h1>
         @DocumentTypeComponent()
-        <form action="/write" method="post">
+        <form id="writer-form" action="/write" method="post">
             <label class="form-label" for="title">Title:</label>
             <input class="form-input" type="text" id="title" name="title" required>
             <label class="form-label" for="subtitle">Subtitle:</label>
@@ -22,6 +22,7 @@ templ WriterDisplay() {
             <textarea class="form-textarea" id="body" name="body" required></textarea>
             <button class="button" type="submit">Submit</button>
         </form>
+        @OpenAISuggestion()
     </div>
 }
 
@@ -116,6 +117,30 @@ templ ProjectFormContent() {
         <label class="form-label" for="tags">Tags:</label>
         <input class="form-input" type="text" id="tags" name="tags" placeholder="Comma Separated" required>
     </div>
+}
+
+templ OpenAISuggestion() {
+    <div class="form-field">
+        <div class="ai-suggestion-header">
+            <button type="button" class="button ai-button"
+                    hx-post="/write/suggest"
+                    hx-target="#suggestion"
+                    hx-include="#writer-form"
+                    hx-indicator="#ai-loading">
+                Get Suggestion
+            </button>
+            <span id="ai-loading" class="htmx-indicator">Loading...</span>
+        </div>
+        <div class="form-field" id="suggestion"></div>
+    </div>
+}
+
+templ AISuggestionResponse(content string) {
+    <p class="ai-content">{ content }</p>
+}
+
+templ AISuggestionError(errorMsg string) {
+    <p class="ai-error">{ errorMsg }</p>
 }
 
 // HTMX template for dynamic form content switching
