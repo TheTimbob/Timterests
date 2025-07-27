@@ -10,12 +10,23 @@ import (
 	"github.com/openai/openai-go/option"
 )
 
-func GetGPTResponse(prompt, instructionFile string) (string, error) {
+func LoadAPIKey() (string, error) {
 	if err := godotenv.Load(); err != nil {
 		return "", err
 	}
-
 	apiKey := os.Getenv("OPENAI_API_KEY")
+	if apiKey == "" {
+		return "", errors.New("OPENAI_API_KEY not found in environment variables")
+	}
+	return apiKey, nil
+}
+
+func GenerateSuggestion(prompt, instructionFile string) (string, error) {
+	apiKey, envLoadErr := LoadAPIKey()
+	if envLoadErr != nil {
+		return "", envLoadErr
+	}
+
 	if apiKey == "" {
 		return "", errors.New("OPENAI_API_KEY not found in environment variables")
 	}
@@ -38,6 +49,10 @@ func GetGPTResponse(prompt, instructionFile string) (string, error) {
 	})
 	if err != nil {
 		return "", err
+	}
+
+	if len(chatCompletion.Choices) == 0 {
+		return "", errors.New("no choices returned from OpenAI API")
 	}
 
 	return chatCompletion.Choices[0].Message.Content, nil

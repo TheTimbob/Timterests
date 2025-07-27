@@ -19,11 +19,10 @@ const instructionFile = "prompts/article.txt"
 func WriterPageHandler(w http.ResponseWriter, r *http.Request, docType string) {
 	var component templ.Component
 
-	// TODO - Uncomment this before release
-	// if !IsAuthenticated(r) {
-	// 	http.Redirect(w, r, "/login", http.StatusSeeOther)
-	// 	return
-	// }
+	if !IsAuthenticated(r) {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
 
 	if r.Header.Get("HX-Request") == "true" {
 		component = FormContentByType(docType)
@@ -39,6 +38,12 @@ func WriterPageHandler(w http.ResponseWriter, r *http.Request, docType string) {
 }
 
 func WriteDocumentHandler(w http.ResponseWriter, r *http.Request, storageInstance storage.Storage) {
+
+	if !IsAuthenticated(r) {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -84,6 +89,12 @@ func WriteDocumentHandler(w http.ResponseWriter, r *http.Request, storageInstanc
 }
 
 func WriterSuggestionHandler(w http.ResponseWriter, r *http.Request) {
+
+	if !IsAuthenticated(r) {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "Failed to parse form", http.StatusBadRequest)
 		return
@@ -94,13 +105,13 @@ func WriterSuggestionHandler(w http.ResponseWriter, r *http.Request) {
 		component := AISuggestionError("Please enter some content in the body field first.")
 		err := component.Render(r.Context(), w)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			http.Error(w, "Service temporarily unavailable", http.StatusBadRequest)
 			log.Printf("Error rendering in WriterSuggestionHandler: %v", err)
 		}
 		return
 	}
 
-	suggestion, err := ai.GetGPTResponse(bodyContent, instructionFile)
+	suggestion, err := ai.GenerateSuggestion(bodyContent, instructionFile)
 	if err != nil {
 		component := AISuggestionError(fmt.Sprintf("Failed to get AI suggestion: %v", err))
 

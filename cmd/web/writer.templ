@@ -11,23 +11,31 @@ templ WriterDisplay() {
         <h1 class="category-title">Create a Document</h1>
         @DocumentTypeComponent()
         <form id="writer-form" action="/write" method="post">
-            <label class="form-label" for="title">Title:</label>
-            <input class="form-input" type="text" id="title" name="title" required>
-            <label class="form-label" for="subtitle">Subtitle:</label>
-            <input class="form-input" type="text" id="subtitle" name="subtitle" required>
+            <div class="form-field">
+                <label class="form-label" for="title">Title:</label>
+                <input class="form-input" type="text" id="title" name="title" required>
+            </div>
+            <div class="form-field">
+                <label class="form-label" for="subtitle">Subtitle:</label>
+                <input class="form-input" type="text" id="subtitle" name="subtitle" required>
+            </div>
             <div id="document-form">
                 @ArticleFormContent()
             </div>
-            <label class="form-label" for="body">Content:</label>
-            <textarea class="form-textarea" id="body" name="body" required></textarea>
-            <button class="button" type="submit">Submit</button>
+            <div class="form-field">
+                <label class="form-label" for="body">Content:</label>
+                <textarea class="form-textarea" id="body" name="body" required></textarea>
+            </div>
+            <div class="form-field">
+                <button class="button" type="submit">Submit</button>
+            </div>
         </form>
         @OpenAISuggestion()
     </div>
 }
 
 templ DocumentTypeComponent() {
-    <div class="form-section">
+    <div class="form-field">
         <label class="form-label" for="document-type">Document Type:</label>
         <select class="form-select" id="document-type" name="document-type"
                 hx-get="/writer"
@@ -121,22 +129,25 @@ templ ProjectFormContent() {
 
 templ OpenAISuggestion() {
     <div class="form-field">
-        <div class="ai-suggestion-header">
-            <button type="button" class="button ai-button"
-                    hx-post="/write/suggest"
-                    hx-target="#suggestion"
-                    hx-include="#writer-form"
-                    hx-indicator="#ai-loading">
-                Get Suggestion
-            </button>
-            <span id="ai-loading" class="htmx-indicator">Loading...</span>
-        </div>
-        <div class="form-field" id="suggestion"></div>
+        <button type="button" class="button ai-button"
+                hx-post="/write/suggest"
+                hx-target="#suggestion"
+                hx-include="#writer-form"
+                hx-indicator="#ai-loading">
+            Get Suggestion
+        </button>
+        <span id="ai-loading" class="htmx-indicator">Loading...</span>
+    </div>
+    <div class="form-field" id="suggestion-container" style="display: none;">
+        <span class="form-textarea" id="suggestion"></span>
     </div>
 }
 
 templ AISuggestionResponse(content string) {
     <p class="ai-content">{ content }</p>
+    <script>
+        document.getElementById('suggestion-container').style.display = 'block';
+    </script>
 }
 
 templ AISuggestionError(errorMsg string) {
