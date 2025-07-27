@@ -1,0 +1,171 @@
+package web
+
+templ WriterPage() {
+    @Base() {
+        @WriterDisplay()
+    }
+}
+
+templ WriterDisplay() {
+    <div id="writer-container" class="form-container">
+        <h1 class="category-title">Create a Document</h1>
+        @DocumentTypeComponent()
+        <form id="writer-form" action="/write" method="post">
+            <div class="form-field">
+                <label class="form-label" for="title">Title:</label>
+                <input class="form-input" type="text" id="title" name="title" required>
+            </div>
+            <div class="form-field">
+                <label class="form-label" for="subtitle">Subtitle:</label>
+                <input class="form-input" type="text" id="subtitle" name="subtitle" required>
+            </div>
+            <div id="document-form">
+                @ArticleFormContent()
+            </div>
+            <div class="form-field">
+                <label class="form-label" for="body">Content:</label>
+                <textarea class="form-textarea" id="body" name="body" required></textarea>
+            </div>
+            <div class="form-field">
+                <button class="button" type="submit">Submit</button>
+            </div>
+        </form>
+        @OpenAISuggestion()
+    </div>
+}
+
+templ DocumentTypeComponent() {
+    <div class="form-field">
+        <label class="form-label" for="document-type">Document Type:</label>
+        <select class="form-select" id="document-type" name="document-type"
+                hx-get="/writer"
+                hx-target="#document-form"
+                hx-trigger="change">
+            <option value="article">Article</option>
+            <option value="letter">Letter</option>
+            <option value="project">Project</option>
+            <option value="book">Book</option>
+        </select>
+    </div>
+}
+
+templ ArticleFormContent() {
+    <div class="form-field">
+        <label class="form-label" for="date">Date:</label>
+        <input class="form-input" type="date" id="date" name="date" required>
+    </div>
+    <div class="form-field">
+        <label class="form-label" for="tags">Tags:</label>
+        <input class="form-input" type="text" id="tags" name="tags" placeholder="comma-separated" required>
+    </div>
+}
+
+templ BookFormContent() {
+    <div class="form-field">
+        <label class="form-label" for="author">Author:</label>
+        <input class="form-input" type="text" id="author" name="author" required>
+    </div>
+    <div class="form-field">
+        <label class="form-label" for="publisher">Publisher:</label>
+        <input class="form-input" type="text" id="publisher" name="publisher" required>
+    </div>
+    <div class="form-field">
+        <label class="form-label" for="isbn">ISBN:</label>
+        <input class="form-input" type="text" id="isbn" name="isbn">
+    </div>
+    <div class="form-field">
+        <label class="form-label" for="date">Publication Date:</label>
+        <input class="form-input" type="date" id="date" name="date">
+    </div>
+    <div class="form-field">
+        <label class="form-label" for="link">Link:</label>
+        <input class="form-input" type="url" id="link" name="link" placeholder="https://example.com">
+    </div>
+    <div class="form-field">
+        <label class="form-label" for="status">Status:</label>
+        <select class="form-select" id="status" name="status">
+            <option value="interested">Interested</option>
+            <option value="purchased">Purchased</option>
+            <option value="reading">Reading</option>
+            <option value="read">Read</option>
+            <option value="abandoned">Abandoned</option>
+        </select>
+    </div>
+    <div class="form-field">
+        <label class="form-label" for="tags">Tags:</label>
+        <input class="form-input" type="text" id="tags" name="tags" placeholder="comma-separated" required>
+    </div>
+}
+
+templ LetterFormContent() {
+    <div class="form-field">
+        <label class="form-label" for="date">Date:</label>
+        <input class="form-input" type="date" id="date" name="date" required>
+    </div>
+    <div class="form-field">
+        <label class="form-label" for="source">Source:</label>
+        <input class="form-input" type="text" id="source" name="source" placeholder="Timterests" required>
+    </div>
+    <div class="form-field">
+        <label class="form-label" for="tags">Tags:</label>
+        <input class="form-input" type="text" id="tags" name="tags" placeholder="comma-separated" required>
+    </div>
+}
+
+templ ProjectFormContent() {
+    <div class="form-field">
+        <label class="form-label" for="image-path">Image Path:</label>
+        <input class="form-input" type="text" id="image-path" name="image-path" placeholder="Path to image" required>
+    </div>
+    <div class="form-field">
+        <label class="form-label" for="repository">Repository:</label>
+        <input class="form-input" type="text" id="repository" name="repository" placeholder="GitHub repository URL" required>
+    </div>
+    <div class="form-field">
+        <label class="form-label" for="tags">Tags:</label>
+        <input class="form-input" type="text" id="tags" name="tags" placeholder="Comma Separated" required>
+    </div>
+}
+
+templ OpenAISuggestion() {
+    <div class="form-field">
+        <button type="button" class="button ai-button"
+                hx-post="/write/suggest"
+                hx-target="#suggestion"
+                hx-include="#writer-form"
+                hx-indicator="#ai-loading">
+            Get Suggestion
+        </button>
+        <span id="ai-loading" class="htmx-indicator">Loading...</span>
+    </div>
+    <div class="form-field" id="suggestion-container" style="display: none;">
+        <span class="form-textarea" id="suggestion"></span>
+    </div>
+}
+
+templ AISuggestionResponse(content string) {
+    <p class="ai-content">{ content }</p>
+    <script>
+        document.getElementById('suggestion-container').style.display = 'block';
+    </script>
+}
+
+templ AISuggestionError(errorMsg string) {
+    <p class="ai-error">{ errorMsg }</p>
+}
+
+// HTMX template for dynamic form content switching
+templ FormContentByType(docType string) {
+    switch docType {
+        case "article":
+            @ArticleFormContent()
+        case "letter":
+            @LetterFormContent()
+        case "project":
+            @ProjectFormContent()
+        case "book":
+            @BookFormContent()
+        default:
+            @ArticleFormContent()
+    }
+}

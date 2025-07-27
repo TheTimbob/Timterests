@@ -36,6 +36,23 @@ func (s *Server) RegisterRoutes() http.Handler {
 		web.HomeHandler(w, r, *s.storage)
 	}))
 
+	mux.Handle("/writer", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		docType := r.URL.Query().Get("document-type")
+		if docType == "" {
+			docType = "article" // default
+		}
+
+		web.WriterPageHandler(w, r, docType)
+	}))
+
+	mux.Handle("/write", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		web.WriteDocumentHandler(w, r, *s.storage)
+	}))
+
+	mux.Handle("/write/suggest", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		web.WriterSuggestionHandler(w, r)
+	}))
+
 	// Health check
 	mux.HandleFunc("/health", s.healthHandler)
 

@@ -139,6 +139,70 @@ func DownloadFile(ctx context.Context, storage Storage, objectKey string, fileNa
 	return err
 }
 
+// UploadFile uploads a local file to S3
+func UploadFile(ctx context.Context, storage Storage, objectKey string, fileName string) error {
+	file, err := os.Open(fileName)
+	if err != nil {
+		log.Printf("Couldn't open file %v. Here's why: %v\n", fileName, err)
+		return err
+	}
+	defer func() {
+		if err := file.Close(); err != nil {
+			log.Printf("error closing file: %v", err)
+		}
+	}()
+
+	_, err = storage.S3Client.PutObject(ctx, &s3.PutObjectInput{
+		Bucket: aws.String(storage.BucketName),
+		Key:    aws.String(objectKey),
+		Body:   file,
+	})
+
+	if err != nil {
+		log.Printf("Couldn't upload file %v to %v:%v. Here's why: %v\n", fileName, storage.BucketName, objectKey, err)
+	}
+
+	return err
+}
+
+// WriteYAMLDocument writes a YAML document to local storage
+func WriteYAMLDocument(objectKey string, formData map[string]any) error {
+
+	fileName := path.Base(objectKey)
+	localFilePath := path.Join("s3", fileName)
+
+	if err := os.MkdirAll("s3", 0755); err != nil {
+		log.Printf("Couldn't create s3 directory. Here's why: %v\n", err)
+		return err
+	}
+
+	file, err := os.Create(localFilePath)
+	if err != nil {
+		log.Printf("Couldn't create file %v. Here's why: %v\n", localFilePath, err)
+		return err
+	}
+	defer func() {
+		if err := file.Close(); err != nil {
+			log.Printf("error closing file: %v", err)
+		}
+	}()
+
+	enc := yaml.NewEncoder(file)
+	defer func() {
+		if err := enc.Close(); err != nil {
+			log.Printf("error closing encoder: %v", err)
+		}
+	}()
+
+	if err := enc.Encode(formData); err != nil {
+		log.Printf("Couldn't encode document to YAML. Here's why: %v\n", err)
+		return err
+	}
+
+	log.Printf("Successfully created document: %s", objectKey)
+	return nil
+}
+
 func GetPreparedFile(key string, document any, storage Storage) error {
 	fileName := path.Base(key)
 	localFilePath := path.Join("s3", fileName)
@@ -270,6 +334,21 @@ func GetTags(v reflect.Value, tags []string) []string {
 func RemoveHTMLTags(s string) string {
 	re := regexp.MustCompile(`<[^>]*>`)
 	return re.ReplaceAllString(s, "")
+}
+
+func SanitizeFilename(filename string) string {
+	filename = strings.ToLower(filename)
+	filename = strings.ReplaceAll(filename, " ", "-")
+
+	reg := regexp.MustCompile("[^a-z0-9-_]")
+	filename = reg.ReplaceAllString(filename, "")
+
+	const maxLength = 50
+	if len(filename) > maxLength {
+		filename = filename[:maxLength]
+	}
+
+	return filename
 }
 
 func Health(storage Storage) map[string]string {

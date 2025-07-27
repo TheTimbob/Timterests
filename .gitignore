@@ -12,9 +12,6 @@
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 
-# Dependency directories (remove the comment below to include it)
-# vendor/
-
 # Go workspace file
 go.work
 tmp/
@@ -36,5 +33,11 @@ node_modules
 # OS X generated file
 .DS_Store
 
-# User specific files
-utils/
+
+# Directories that should be ignored
+prompts/*
+s3/*
+utils/*
+
+# Keep empty directories
+!.gitkeep
