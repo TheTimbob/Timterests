@@ -166,7 +166,7 @@ func UploadFile(ctx context.Context, storage Storage, objectKey string, fileName
 }
 
 // WriteYAMLDocument writes a YAML document to local storage
-func WriteYAMLDocument(storage Storage, objectKey string, formData map[string]any) error {
+func WriteYAMLDocument(objectKey string, formData map[string]any) error {
 
 	fileName := path.Base(objectKey)
 	localFilePath := path.Join("s3", fileName)
@@ -343,8 +343,9 @@ func SanitizeFilename(filename string) string {
 	reg := regexp.MustCompile("[^a-z0-9-_]")
 	filename = reg.ReplaceAllString(filename, "")
 
-	if len(filename) > 50 {
-		filename = filename[:50]
+	const maxLength = 50
+	if len(filename) > maxLength {
+		filename = filename[:maxLength]
 	}
 
 	return filename

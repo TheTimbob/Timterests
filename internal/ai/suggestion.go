@@ -21,14 +21,10 @@ func LoadAPIKey() (string, error) {
 	return apiKey, nil
 }
 
-func GenerateSuggestion(prompt, instructionFile string) (string, error) {
+func GenerateSuggestion(ctx context.Context, prompt, instructionFile string) (string, error) {
 	apiKey, envLoadErr := LoadAPIKey()
 	if envLoadErr != nil {
 		return "", envLoadErr
-	}
-
-	if apiKey == "" {
-		return "", errors.New("OPENAI_API_KEY not found in environment variables")
 	}
 
 	systemInstruction, err := GetInstruction(instructionFile)
@@ -40,7 +36,7 @@ func GenerateSuggestion(prompt, instructionFile string) (string, error) {
 		option.WithAPIKey(apiKey),
 	)
 
-	chatCompletion, err := client.Chat.Completions.New(context.TODO(), openai.ChatCompletionNewParams{
+	chatCompletion, err := client.Chat.Completions.New(ctx, openai.ChatCompletionNewParams{
 		Messages: []openai.ChatCompletionMessageParamUnion{
 			openai.SystemMessage(systemInstruction),
 			openai.UserMessage(prompt),

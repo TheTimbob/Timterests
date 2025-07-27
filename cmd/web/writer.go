@@ -79,7 +79,7 @@ func WriteDocumentHandler(w http.ResponseWriter, r *http.Request, storageInstanc
 	sanitizedTitle := storage.SanitizeFilename(title)
 	objectKey := fmt.Sprintf("%s-%s.yaml", sanitizedTitle, timestamp)
 
-	err := storage.WriteYAMLDocument(storageInstance, objectKey, formData)
+	err := storage.WriteYAMLDocument(objectKey, formData)
 	if err != nil {
 		http.Error(w, "Failed to save document", http.StatusInternalServerError)
 		log.Printf("Error writing document: %v", err)
@@ -111,7 +111,7 @@ func WriterSuggestionHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	suggestion, err := ai.GenerateSuggestion(bodyContent, instructionFile)
+	suggestion, err := ai.GenerateSuggestion(r.Context(), bodyContent, instructionFile)
 	if err != nil {
 		component := AISuggestionError(fmt.Sprintf("Failed to get AI suggestion: %v", err))
 
