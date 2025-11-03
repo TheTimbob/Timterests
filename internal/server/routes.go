@@ -36,6 +36,10 @@ func (s *Server) RegisterRoutes() http.Handler {
 		web.HomeHandler(w, r, *s.storage)
 	}))
 
+	mux.Handle("/admin", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		web.AdminPageHandler(w, r)
+	}))
+
 	mux.Handle("/writer", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		docType := r.URL.Query().Get("document-type")
 		if docType == "" {

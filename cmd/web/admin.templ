@@ -1,0 +1,19 @@
+package web
+
+templ AdminPage() {
+    @Base() {
+        @AdminDisplay()
+    }
+}
+
+templ AdminDisplay() {
+    <div id="admin-container">
+        <h1 class="category-title">Admin</h1>
+        <div>
+            <a href="/letters" class="hyperlink card-subtitle">Letters</a>
+        </div>
+        <div>
+            <a href="/writer" class="hyperlink card-subtitle">Writer</a>
+        </div>
+    </div>
+}

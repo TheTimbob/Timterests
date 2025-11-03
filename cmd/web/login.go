@@ -18,7 +18,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		// Perform authentication
 		isAuthenticated, err := Authenticate(w, r, email, password)
 		if isAuthenticated && err == nil {
-			http.Redirect(w, r, "/letters", http.StatusSeeOther)
+			http.Redirect(w, r, "/admin", http.StatusSeeOther)
 			return
 		} else {
 			http.Error(w, "Authentication: "+err.Error(), http.StatusInternalServerError)

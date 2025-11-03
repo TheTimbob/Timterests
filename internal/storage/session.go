@@ -7,7 +7,7 @@ import (
 	"github.com/gorilla/sessions"
 )
 
-var store = sessions.NewCookieStore([]byte(os.Getenv("SESSION_KEY")))
+var store = sessions.NewCookieStore([]byte(os.Getenv("SESSION_NAME")))
 
 // Initialize the session store with options.
 func init() {
