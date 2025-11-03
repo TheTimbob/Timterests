@@ -20,6 +20,6 @@ func AdminPageHandler(w http.ResponseWriter, r *http.Request) {
 	err := component.Render(r.Context(), w)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		log.Printf("Error rendering in WriterPage: %v", err)
+		log.Printf("Error rendering in AdminPage: %v", err)
 	}
 }
