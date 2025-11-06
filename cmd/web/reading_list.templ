@@ -45,13 +45,14 @@ templ ReadingListList(readingList []ReadingList, design string) {
 	</ul>
 }
 
-templ BookPage(readingList ReadingList) {
+templ BookPage(readingList ReadingList, userIsAdmin bool) {
     @Base() {
-        @BookDisplay(readingList)
+        @BookDisplay(readingList, userIsAdmin)
     }
 }
 
-templ BookDisplay(readingList ReadingList) {
+templ BookDisplay(readingList ReadingList, userIsAdmin bool) {
+    @EditBookButton(readingList, userIsAdmin)
 	<div id="reading-list-container">
 		<h1 class="category-title">{ readingList.Title }</h1>
 		<h2 class="category-subtitle">{ readingList.Subtitle }</h2>
@@ -64,4 +65,15 @@ templ BookDisplay(readingList ReadingList) {
 		<br>
 		<div>I am not affiliated with, nor do I own any rights to, the books listed in my reading list. All purchase links are non-affiliate and provided solely for informational purposes.</div>
 	</div>
+}
+
+templ EditBookButton(readingList ReadingList, userIsAdmin bool) {
+    if userIsAdmin {
+        <form hx-post="/writer" hx-target="body" style="display: inline;">
+            <input type="hidden" name="document-type" value="book"/>
+            <input type="hidden" name="document-key" value={readingList.S3Key}/>
+            <input type="hidden" name="type-id" value={readingList.ID}/>
+            <button type="submit" class="button">Edit</button>
+        </form>
+    }
 }

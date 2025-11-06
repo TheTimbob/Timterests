@@ -61,10 +61,12 @@ func GetProjectHandler(w http.ResponseWriter, r *http.Request, storageInstance s
 	for _, project := range projects {
 		if project.ID == projectID {
 			var component templ.Component
+			isAuthenticated := IsAuthenticated(r)
+
 			if r.Header.Get("HX-Request") == "true" {
-				component = ProjectDisplay(project)
+				component = ProjectDisplay(project, isAuthenticated)
 			} else {
-				component = ProjectPage(project)
+				component = ProjectPage(project, isAuthenticated)
 			}
 			err = component.Render(r.Context(), w)
 			if err != nil {
@@ -110,6 +112,7 @@ func ListProjects(storageInstance storage.Storage, tag string) ([]Project, error
 func GetProject(key string, id int, storageInstance storage.Storage) (*Project, error) {
 	var project Project
 	project.ID = strconv.Itoa(id)
+	project.S3Key = key
 	err := storage.GetPreparedFile(key, &project, storageInstance)
 	if err != nil {
 		return nil, err

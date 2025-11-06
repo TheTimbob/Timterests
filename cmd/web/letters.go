@@ -59,7 +59,8 @@ func LettersPageHandler(w http.ResponseWriter, r *http.Request, storageInstance 
 
 func GetLetterHandler(w http.ResponseWriter, r *http.Request, storageInstance storage.Storage, letterID string) {
 	// Check if user is authenticated
-	if !IsAuthenticated(r) {
+	isAuthenticated := IsAuthenticated(r)
+	if !isAuthenticated {
 		log.Printf("User not authenticated, redirecting to login")
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
@@ -75,9 +76,9 @@ func GetLetterHandler(w http.ResponseWriter, r *http.Request, storageInstance st
 		if letter.ID == letterID {
 			var component templ.Component
 			if r.Header.Get("HX-Request") == "true" {
-				component = LetterDisplay(letter)
+				component = LetterDisplay(letter, isAuthenticated)
 			} else {
-				component = LetterPage(letter)
+				component = LetterPage(letter, isAuthenticated)
 			}
 			err = component.Render(r.Context(), w)
 			if err != nil {
@@ -124,7 +125,7 @@ func ListLetters(storageInstance storage.Storage) ([]Letter, error) {
 func GetLetter(key string, id int, storageInstance storage.Storage) (*Letter, error) {
 	var letter Letter
 	letter.ID = strconv.Itoa(id)
-
+	letter.S3Key = key
 	err := storage.GetPreparedFile(key, &letter, storageInstance)
 	if err != nil {
 		return nil, err

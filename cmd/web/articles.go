@@ -61,10 +61,12 @@ func GetArticleHandler(w http.ResponseWriter, r *http.Request, storageInstance s
 	for _, article := range articles {
 		if article.ID == articleID {
 			var component templ.Component
+			isAuthenticated := IsAuthenticated(r)
+
 			if r.Header.Get("HX-Request") == "true" {
-				component = ArticleDisplay(article)
+				component = ArticleDisplay(article, isAuthenticated)
 			} else {
-				component = ArticlePage(article)
+				component = ArticlePage(article, isAuthenticated)
 			}
 			err = component.Render(r.Context(), w)
 			if err != nil {
@@ -113,6 +115,7 @@ func ListArticles(storageInstance storage.Storage, tag string) ([]Article, error
 func GetArticle(key string, id int, storageInstance storage.Storage) (*Article, error) {
 	var article Article
 	article.ID = strconv.Itoa(id)
+	article.S3Key = key
 	err := storage.GetPreparedFile(key, &article, storageInstance)
 	if err != nil {
 		return nil, err

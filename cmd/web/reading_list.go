@@ -65,10 +65,11 @@ func GetReadingListBook(w http.ResponseWriter, r *http.Request, storageInstance 
 
 	for _, book := range readingList {
 		if book.ID == bookID {
+			isAuthenticated := IsAuthenticated(r)
 			if r.Header.Get("HX-Request") == "true" {
-				component = BookDisplay(book)
+				component = BookDisplay(book, isAuthenticated)
 			} else {
-				component = BookPage(book)
+				component = BookPage(book, isAuthenticated)
 			}
 			err = component.Render(r.Context(), w)
 			if err != nil {
@@ -112,6 +113,7 @@ func ListBooks(storageInstance storage.Storage, tag string) ([]ReadingList, erro
 func GetBook(key string, id int, storageInstance storage.Storage) (*ReadingList, error) {
 	var book ReadingList
 	book.ID = strconv.Itoa(id)
+	book.S3Key = key
 	err := storage.GetPreparedFile(key, &book, storageInstance)
 	if err != nil {
 		return nil, err

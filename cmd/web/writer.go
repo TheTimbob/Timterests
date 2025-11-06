@@ -16,7 +16,11 @@ import (
 const dateFormat = "01-02-2006"
 const instructionFile = "prompts/article.txt"
 
-func WriterPageHandler(w http.ResponseWriter, r *http.Request, docType string) {
+var validDocTypes = []string{"article", "project", "book", "letter"}
+
+func WriterPageHandler(w http.ResponseWriter, r *http.Request, storageInstance storage.Storage, docType, key string, typeID int) {
+	var content any
+	var err error
 	var component templ.Component
 
 	if !IsAuthenticated(r) {
@@ -24,13 +28,36 @@ func WriterPageHandler(w http.ResponseWriter, r *http.Request, docType string) {
 		return
 	}
 
-	if r.Header.Get("HX-Request") == "true" {
-		component = FormContentByType(docType)
+	// If key is provided, get the content to load the existing document
+	if key != "" {
+		content, err = GetTypeContentFromID(docType, key, typeID, storageInstance)
+		if err != nil {
+			http.Error(w, "Failed to load document: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
 	} else {
-		component = WriterPage()
+		// Create empty content based on docType
+		switch docType {
+		case "article":
+			content = &Article{}
+		case "project":
+			content = &Project{}
+		case "book":
+			content = &ReadingList{}
+		case "letter":
+			content = &Letter{}
+		default:
+			content = &Article{} // default to Article
+		}
 	}
 
-	err := component.Render(r.Context(), w)
+	if r.Header.Get("HX-Request") == "true" && key == "" {
+		component = FormContentByType(content)
+	} else {
+		component = WriterPage(content, docType)
+	}
+
+	err = component.Render(r.Context(), w)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		log.Printf("Error rendering in WriterPage: %v", err)
@@ -129,4 +156,22 @@ func WriterSuggestionHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+}
+
+func GetTypeContentFromID(docType, key string, id int, storageInstance storage.Storage) (any, error) {
+	for _, valid := range validDocTypes {
+		if docType == valid {
+			switch docType {
+			case "article":
+				return GetArticle(key, id, storageInstance)
+			case "project":
+				return GetProject(key, id, storageInstance)
+			case "book":
+				return GetBook(key, id, storageInstance)
+			case "letter":
+				return GetLetter(key, id, storageInstance)
+			}
+		}
+	}
+	return nil, fmt.Errorf("unsupported document type: %s", docType)
 }
