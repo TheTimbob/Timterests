@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"path/filepath"
 	"strconv"
+	"strings"
 
 	"timterests/cmd/web"
 	"timterests/internal/storage"
@@ -77,6 +79,52 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	mux.Handle("/write/suggest", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		web.WriterSuggestionHandler(w, r)
+	}))
+
+	mux.Handle("/download", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		// Only admins can download documents
+		if !web.IsAuthenticated(r) {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		// Get the file key
+		if err := r.ParseForm(); err != nil {
+			http.Error(w, "Failed to parse form", http.StatusBadRequest)
+			return
+		}
+
+		key := r.FormValue("document-key")
+		if key == "" {
+			http.Error(w, "File key is required", http.StatusBadRequest)
+			return
+		}
+
+		// Remove the path of the type of document
+		path_parts := strings.Split(key, "/")
+		localKey := path_parts[len(path_parts)-1]
+		cleanLocalKey := strings.ReplaceAll(localKey, "..", "")
+		cleanLocalKey = strings.TrimLeft(cleanLocalKey, "/\\")
+		filePath := "s3/" + cleanLocalKey
+
+		// Set headers to force download
+		w.Header().Set("Content-Disposition", "attachment; filename=\""+localKey+"\"")
+		w.Header().Set("Content-Type", "application/x-yaml")
+
+		// Ensure the file path is within the s3 directory
+		absS3Dir, err := filepath.Abs("s3")
+		if err != nil {
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
+		absFilePath, err := filepath.Abs(filePath)
+		if err != nil || !strings.HasPrefix(absFilePath, absS3Dir) {
+			http.Error(w, "Invalid file path", http.StatusBadRequest)
+			return
+		}
+
+		http.ServeFile(w, r, filePath)
 	}))
 
 	// Health check
