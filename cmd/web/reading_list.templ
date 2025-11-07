@@ -53,7 +53,7 @@ templ BookPage(readingList ReadingList, userIsAdmin bool) {
 
 templ BookDisplay(readingList ReadingList, userIsAdmin bool) {
     @EditBookButton(readingList, userIsAdmin)
-    @DownloadDocumentButton(readingList.S3Key, userIsAdmin)
+    @components.DownloadDocumentButton(readingList.S3Key, userIsAdmin)
 	<div id="reading-list-container">
 		<h1 class="category-title">{ readingList.Title }</h1>
 		<h2 class="category-subtitle">{ readingList.Subtitle }</h2>

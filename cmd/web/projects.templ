@@ -53,7 +53,7 @@ templ ProjectPage(project Project, userIsAdmin bool) {
 
 templ ProjectDisplay(project Project, userIsAdmin bool) {
     @EditProjectButton(project, userIsAdmin)
-    @DownloadDocumentButton(project.S3Key, userIsAdmin)
+    @components.DownloadDocumentButton(project.S3Key, userIsAdmin)
     <div id="project-container">
         <h1 class="category-title">{ project.Title }</h1>
         <h2 class="category-subtitle">{ project.Subtitle }</h2>

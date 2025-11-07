@@ -101,15 +101,16 @@ func (s *Server) RegisterRoutes() http.Handler {
 			return
 		}
 
-		// Remove the path of the type of document
-		path_parts := strings.Split(key, "/")
-		localKey := path_parts[len(path_parts)-1]
-		cleanLocalKey := strings.ReplaceAll(localKey, "..", "")
-		cleanLocalKey = strings.TrimLeft(cleanLocalKey, "/\\")
-		filePath := "s3/" + cleanLocalKey
+		// Sanitize the key and construct the file path safely
+		filename := filepath.Base(key)
+		if filename == "" || filename == "." || filename == ".." {
+			http.Error(w, "Invalid file key", http.StatusBadRequest)
+			return
+		}
+		filePath := filepath.Join("s3", filename)
 
 		// Set headers to force download
-		w.Header().Set("Content-Disposition", "attachment; filename=\""+localKey+"\"")
+		w.Header().Set("Content-Disposition", "attachment; filename=\""+filename+"\"")
 		w.Header().Set("Content-Type", "application/x-yaml")
 
 		// Ensure the file path is within the s3 directory
@@ -119,7 +120,12 @@ func (s *Server) RegisterRoutes() http.Handler {
 			return
 		}
 		absFilePath, err := filepath.Abs(filePath)
-		if err != nil || !strings.HasPrefix(absFilePath, absS3Dir) {
+		if err != nil {
+			http.Error(w, "Invalid file path", http.StatusBadRequest)
+			return
+		}
+		rel, err := filepath.Rel(absS3Dir, absFilePath)
+		if err != nil || strings.HasPrefix(rel, "..") || filepath.IsAbs(rel) {
 			http.Error(w, "Invalid file path", http.StatusBadRequest)
 			return
 		}
