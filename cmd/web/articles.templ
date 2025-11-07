@@ -53,6 +53,7 @@ templ ArticlePage(article Article, userIsAdmin bool) {
 
 templ ArticleDisplay(article Article, userIsAdmin bool) {
     @EditArticleButton(article, userIsAdmin)
+    @components.DownloadDocumentButton(article.S3Key, userIsAdmin)
 	<div id="article-container">
 		<h1 class="category-title">{ article.Title }</h1>
 		<h2 class="category-subtitle">{ article.Subtitle }</h2>
