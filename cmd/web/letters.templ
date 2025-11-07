@@ -45,16 +45,28 @@ templ LettersList(letters []Letter, design string) {
 	</ul>
 }
 
-templ LetterPage(letter Letter){
+templ LetterPage(letter Letter, userIsAdmin bool){
     @Base() {
-        @LetterDisplay(letter)
+        @LetterDisplay(letter, userIsAdmin)
     }
 }
 
-templ LetterDisplay(letter Letter) {
+templ LetterDisplay(letter Letter, userIsAdmin bool) {
+    @EditLetterButton(letter, userIsAdmin)
     <div id="letter-container">
         <h1 class="category-title">{ letter.Title }</h1>
         <h2 class="category-subtitle">{ letter.Subtitle }</h2>
         @templ.Raw(letter.Body)
     </div>
+}
+
+templ EditLetterButton(letter Letter, userIsAdmin bool) {
+    if userIsAdmin {
+        <form hx-post="/writer" hx-target="body" style="display: inline;">
+            <input type="hidden" name="document-type" value="letter"/>
+            <input type="hidden" name="document-key" value={letter.S3Key}/>
+            <input type="hidden" name="type-id" value={letter.ID}/>
+            <button type="submit" class="button">Edit</button>
+        </form>
+    }
 }

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strconv"
 
 	"timterests/cmd/web"
 	"timterests/internal/storage"
@@ -41,12 +42,33 @@ func (s *Server) RegisterRoutes() http.Handler {
 	}))
 
 	mux.Handle("/writer", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		docType := r.URL.Query().Get("document-type")
+		var docType, key string
+		var typeID int
+
+		// Handle POST request - parse form data
+		if err := r.ParseForm(); err != nil {
+			http.Error(w, "Failed to parse form", http.StatusBadRequest)
+			return
+		}
+
+		docType = r.FormValue("document-type")
 		if docType == "" {
 			docType = "article" // default
 		}
 
-		web.WriterPageHandler(w, r, docType)
+		typeIDString := r.FormValue("type-id")
+		if typeIDString != "" {
+			var err error
+			typeID, err = strconv.Atoi(typeIDString)
+			if err != nil {
+				http.Error(w, "Invalid type ID: expected integer, got '"+typeIDString+"'", http.StatusBadRequest)
+				return
+			}
+		}
+
+		key = r.FormValue("document-key")
+
+		web.WriterPageHandler(w, r, *s.storage, docType, key, typeID)
 	}))
 
 	mux.Handle("/write", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

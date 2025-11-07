@@ -45,13 +45,14 @@ templ ProjectsList(projects []Project, design string) {
 	</ul>
 }
 
-templ ProjectPage(project Project) {
+templ ProjectPage(project Project, userIsAdmin bool) {
     @Base() {
-        @ProjectDisplay(project)
+        @ProjectDisplay(project, userIsAdmin)
     }
 }
 
-templ ProjectDisplay(project Project) {
+templ ProjectDisplay(project Project, userIsAdmin bool) {
+    @EditProjectButton(project, userIsAdmin)
     <div id="project-container">
         <h1 class="category-title">{ project.Title }</h1>
         <h2 class="category-subtitle">{ project.Subtitle }</h2>
@@ -60,4 +61,15 @@ templ ProjectDisplay(project Project) {
 		}
         @templ.Raw(project.Body)
     </div>
+}
+
+templ EditProjectButton(project Project, userIsAdmin bool) {
+    if userIsAdmin {
+        <form hx-post="/writer" hx-target="body" style="display: inline;">
+            <input type="hidden" name="document-type" value="project"/>
+            <input type="hidden" name="document-key" value={project.S3Key}/>
+            <input type="hidden" name="type-id" value={project.ID}/>
+            <button type="submit" class="button">Edit</button>
+        </form>
+    }
 }

@@ -45,16 +45,28 @@ templ ArticlesList(articles []Article, design string) {
     </ul>
 }
 
-templ ArticlePage(article Article) {
+templ ArticlePage(article Article, userIsAdmin bool) {
     @Base() {
-        @ArticleDisplay(article)
+        @ArticleDisplay(article, userIsAdmin)
     }
 }
 
-templ ArticleDisplay(article Article) {
-    <div id="article-container">
-        <h1 class="category-title">{ article.Title }</h1>
-        <h2 class="category-subtitle">{ article.Subtitle }</h2>
-        @templ.Raw(article.Body)
-    </div>
+templ ArticleDisplay(article Article, userIsAdmin bool) {
+    @EditArticleButton(article, userIsAdmin)
+	<div id="article-container">
+		<h1 class="category-title">{ article.Title }</h1>
+		<h2 class="category-subtitle">{ article.Subtitle }</h2>
+		@templ.Raw(article.Body)
+	</div>
+}
+
+templ EditArticleButton(article Article, userIsAdmin bool) {
+    if userIsAdmin {
+        <form hx-post="/writer" hx-target="body" style="display: inline;">
+            <input type="hidden" name="document-type" value="article"/>
+            <input type="hidden" name="document-key" value={article.S3Key}/>
+            <input type="hidden" name="type-id" value={article.ID}/>
+            <button type="submit" class="button">Edit</button>
+        </form>
+    }
 }
