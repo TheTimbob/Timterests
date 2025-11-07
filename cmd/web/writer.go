@@ -16,8 +16,6 @@ import (
 const dateFormat = "01-02-2006"
 const instructionFile = "prompts/article.txt"
 
-var validDocTypes = []string{"article", "project", "book", "letter"}
-
 func WriterPageHandler(w http.ResponseWriter, r *http.Request, storageInstance storage.Storage, docType, key string, typeID int) {
 	var content any
 	var err error
@@ -159,19 +157,16 @@ func WriterSuggestionHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetTypeContentFromID(docType, key string, id int, storageInstance storage.Storage) (any, error) {
-	for _, valid := range validDocTypes {
-		if docType == valid {
-			switch docType {
-			case "article":
-				return GetArticle(key, id, storageInstance)
-			case "project":
-				return GetProject(key, id, storageInstance)
-			case "book":
-				return GetBook(key, id, storageInstance)
-			case "letter":
-				return GetLetter(key, id, storageInstance)
-			}
-		}
+	switch docType {
+	case "article":
+		return GetArticle(key, id, storageInstance)
+	case "project":
+		return GetProject(key, id, storageInstance)
+	case "book":
+		return GetBook(key, id, storageInstance)
+	case "letter":
+		return GetLetter(key, id, storageInstance)
+	default:
+		return nil, fmt.Errorf("unsupported document type: %s", docType)
 	}
-	return nil, fmt.Errorf("unsupported document type: %s", docType)
 }
