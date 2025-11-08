@@ -55,7 +55,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 		docType = r.FormValue("document-type")
 		if docType == "" {
-			docType = "article" // default
+			docType = "articles" // default
 		}
 
 		typeIDString := r.FormValue("type-id")

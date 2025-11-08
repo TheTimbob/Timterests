@@ -67,7 +67,7 @@ templ ProjectDisplay(project Project, userIsAdmin bool) {
 templ EditProjectButton(project Project, userIsAdmin bool) {
     if userIsAdmin {
         <form hx-post="/writer" hx-target="body" style="display: inline;">
-            <input type="hidden" name="document-type" value="project"/>
+            <input type="hidden" name="document-type" value="projects"/>
             <input type="hidden" name="document-key" value={project.S3Key}/>
             <input type="hidden" name="type-id" value={project.ID}/>
             <button type="submit" class="button">Edit</button>

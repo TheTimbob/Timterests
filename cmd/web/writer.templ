@@ -5,23 +5,23 @@ import (
     "strings"
 )
 
-templ WriterPage(content any, docType string) {
+templ WriterPage(content any) {
     @Base() {
-        @WriterDisplay(content, docType)
+        @WriterDisplay(content)
     }
 }
 
-templ WriterDisplay(content any, docType string) {
+templ WriterDisplay(content any) {
     <div id="writer-container" class="form-container">
         <h1 class="category-title">Create a Document</h1>
-        @DocumentTypeComponent(docType)
         @FormContentByType(content)
         @OpenAISuggestion()
     </div>
 }
 
-templ WriterFormContent(content types.Document, component templ.Component) {
+templ WriterFormContent(content types.Document, component templ.Component, docType string) {
     <form id="writer-form" action="/write" method="post">
+        @DocumentTypeComponent(docType)
         <div class="form-field">
             <label class="form-label" for="title">Title:</label>
             <input class="form-input" type="text" id="title" name="title" value={content.Title} required>
@@ -50,10 +50,10 @@ templ DocumentTypeComponent(doctype string) {
                 hx-get="/writer"
                 hx-target="#document-form"
                 hx-trigger="change">
-            <option value="article" selected?={doctype == "article"}>Article</option>
-            <option value="letter" selected?={doctype == "letter"}>Letter</option>
-            <option value="project" selected?={doctype == "project"}>Project</option>
-            <option value="book" selected?={doctype == "book"}>Book</option>
+            <option value="articles" selected?={doctype == "articles"}>Article</option>
+            <option value="letters" selected?={doctype == "letters"}>Letter</option>
+            <option value="projects" selected?={doctype == "projects"}>Project</option>
+            <option value="reading-list" selected?={doctype == "reading-list"}>Book</option>
         </select>
     </div>
 }
@@ -163,12 +163,12 @@ templ AISuggestionError(errorMsg string) {
 templ FormContentByType(content any) {
     switch c := content.(type) {
         case *Article:
-            @WriterFormContent(c.Document, ArticleFormContent(c))
+            @WriterFormContent(c.Document, ArticleFormContent(c), "articles")
         case *Letter:
-            @WriterFormContent(c.Document, LetterFormContent(c))
+            @WriterFormContent(c.Document, LetterFormContent(c), "letter")
         case *Project:
-            @WriterFormContent(c.Document, ProjectFormContent(c))
+            @WriterFormContent(c.Document, ProjectFormContent(c), "projects")
         case *ReadingList:
-            @WriterFormContent(c.Document, BookFormContent(c))
+            @WriterFormContent(c.Document, BookFormContent(c), "reading-list")
     }
 }
