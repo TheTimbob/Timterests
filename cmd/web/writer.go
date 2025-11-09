@@ -80,6 +80,10 @@ func WriteDocumentHandler(w http.ResponseWriter, r *http.Request, storageInstanc
 		return
 	}
 
+	// Check if S3 upload should be performed
+	s3Upload := r.FormValue("s3-upload") == "on"
+	delete(r.Form, "s3-upload")
+
 	// Extract form data
 	formData := make(map[string]any)
 	for key, values := range r.Form {
@@ -122,12 +126,14 @@ func WriteDocumentHandler(w http.ResponseWriter, r *http.Request, storageInstanc
 		return
 	}
 
-	// Upload to S3
-	s3Path := docType + "/" + localFile
-	err = storage.UploadFileToS3(r.Context(), storageInstance, s3Path, localFilePath)
-	if err != nil {
-		http.Error(w, "Failed to upload document to storage", http.StatusInternalServerError)
-		return
+	if s3Upload {
+		// Upload to S3
+		s3Path := docType + "/" + localFile
+		err = storage.UploadFileToS3(r.Context(), storageInstance, s3Path, localFilePath)
+		if err != nil {
+			http.Error(w, "Failed to upload document to storage", http.StatusInternalServerError)
+			return
+		}
 	}
 
 	http.Redirect(w, r, "/writer", http.StatusSeeOther)

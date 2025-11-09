@@ -21,6 +21,10 @@ templ WriterDisplay(content any) {
 
 templ WriterFormContent(content types.Document, component templ.Component, docType string) {
     <form id="writer-form" action="/write" method="post">
+        <div>
+            <label class="form-label" for="s3-upload">Upload to S3:</label>
+            <input type="checkbox" id="s3-upload" name="s3-upload">
+        </div>
         @DocumentTypeComponent(docType)
         <div class="form-field">
             <label class="form-label" for="title">Title:</label>
