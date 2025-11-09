@@ -14,7 +14,9 @@ import (
 	"regexp"
 	"slices"
 	"sort"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -344,6 +346,18 @@ func SanitizeFilename(filename string) string {
 	filename = reg.ReplaceAllString(filename, "")
 
 	const maxLength = 50
+	if len(filename) > maxLength {
+		filename = filename[:maxLength]
+	}
+
+	filename = strings.Trim(filename, ".-")
+
+	// Ensure filename is not empty after trimming
+	if filename == "" {
+		filename = "unnamed-" + strconv.FormatInt(time.Now().Unix(), 10)
+	}
+
+	// Re-check length after trimming
 	if len(filename) > maxLength {
 		filename = filename[:maxLength]
 	}

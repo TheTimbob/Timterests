@@ -1,6 +1,7 @@
 package web
 
 import (
+    "timterests/cmd/web/components"
 	"timterests/internal/types"
     "strings"
 )
@@ -43,6 +44,9 @@ templ WriterFormContent(content types.Document, component templ.Component, docTy
         </div>
         <div class="form-field">
             <button class="button" type="submit">Submit</button>
+        </div>
+        <div class="form-field">
+            @components.DownloadNewDocumentButton(true)
         </div>
     </form>
 }

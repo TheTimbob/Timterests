@@ -4,9 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"path/filepath"
 	"strconv"
-	"strings"
 
 	"timterests/cmd/web"
 	"timterests/internal/storage"
@@ -82,55 +80,12 @@ func (s *Server) RegisterRoutes() http.Handler {
 	}))
 
 	mux.Handle("/download", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		documentTitle := r.URL.Query().Get("title")
+		web.DownloadDocumentHandler(w, r, documentTitle)
+	}))
 
-		// Only admins can download documents
-		if !web.IsAuthenticated(r) {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
-			return
-		}
-
-		// Get the file key
-		if err := r.ParseForm(); err != nil {
-			http.Error(w, "Failed to parse form", http.StatusBadRequest)
-			return
-		}
-
-		key := r.FormValue("document-key")
-		if key == "" {
-			http.Error(w, "File key is required", http.StatusBadRequest)
-			return
-		}
-
-		// Sanitize the key and construct the file path safely
-		filename := filepath.Base(key)
-		if filename == "" || filename == "." || filename == ".." {
-			http.Error(w, "Invalid file key", http.StatusBadRequest)
-			return
-		}
-		filePath := filepath.Join("s3", filename)
-
-		// Set headers to force download
-		w.Header().Set("Content-Disposition", "attachment; filename=\""+filename+"\"")
-		w.Header().Set("Content-Type", "application/x-yaml")
-
-		// Ensure the file path is within the s3 directory
-		absS3Dir, err := filepath.Abs("s3")
-		if err != nil {
-			http.Error(w, "Internal server error", http.StatusInternalServerError)
-			return
-		}
-		absFilePath, err := filepath.Abs(filePath)
-		if err != nil {
-			http.Error(w, "Invalid file path", http.StatusBadRequest)
-			return
-		}
-		rel, err := filepath.Rel(absS3Dir, absFilePath)
-		if err != nil || strings.HasPrefix(rel, "..") || filepath.IsAbs(rel) {
-			http.Error(w, "Invalid file path", http.StatusBadRequest)
-			return
-		}
-
-		http.ServeFile(w, r, filePath)
+	mux.Handle("/download/new", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		web.DownloadNewDocumentHandler(w, r)
 	}))
 
 	// Health check

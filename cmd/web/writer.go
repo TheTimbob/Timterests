@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 	"strings"
-	"time"
 
 	"timterests/internal/ai"
 	"timterests/internal/storage"
@@ -13,7 +12,6 @@ import (
 	"github.com/a-h/templ"
 )
 
-const dateFormat = "01-02-2006"
 const instructionFile = "prompts/article.txt"
 
 func WriterPageHandler(w http.ResponseWriter, r *http.Request, storageInstance storage.Storage, docType, key string, typeID int) {
@@ -114,9 +112,15 @@ func WriteDocumentHandler(w http.ResponseWriter, r *http.Request, storageInstanc
 		return
 	}
 
-	timestamp := time.Now().Format(dateFormat)
 	sanitizedTitle := storage.SanitizeFilename(title)
-	localFile := fmt.Sprintf("%s-%s.yaml", sanitizedTitle, timestamp)
+
+	var localFile string
+	if docType == "articles" {
+		articleDate := FormatDateForFilename(formData["date"].(string))
+		localFile = fmt.Sprintf("%s-%s.yaml", sanitizedTitle, articleDate)
+	} else {
+		localFile = fmt.Sprintf("%s.yaml", sanitizedTitle)
+	}
 
 	// Create document
 	localFilePath, err := storage.WriteYAMLDocument(localFile, formData)
