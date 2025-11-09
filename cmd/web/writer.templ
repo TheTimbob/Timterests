@@ -165,7 +165,7 @@ templ FormContentByType(content any) {
         case *Article:
             @WriterFormContent(c.Document, ArticleFormContent(c), "articles")
         case *Letter:
-            @WriterFormContent(c.Document, LetterFormContent(c), "letter")
+            @WriterFormContent(c.Document, LetterFormContent(c), "letters")
         case *Project:
             @WriterFormContent(c.Document, ProjectFormContent(c), "projects")
         case *ReadingList:
