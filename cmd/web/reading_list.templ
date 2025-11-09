@@ -71,7 +71,7 @@ templ BookDisplay(readingList ReadingList, userIsAdmin bool) {
 templ EditBookButton(readingList ReadingList, userIsAdmin bool) {
     if userIsAdmin {
         <form hx-post="/writer" hx-target="body" style="display: inline;">
-            <input type="hidden" name="document-type" value="book"/>
+            <input type="hidden" name="document-type" value="reading-list"/>
             <input type="hidden" name="document-key" value={readingList.S3Key}/>
             <input type="hidden" name="type-id" value={readingList.ID}/>
             <button type="submit" class="button">Edit</button>

@@ -36,13 +36,13 @@ func WriterPageHandler(w http.ResponseWriter, r *http.Request, storageInstance s
 	} else {
 		// Create empty content based on docType
 		switch docType {
-		case "article":
+		case "articles":
 			content = &Article{}
-		case "project":
+		case "projects":
 			content = &Project{}
-		case "book":
+		case "reading-list":
 			content = &ReadingList{}
-		case "letter":
+		case "letters":
 			content = &Letter{}
 		default:
 			content = &Article{} // default to Article
@@ -52,7 +52,7 @@ func WriterPageHandler(w http.ResponseWriter, r *http.Request, storageInstance s
 	if r.Header.Get("HX-Request") == "true" && key == "" {
 		component = FormContentByType(content)
 	} else {
-		component = WriterPage(content, docType)
+		component = WriterPage(content)
 	}
 
 	err = component.Render(r.Context(), w)
@@ -80,6 +80,7 @@ func WriteDocumentHandler(w http.ResponseWriter, r *http.Request, storageInstanc
 		return
 	}
 
+	// Extract form data
 	formData := make(map[string]any)
 	for key, values := range r.Form {
 		if key == "tags" {
@@ -93,6 +94,15 @@ func WriteDocumentHandler(w http.ResponseWriter, r *http.Request, storageInstanc
 		}
 	}
 
+	docType, ok := formData["document-type"].(string)
+	if !ok || strings.TrimSpace(docType) == "" {
+		http.Error(w, "Invalid or missing document type in form data", http.StatusBadRequest)
+		log.Printf("Invalid or missing document type in form data")
+		return
+	}
+	delete(formData, "document-type")
+
+	// Create file name
 	title, ok := formData["title"].(string)
 	if !ok || strings.TrimSpace(title) == "" {
 		http.Error(w, "Invalid or missing title in form data", http.StatusBadRequest)
@@ -102,14 +112,24 @@ func WriteDocumentHandler(w http.ResponseWriter, r *http.Request, storageInstanc
 
 	timestamp := time.Now().Format(dateFormat)
 	sanitizedTitle := storage.SanitizeFilename(title)
-	objectKey := fmt.Sprintf("%s-%s.yaml", sanitizedTitle, timestamp)
+	localFile := fmt.Sprintf("%s-%s.yaml", sanitizedTitle, timestamp)
 
-	err := storage.WriteYAMLDocument(objectKey, formData)
+	// Create document
+	localFilePath, err := storage.WriteYAMLDocument(localFile, formData)
 	if err != nil {
 		http.Error(w, "Failed to save document", http.StatusInternalServerError)
 		log.Printf("Error writing document: %v", err)
 		return
 	}
+
+	// Upload to S3
+	s3Path := docType + "/" + localFile
+	err = storage.UploadFileToS3(r.Context(), storageInstance, s3Path, localFilePath)
+	if err != nil {
+		http.Error(w, "Failed to upload document to storage", http.StatusInternalServerError)
+		return
+	}
+
 	http.Redirect(w, r, "/writer", http.StatusSeeOther)
 }
 
@@ -158,13 +178,13 @@ func WriterSuggestionHandler(w http.ResponseWriter, r *http.Request) {
 
 func GetTypeContentFromID(docType, key string, id int, storageInstance storage.Storage) (any, error) {
 	switch docType {
-	case "article":
+	case "articles":
 		return GetArticle(key, id, storageInstance)
-	case "project":
+	case "projects":
 		return GetProject(key, id, storageInstance)
-	case "book":
+	case "reading-list":
 		return GetBook(key, id, storageInstance)
-	case "letter":
+	case "letters":
 		return GetLetter(key, id, storageInstance)
 	default:
 		return nil, fmt.Errorf("unsupported document type: %s", docType)

@@ -140,7 +140,7 @@ func DownloadFile(ctx context.Context, storage Storage, objectKey string, fileNa
 }
 
 // UploadFile uploads a local file to S3
-func UploadFile(ctx context.Context, storage Storage, objectKey string, fileName string) error {
+func UploadFileToS3(ctx context.Context, storage Storage, objectKey string, fileName string) error {
 	file, err := os.Open(fileName)
 	if err != nil {
 		log.Printf("Couldn't open file %v. Here's why: %v\n", fileName, err)
@@ -166,20 +166,20 @@ func UploadFile(ctx context.Context, storage Storage, objectKey string, fileName
 }
 
 // WriteYAMLDocument writes a YAML document to local storage
-func WriteYAMLDocument(objectKey string, formData map[string]any) error {
+func WriteYAMLDocument(objectKey string, formData map[string]any) (string, error) {
 
 	fileName := path.Base(objectKey)
 	localFilePath := path.Join("s3", fileName)
 
 	if err := os.MkdirAll("s3", 0755); err != nil {
 		log.Printf("Couldn't create s3 directory. Here's why: %v\n", err)
-		return err
+		return "", err
 	}
 
 	file, err := os.Create(localFilePath)
 	if err != nil {
 		log.Printf("Couldn't create file %v. Here's why: %v\n", localFilePath, err)
-		return err
+		return "", err
 	}
 	defer func() {
 		if err := file.Close(); err != nil {
@@ -196,11 +196,11 @@ func WriteYAMLDocument(objectKey string, formData map[string]any) error {
 
 	if err := enc.Encode(formData); err != nil {
 		log.Printf("Couldn't encode document to YAML. Here's why: %v\n", err)
-		return err
+		return "", err
 	}
 
 	log.Printf("Successfully created document: %s", objectKey)
-	return nil
+	return localFilePath, nil
 }
 
 func GetPreparedFile(key string, document any, storage Storage) error {
