@@ -14,7 +14,9 @@ import (
 	"regexp"
 	"slices"
 	"sort"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -348,6 +350,12 @@ func SanitizeFilename(filename string) string {
 		filename = filename[:maxLength]
 	}
 
+	filename = strings.Trim(filename, ".-")
+
+	// Ensure filename is not empty after trimming
+	if filename == "" {
+		return "unnamed-" + strconv.FormatInt(time.Now().Unix(), 10)
+	}
 	return filename
 }
 

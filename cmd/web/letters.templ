@@ -53,7 +53,7 @@ templ LetterPage(letter Letter, userIsAdmin bool){
 
 templ LetterDisplay(letter Letter, userIsAdmin bool) {
     @EditLetterButton(letter, userIsAdmin)
-    @components.DownloadDocumentButton(letter.S3Key, userIsAdmin)
+    @components.DownloadDocumentButton(letter.Title, userIsAdmin)
     <div id="letter-container">
         <h1 class="category-title">{ letter.Title }</h1>
         <h2 class="category-subtitle">{ letter.Subtitle }</h2>

@@ -9,6 +9,7 @@ import (
 	"slices"
 	"sort"
 	"strconv"
+	"time"
 	"timterests/internal/storage"
 	"timterests/internal/types"
 
@@ -139,4 +140,15 @@ func GetLatestArticle(storageInstance storage.Storage) (*Article, error) {
 	}
 
 	return nil, nil
+}
+
+func FormatDateForFilename(dateStr string) string {
+	// Parse the date string (assuming YYYY-MM-DD format)
+	t, err := time.Parse("2006-01-02", dateStr)
+	if err != nil {
+		log.Printf("FormatDateForFilename: failed to parse date '%s': %v", dateStr, err)
+		return dateStr
+	}
+	// Format as MM-DD-YYYY
+	return t.Format("01-02-2006")
 }

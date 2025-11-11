@@ -1,10 +1,18 @@
 package components
 
-templ DownloadDocumentButton(key string, userIsAdmin bool) {
+templ DownloadDocumentButton(title string, userIsAdmin bool) {
     if userIsAdmin {
-        <form action="/download" method="post" style="display: inline;">
-            <input type="hidden" name="document-key" value={key}/>
+        <form action="/download" method="get" style="display: inline;">
+            <input type="hidden" name="title" value={title}/>
             <button type="submit" class="button">Download</button>
         </form>
+    }
+}
+
+templ DownloadNewDocumentButton(userIsAdmin bool) {
+    if userIsAdmin {
+        <button type="submit" class="button" formaction="/download/new">
+            Download
+        </button>
     }
 }
