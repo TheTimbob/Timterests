@@ -354,14 +354,8 @@ func SanitizeFilename(filename string) string {
 
 	// Ensure filename is not empty after trimming
 	if filename == "" {
-		filename = "unnamed-" + strconv.FormatInt(time.Now().Unix(), 10)
+		return "unnamed-" + strconv.FormatInt(time.Now().Unix(), 10)
 	}
-
-	// Re-check length after trimming
-	if len(filename) > maxLength {
-		filename = filename[:maxLength]
-	}
-
 	return filename
 }
 
