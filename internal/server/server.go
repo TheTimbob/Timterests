@@ -13,22 +13,21 @@ import (
 )
 
 type Server struct {
-	port int
-
+	port    int
 	storage *storage.Storage
 }
 
 func NewServer() *http.Server {
 
 	port, _ := strconv.Atoi(os.Getenv("PORT"))
-	storageInstance, err := storage.NewStorage()
+	s, err := storage.NewS3Storage()
 	if err != nil {
 		panic(fmt.Sprintf("failed to initialize storage: %v", err))
 	}
 
 	NewServer := &Server{
 		port:    port,
-		storage: storageInstance,
+		storage: s,
 	}
 
 	// Declare Server config

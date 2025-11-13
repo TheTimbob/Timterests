@@ -6,16 +6,16 @@ import (
 	"timterests/internal/storage"
 )
 
-func HomeHandler(w http.ResponseWriter, r *http.Request, storageInstance storage.Storage) {
+func HomeHandler(w http.ResponseWriter, r *http.Request, s storage.Storage) {
 
-	latestArticle, err := GetLatestArticle(storageInstance)
+	latestArticle, err := GetLatestArticle(s)
 	if err != nil {
 		http.Error(w, "Failed to fetch latest article", http.StatusInternalServerError)
 		log.Printf("Error fetching latest article: %v", err)
 		return
 	}
 
-	featuredProject, err := GetFeaturedProject(storageInstance)
+	featuredProject, err := GetFeaturedProject(s)
 	if err != nil {
 		http.Error(w, "Failed to fetch featured project", http.StatusInternalServerError)
 		log.Printf("Error fetching featured project: %v", err)

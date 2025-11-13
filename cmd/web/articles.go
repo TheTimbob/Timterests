@@ -22,11 +22,11 @@ type Article struct {
 	Date           string `yaml:"date"`
 }
 
-func ArticlesPageHandler(w http.ResponseWriter, r *http.Request, storageInstance storage.Storage, currentTag, design string) {
+func ArticlesPageHandler(w http.ResponseWriter, r *http.Request, s storage.Storage, currentTag, design string) {
 	var component templ.Component
 	var tags []string
 
-	articles, err := ListArticles(storageInstance, currentTag)
+	articles, err := ListArticles(s, currentTag)
 	if err != nil {
 		message := "Failed to fetch articles"
 		http.Error(w, fmt.Sprintf("%s: %v", message, err), http.StatusInternalServerError)
@@ -52,8 +52,8 @@ func ArticlesPageHandler(w http.ResponseWriter, r *http.Request, storageInstance
 	}
 }
 
-func GetArticleHandler(w http.ResponseWriter, r *http.Request, storageInstance storage.Storage, articleID string) {
-	articles, err := ListArticles(storageInstance, "all")
+func GetArticleHandler(w http.ResponseWriter, r *http.Request, s storage.Storage, articleID string) {
+	articles, err := ListArticles(s, "all")
 	if err != nil {
 		http.Error(w, "Failed to fetch articles", http.StatusInternalServerError)
 		return
@@ -79,12 +79,12 @@ func GetArticleHandler(w http.ResponseWriter, r *http.Request, storageInstance s
 
 }
 
-func ListArticles(storageInstance storage.Storage, tag string) ([]Article, error) {
+func ListArticles(s storage.Storage, tag string) ([]Article, error) {
 	var articles []Article
 
 	// Get all articles from the storage
 	prefix := "articles/"
-	articleFiles, err := storage.ListObjects(context.Background(), storageInstance, prefix)
+	articleFiles, err := s.ListS3Objects(context.Background(), prefix)
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +96,7 @@ func ListArticles(storageInstance storage.Storage, tag string) ([]Article, error
 			continue
 		}
 
-		article, err := GetArticle(key, id, storageInstance)
+		article, err := GetArticle(key, id, s)
 		if err != nil {
 			return nil, err
 		}
@@ -113,11 +113,11 @@ func ListArticles(storageInstance storage.Storage, tag string) ([]Article, error
 	return articles, nil
 }
 
-func GetArticle(key string, id int, storageInstance storage.Storage) (*Article, error) {
+func GetArticle(key string, id int, s storage.Storage) (*Article, error) {
 	var article Article
 	article.ID = strconv.Itoa(id)
 	article.S3Key = key
-	err := storage.GetPreparedFile(key, &article, storageInstance)
+	err := s.GetPreparedFile(key, &article)
 	if err != nil {
 		return nil, err
 	}
@@ -125,9 +125,9 @@ func GetArticle(key string, id int, storageInstance storage.Storage) (*Article, 
 	return &article, nil
 }
 
-func GetLatestArticle(storageInstance storage.Storage) (*Article, error) {
+func GetLatestArticle(s storage.Storage) (*Article, error) {
 
-	articles, err := ListArticles(storageInstance, "all")
+	articles, err := ListArticles(s, "all")
 	if err != nil {
 		return nil, err
 	}

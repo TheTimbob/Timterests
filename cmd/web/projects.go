@@ -21,11 +21,11 @@ type Project struct {
 	Image          string `yaml:"image-path"`
 }
 
-func ProjectsPageHandler(w http.ResponseWriter, r *http.Request, storageInstance storage.Storage, currentTag, design string) {
+func ProjectsPageHandler(w http.ResponseWriter, r *http.Request, s storage.Storage, currentTag, design string) {
 	var component templ.Component
 	var tags []string
 
-	projects, err := ListProjects(storageInstance, currentTag)
+	projects, err := ListProjects(s, currentTag)
 	if err != nil {
 		message := "Failed to fetch projects"
 		http.Error(w, fmt.Sprintf("%s: %v", message, err), http.StatusInternalServerError)
@@ -51,8 +51,8 @@ func ProjectsPageHandler(w http.ResponseWriter, r *http.Request, storageInstance
 	}
 }
 
-func GetProjectHandler(w http.ResponseWriter, r *http.Request, storageInstance storage.Storage, projectID string) {
-	projects, err := ListProjects(storageInstance, "all")
+func GetProjectHandler(w http.ResponseWriter, r *http.Request, s storage.Storage, projectID string) {
+	projects, err := ListProjects(s, "all")
 	if err != nil {
 		http.Error(w, "Failed to fetch projects", http.StatusInternalServerError)
 		return
@@ -78,12 +78,12 @@ func GetProjectHandler(w http.ResponseWriter, r *http.Request, storageInstance s
 
 }
 
-func ListProjects(storageInstance storage.Storage, tag string) ([]Project, error) {
+func ListProjects(s storage.Storage, tag string) ([]Project, error) {
 	var projects []Project
 
 	// Get all projects from the storage
 	prefix := "projects/"
-	projectFiles, err := storage.ListObjects(context.Background(), storageInstance, prefix)
+	projectFiles, err := s.ListS3Objects(context.Background(), prefix)
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +95,7 @@ func ListProjects(storageInstance storage.Storage, tag string) ([]Project, error
 			continue
 		}
 
-		project, err := GetProject(key, id, storageInstance)
+		project, err := GetProject(key, id, s)
 		if err != nil {
 			log.Printf("Failed to get project: %v", err)
 			return nil, err
@@ -109,16 +109,16 @@ func ListProjects(storageInstance storage.Storage, tag string) ([]Project, error
 	return projects, nil
 }
 
-func GetProject(key string, id int, storageInstance storage.Storage) (*Project, error) {
+func GetProject(key string, id int, s storage.Storage) (*Project, error) {
 	var project Project
 	project.ID = strconv.Itoa(id)
 	project.S3Key = key
-	err := storage.GetPreparedFile(key, &project, storageInstance)
+	err := s.GetPreparedFile(key, &project)
 	if err != nil {
 		return nil, err
 	}
 
-	localImagePath, err := storage.GetImageFromS3(storageInstance, project.Image)
+	localImagePath, err := s.GetImageFromS3(project.Image)
 	if err != nil {
 		log.Printf("Failed to download image: %v", err)
 		return nil, err
@@ -128,9 +128,9 @@ func GetProject(key string, id int, storageInstance storage.Storage) (*Project, 
 	return &project, nil
 }
 
-func GetFeaturedProject(storageInstance storage.Storage) (*Project, error) {
+func GetFeaturedProject(s storage.Storage) (*Project, error) {
 
-	projects, err := ListProjects(storageInstance, "all")
+	projects, err := ListProjects(s, "all")
 	if err != nil {
 		return nil, err
 	}

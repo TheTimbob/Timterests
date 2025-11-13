@@ -14,7 +14,7 @@ import (
 
 const instructionFile = "prompts/article.txt"
 
-func WriterPageHandler(w http.ResponseWriter, r *http.Request, storageInstance storage.Storage, docType, key string, typeID int) {
+func WriterPageHandler(w http.ResponseWriter, r *http.Request, s storage.Storage, docType, key string, typeID int) {
 	var content any
 	var err error
 	var component templ.Component
@@ -26,7 +26,7 @@ func WriterPageHandler(w http.ResponseWriter, r *http.Request, storageInstance s
 
 	// If key is provided, get the content to load the existing document
 	if key != "" {
-		content, err = GetTypeContentFromID(docType, key, typeID, storageInstance)
+		content, err = GetTypeContentFromID(docType, key, typeID, s)
 		if err != nil {
 			http.Error(w, "Failed to load document: "+err.Error(), http.StatusInternalServerError)
 			return
@@ -60,7 +60,7 @@ func WriterPageHandler(w http.ResponseWriter, r *http.Request, storageInstance s
 	}
 }
 
-func WriteDocumentHandler(w http.ResponseWriter, r *http.Request, storageInstance storage.Storage) {
+func WriteDocumentHandler(w http.ResponseWriter, r *http.Request, s storage.Storage) {
 
 	if !IsAuthenticated(r) {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
@@ -133,7 +133,7 @@ func WriteDocumentHandler(w http.ResponseWriter, r *http.Request, storageInstanc
 	if s3Upload {
 		// Upload to S3
 		s3Path := docType + "/" + localFile
-		err = storage.UploadFileToS3(r.Context(), storageInstance, s3Path, localFilePath)
+		err = s.UploadFileToS3(r.Context(), s3Path, localFilePath)
 		if err != nil {
 			http.Error(w, "Failed to upload document to storage", http.StatusInternalServerError)
 			return
@@ -186,16 +186,16 @@ func WriterSuggestionHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func GetTypeContentFromID(docType, key string, id int, storageInstance storage.Storage) (any, error) {
+func GetTypeContentFromID(docType, key string, id int, s storage.Storage) (any, error) {
 	switch docType {
 	case "articles":
-		return GetArticle(key, id, storageInstance)
+		return GetArticle(key, id, s)
 	case "projects":
-		return GetProject(key, id, storageInstance)
+		return GetProject(key, id, s)
 	case "reading-list":
-		return GetBook(key, id, storageInstance)
+		return GetBook(key, id, s)
 	case "letters":
-		return GetLetter(key, id, storageInstance)
+		return GetLetter(key, id, s)
 	default:
 		return nil, fmt.Errorf("unsupported document type: %s", docType)
 	}
