@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"path"
 	"strings"
 
 	"timterests/internal/ai"
@@ -114,16 +115,17 @@ func WriteDocumentHandler(w http.ResponseWriter, r *http.Request, s storage.Stor
 
 	sanitizedTitle := storage.SanitizeFilename(title)
 
-	var localFile string
+	var filename string
 	if docType == "articles" {
 		articleDate := FormatDateForFilename(formData["date"].(string))
-		localFile = fmt.Sprintf("%s-%s.yaml", sanitizedTitle, articleDate)
+		filename = fmt.Sprintf("%s-%s.yaml", sanitizedTitle, articleDate)
 	} else {
-		localFile = fmt.Sprintf("%s.yaml", sanitizedTitle)
+		filename = fmt.Sprintf("%s.yaml", sanitizedTitle)
 	}
 
 	// Create document
-	localFilePath, err := storage.WriteYAMLDocument(localFile, formData)
+	localFilePath := path.Join("s3", filename)
+	err := storage.WriteYAMLDocument(localFilePath, formData)
 	if err != nil {
 		http.Error(w, "Failed to save document", http.StatusInternalServerError)
 		log.Printf("Error writing document: %v", err)
@@ -132,7 +134,7 @@ func WriteDocumentHandler(w http.ResponseWriter, r *http.Request, s storage.Stor
 
 	if s3Upload {
 		// Upload to S3
-		s3Path := docType + "/" + localFile
+		s3Path := docType + "/" + filename
 		err = s.UploadFileToS3(r.Context(), s3Path, localFilePath)
 		if err != nil {
 			http.Error(w, "Failed to upload document to storage", http.StatusInternalServerError)

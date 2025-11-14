@@ -2,19 +2,17 @@ package storage
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
-	"path"
 
 	"gopkg.in/yaml.v2"
 )
 
-func DecodeFile(file *os.File, out any) error {
-	// Decode the YAML file into a document object
+// Decodes a YAML file into the provided output structure
+func DecodeFile(file io.Reader, out any) error {
 	decoder := yaml.NewDecoder(file)
-	// Out should be a pointer to a struct
 	if err := decoder.Decode(out); err != nil {
-		// Consider using a lower logging level or removing log output
 		log.Printf("failed to decode file: %v", err)
 		return fmt.Errorf("decode error: %w", err)
 	}
@@ -22,20 +20,12 @@ func DecodeFile(file *os.File, out any) error {
 }
 
 // WriteYAMLDocument writes a YAML document to local storage
-func WriteYAMLDocument(objectKey string, formData map[string]any) (string, error) {
-
-	fileName := path.Base(objectKey)
-	localFilePath := path.Join("s3", fileName)
-
-	if err := os.MkdirAll("s3", 0755); err != nil {
-		log.Printf("Couldn't create s3 directory. Here's why: %v\n", err)
-		return "", err
-	}
+func WriteYAMLDocument(localFilePath string, formData map[string]any) error {
 
 	file, err := os.Create(localFilePath)
 	if err != nil {
 		log.Printf("Couldn't create file %v. Here's why: %v\n", localFilePath, err)
-		return "", err
+		return err
 	}
 	defer func() {
 		if err := file.Close(); err != nil {
@@ -52,9 +42,8 @@ func WriteYAMLDocument(objectKey string, formData map[string]any) (string, error
 
 	if err := enc.Encode(formData); err != nil {
 		log.Printf("Couldn't encode document to YAML. Here's why: %v\n", err)
-		return "", err
+		return err
 	}
 
-	log.Printf("Successfully created document: %s", objectKey)
-	return localFilePath, nil
+	return nil
 }

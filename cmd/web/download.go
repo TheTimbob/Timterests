@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"timterests/internal/storage"
 )
@@ -38,7 +39,7 @@ func DownloadNewDocumentHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tempFilename := storage.SanitizeFilename("") + ".yaml"
+	filename := storage.SanitizeFilename("") + ".yaml"
 
 	// Convert url.Values to map[string]any
 	formData := make(map[string]any)
@@ -51,7 +52,8 @@ func DownloadNewDocumentHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	delete(formData, "document-type")
 
-	filePath, err := storage.WriteYAMLDocument(tempFilename, formData)
+	localFilePath := path.Join("s3", filename)
+	err := storage.WriteYAMLDocument(localFilePath, formData)
 	if err != nil {
 		http.Error(w, "Failed to write YAML document", http.StatusInternalServerError)
 		return
@@ -59,7 +61,7 @@ func DownloadNewDocumentHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Cleanup temporary file after serving
 	defer func() {
-		if err := os.Remove(filePath); err != nil {
+		if err := os.Remove(localFilePath); err != nil {
 			fmt.Printf("Failed to remove temporary file: %v", err)
 		}
 	}()
@@ -75,5 +77,5 @@ func DownloadNewDocumentHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Disposition", "attachment; filename=\""+downloadFilename+"\"")
 	w.Header().Set("Content-Type", "application/x-yaml")
 
-	http.ServeFile(w, r, filePath)
+	http.ServeFile(w, r, localFilePath)
 }

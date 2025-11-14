@@ -60,6 +60,15 @@ func TestGetTags(t *testing.T) {
 	}
 }
 
+func TestRemoveHTMLTags(t *testing.T) {
+	input := `<p>This is a <strong>test</strong> string with <a href="#">HTML</a> tags.</p>`
+	expected := "This is a test string with HTML tags."
+	result := RemoveHTMLTags(input)
+	if result != expected {
+		t.Errorf("Expected %s, got %s", expected, result)
+	}
+}
+
 func TestSanitizeFilename(t *testing.T) {
 	longFilename := "This is a Very Long Filename without Special Characters"
 	expectedLF := "this-is-a-very-long-filename-without-special-chara"
@@ -68,15 +77,15 @@ func TestSanitizeFilename(t *testing.T) {
 		t.Errorf("Expected sanitized filename to be %s, got %s", expectedLF, sanitizedLF)
 	}
 
-	specialCharFilename := "Invalid:/\\*?\"<>|Filename.yaml"
-	expectedSCF := "invalidfilenameyaml"
+	specialCharFilename := "Inva|id/Filename!.yaml"
+	expectedSCF := "filenameyaml"
 	sanitizedSCF := SanitizeFilename(specialCharFilename)
 	if sanitizedSCF != expectedSCF {
 		t.Errorf("Expected sanitized filename to be %s, got %s", expectedSCF, sanitizedSCF)
 	}
 
-	exploitFilename := "../../etc/passwd"
-	expectedEF := "etcpasswd"
+	exploitFilename := "../../etc/.ssh/rsa_key"
+	expectedEF := "rsa_key"
 	sanitizedEF := SanitizeFilename(exploitFilename)
 	if sanitizedEF != expectedEF {
 		t.Errorf("Expected sanitized filename to be %s, got %s", expectedEF, sanitizedEF)

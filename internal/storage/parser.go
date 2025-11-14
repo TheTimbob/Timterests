@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"path"
 	"reflect"
 	"regexp"
 	"slices"
@@ -86,6 +87,7 @@ func RemoveHTMLTags(s string) string {
 }
 
 func SanitizeFilename(filename string) string {
+	filename = path.Base(filename)
 	filename = strings.ToLower(filename)
 	filename = strings.ReplaceAll(filename, " ", "-")
 
