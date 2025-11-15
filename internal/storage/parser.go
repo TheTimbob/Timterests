@@ -87,6 +87,8 @@ func RemoveHTMLTags(s string) string {
 }
 
 func SanitizeFilename(filename string) string {
+	// Strip any directory components from the filename to prevent directory traversal attacks.
+	// This ensures only the base filename is sanitized.
 	filename = path.Base(filename)
 	filename = strings.ToLower(filename)
 	filename = strings.ReplaceAll(filename, " ", "-")
