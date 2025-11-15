@@ -8,6 +8,7 @@ import (
 	"reflect"
 	"sort"
 	"strconv"
+	"timterests/internal/auth"
 	"timterests/internal/storage"
 	"timterests/internal/types"
 
@@ -26,7 +27,7 @@ func LettersPageHandler(w http.ResponseWriter, r *http.Request, s storage.Storag
 	var tags []string
 
 	// Check if user is authenticated
-	if !IsAuthenticated(r) {
+	if !auth.IsAuthenticated(r) {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
@@ -59,8 +60,8 @@ func LettersPageHandler(w http.ResponseWriter, r *http.Request, s storage.Storag
 
 func GetLetterHandler(w http.ResponseWriter, r *http.Request, s storage.Storage, letterID string) {
 	// Check if user is authenticated
-	isAuthenticated := IsAuthenticated(r)
-	if !isAuthenticated {
+	authenticated := auth.IsAuthenticated(r)
+	if !authenticated {
 		log.Printf("User not authenticated, redirecting to login")
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
@@ -76,9 +77,9 @@ func GetLetterHandler(w http.ResponseWriter, r *http.Request, s storage.Storage,
 		if letter.ID == letterID {
 			var component templ.Component
 			if r.Header.Get("HX-Request") == "true" {
-				component = LetterDisplay(letter, isAuthenticated)
+				component = LetterDisplay(letter, authenticated)
 			} else {
-				component = LetterPage(letter, isAuthenticated)
+				component = LetterPage(letter, authenticated)
 			}
 			err = component.Render(r.Context(), w)
 			if err != nil {

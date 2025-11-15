@@ -3,6 +3,7 @@ package web
 import (
 	"log"
 	"net/http"
+	"timterests/internal/auth"
 
 	"github.com/a-h/templ"
 )
@@ -10,7 +11,7 @@ import (
 func AdminPageHandler(w http.ResponseWriter, r *http.Request) {
 	var component templ.Component
 
-	if !IsAuthenticated(r) {
+	if !auth.IsAuthenticated(r) {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}

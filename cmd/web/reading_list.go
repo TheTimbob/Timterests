@@ -8,6 +8,7 @@ import (
 	"reflect"
 	"slices"
 	"strconv"
+	"timterests/internal/auth"
 	"timterests/internal/storage"
 	"timterests/internal/types"
 
@@ -65,11 +66,11 @@ func GetReadingListBook(w http.ResponseWriter, r *http.Request, s storage.Storag
 
 	for _, book := range readingList {
 		if book.ID == bookID {
-			isAuthenticated := IsAuthenticated(r)
+			authenticated := auth.IsAuthenticated(r)
 			if r.Header.Get("HX-Request") == "true" {
-				component = BookDisplay(book, isAuthenticated)
+				component = BookDisplay(book, authenticated)
 			} else {
-				component = BookPage(book, isAuthenticated)
+				component = BookPage(book, authenticated)
 			}
 			err = component.Render(r.Context(), w)
 			if err != nil {

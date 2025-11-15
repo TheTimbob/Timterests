@@ -6,12 +6,13 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"timterests/internal/auth"
 	"timterests/internal/storage"
 )
 
 func DownloadDocumentHandler(w http.ResponseWriter, r *http.Request, title string) {
 	// Only admins can download documents
-	if !IsAuthenticated(r) {
+	if !auth.IsAuthenticated(r) {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
@@ -28,7 +29,7 @@ func DownloadDocumentHandler(w http.ResponseWriter, r *http.Request, title strin
 
 func DownloadNewDocumentHandler(w http.ResponseWriter, r *http.Request) {
 	// Only admins can download documents
-	if !IsAuthenticated(r) {
+	if !auth.IsAuthenticated(r) {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}

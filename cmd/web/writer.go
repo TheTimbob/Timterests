@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"timterests/internal/ai"
+	"timterests/internal/auth"
 	"timterests/internal/storage"
 
 	"github.com/a-h/templ"
@@ -20,7 +21,7 @@ func WriterPageHandler(w http.ResponseWriter, r *http.Request, s storage.Storage
 	var err error
 	var component templ.Component
 
-	if !IsAuthenticated(r) {
+	if !auth.IsAuthenticated(r) {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
@@ -63,7 +64,7 @@ func WriterPageHandler(w http.ResponseWriter, r *http.Request, s storage.Storage
 
 func WriteDocumentHandler(w http.ResponseWriter, r *http.Request, s storage.Storage) {
 
-	if !IsAuthenticated(r) {
+	if !auth.IsAuthenticated(r) {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
@@ -147,7 +148,7 @@ func WriteDocumentHandler(w http.ResponseWriter, r *http.Request, s storage.Stor
 
 func WriterSuggestionHandler(w http.ResponseWriter, r *http.Request) {
 
-	if !IsAuthenticated(r) {
+	if !auth.IsAuthenticated(r) {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}

@@ -10,6 +10,7 @@ import (
 	"sort"
 	"strconv"
 	"time"
+	"timterests/internal/auth"
 	"timterests/internal/storage"
 	"timterests/internal/types"
 
@@ -62,12 +63,12 @@ func GetArticleHandler(w http.ResponseWriter, r *http.Request, s storage.Storage
 	for _, article := range articles {
 		if article.ID == articleID {
 			var component templ.Component
-			isAuthenticated := IsAuthenticated(r)
+			authenticated := auth.IsAuthenticated(r)
 
 			if r.Header.Get("HX-Request") == "true" {
-				component = ArticleDisplay(article, isAuthenticated)
+				component = ArticleDisplay(article, authenticated)
 			} else {
-				component = ArticlePage(article, isAuthenticated)
+				component = ArticlePage(article, authenticated)
 			}
 			err = component.Render(r.Context(), w)
 			if err != nil {

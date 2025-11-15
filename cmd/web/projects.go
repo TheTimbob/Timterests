@@ -8,6 +8,7 @@ import (
 	"reflect"
 	"slices"
 	"strconv"
+	"timterests/internal/auth"
 	"timterests/internal/storage"
 	"timterests/internal/types"
 
@@ -61,12 +62,12 @@ func GetProjectHandler(w http.ResponseWriter, r *http.Request, s storage.Storage
 	for _, project := range projects {
 		if project.ID == projectID {
 			var component templ.Component
-			isAuthenticated := IsAuthenticated(r)
+			authenticated := auth.IsAuthenticated(r)
 
 			if r.Header.Get("HX-Request") == "true" {
-				component = ProjectDisplay(project, isAuthenticated)
+				component = ProjectDisplay(project, authenticated)
 			} else {
-				component = ProjectPage(project, isAuthenticated)
+				component = ProjectPage(project, authenticated)
 			}
 			err = component.Render(r.Context(), w)
 			if err != nil {
