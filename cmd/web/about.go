@@ -13,19 +13,19 @@ type About struct {
 	Body     string `yaml:"body"`
 }
 
-func AboutHandler(w http.ResponseWriter, r *http.Request, storageInstance storage.Storage) {
+func AboutHandler(w http.ResponseWriter, r *http.Request, s storage.Storage) {
 	var about About
 
 	// Get all articles from the storage
 	prefix := "about/"
-	aboutFile, err := storage.ListObjects(context.Background(), storageInstance, prefix)
+	aboutFile, err := s.ListS3Objects(context.Background(), prefix)
 	if err != nil {
 		http.Error(w, "Failed to fetch about info", http.StatusInternalServerError)
 		return
 	}
 
 	key := *aboutFile[0].Key
-	err = storage.GetPreparedFile(key, &about, storageInstance)
+	err = s.GetPreparedFile(key, &about)
 	if err != nil {
 		http.Error(w, "Failed to prepare about info", http.StatusInternalServerError)
 		log.Printf("Error fetching about info: %v", err)

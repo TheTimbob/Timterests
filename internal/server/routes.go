@@ -7,7 +7,6 @@ import (
 	"strconv"
 
 	"timterests/cmd/web"
-	"timterests/internal/storage"
 )
 
 func (s *Server) RegisterRoutes() http.Handler {
@@ -205,7 +204,7 @@ func (s *Server) HelloWorldHandler(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) healthHandler(w http.ResponseWriter, r *http.Request) {
 	//Marshal the health check response
-	resp, err := json.Marshal(storage.Health(*s.storage))
+	resp, err := json.Marshal(s.storage.Health())
 	if err != nil {
 		http.Error(w, "Failed to marshal health check response", http.StatusInternalServerError)
 		return

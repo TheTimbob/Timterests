@@ -8,6 +8,7 @@ import (
 	"reflect"
 	"sort"
 	"strconv"
+	"timterests/internal/auth"
 	"timterests/internal/storage"
 	"timterests/internal/types"
 
@@ -21,17 +22,17 @@ type Letter struct {
 	Occasion       string `yaml:"occasion"`
 }
 
-func LettersPageHandler(w http.ResponseWriter, r *http.Request, storageInstance storage.Storage, currentTag, design string) {
+func LettersPageHandler(w http.ResponseWriter, r *http.Request, s storage.Storage, currentTag, design string) {
 	var component templ.Component
 	var tags []string
 
 	// Check if user is authenticated
-	if !IsAuthenticated(r) {
+	if !auth.IsAuthenticated(r) {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
 
-	letters, err := ListLetters(storageInstance)
+	letters, err := ListLetters(s)
 	if err != nil {
 		message := "Failed to fetch letters"
 		http.Error(w, fmt.Sprintf("%s: %v", message, err), http.StatusInternalServerError)
@@ -57,16 +58,16 @@ func LettersPageHandler(w http.ResponseWriter, r *http.Request, storageInstance 
 	}
 }
 
-func GetLetterHandler(w http.ResponseWriter, r *http.Request, storageInstance storage.Storage, letterID string) {
+func GetLetterHandler(w http.ResponseWriter, r *http.Request, s storage.Storage, letterID string) {
 	// Check if user is authenticated
-	isAuthenticated := IsAuthenticated(r)
-	if !isAuthenticated {
+	authenticated := auth.IsAuthenticated(r)
+	if !authenticated {
 		log.Printf("User not authenticated, redirecting to login")
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
 
-	letters, err := ListLetters(storageInstance)
+	letters, err := ListLetters(s)
 	if err != nil {
 		http.Error(w, "Failed to fetch letters", http.StatusInternalServerError)
 		return
@@ -76,9 +77,9 @@ func GetLetterHandler(w http.ResponseWriter, r *http.Request, storageInstance st
 		if letter.ID == letterID {
 			var component templ.Component
 			if r.Header.Get("HX-Request") == "true" {
-				component = LetterDisplay(letter, isAuthenticated)
+				component = LetterDisplay(letter, authenticated)
 			} else {
-				component = LetterPage(letter, isAuthenticated)
+				component = LetterPage(letter, authenticated)
 			}
 			err = component.Render(r.Context(), w)
 			if err != nil {
@@ -90,12 +91,12 @@ func GetLetterHandler(w http.ResponseWriter, r *http.Request, storageInstance st
 
 }
 
-func ListLetters(storageInstance storage.Storage) ([]Letter, error) {
+func ListLetters(s storage.Storage) ([]Letter, error) {
 	var letters []Letter
 
 	// Get all letters from the storage
 	prefix := "letters/"
-	letterFiles, err := storage.ListObjects(context.Background(), storageInstance, prefix)
+	letterFiles, err := s.ListS3Objects(context.Background(), prefix)
 	if err != nil {
 		return nil, err
 	}
@@ -107,7 +108,7 @@ func ListLetters(storageInstance storage.Storage) ([]Letter, error) {
 			continue
 		}
 
-		letter, err := GetLetter(key, id, storageInstance)
+		letter, err := GetLetter(key, id, s)
 		if err != nil {
 			return nil, err
 		}
@@ -122,11 +123,11 @@ func ListLetters(storageInstance storage.Storage) ([]Letter, error) {
 	return letters, nil
 }
 
-func GetLetter(key string, id int, storageInstance storage.Storage) (*Letter, error) {
+func GetLetter(key string, id int, s storage.Storage) (*Letter, error) {
 	var letter Letter
 	letter.ID = strconv.Itoa(id)
 	letter.S3Key = key
-	err := storage.GetPreparedFile(key, &letter, storageInstance)
+	err := s.GetPreparedFile(key, &letter)
 	if err != nil {
 		return nil, err
 	}

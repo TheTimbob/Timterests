@@ -1,4 +1,4 @@
-package storage
+package auth
 
 import (
 	"net/http"
@@ -20,7 +20,7 @@ func init() {
 	}
 }
 
-// Sets a map of key-value paris to a global session using the provided key.
+// Sets a map of key-value pairs to a global session using the provided key.
 func SetSessionValue(w http.ResponseWriter, r *http.Request, values map[interface{}]interface{}) error {
 	session, err := store.Get(r, os.Getenv("SESSION_NAME"))
 	if err != nil {
@@ -49,5 +49,9 @@ func GetSessionValue(r *http.Request, key interface{}) string {
 	if value == nil {
 		return ""
 	}
-	return value.(string)
+	str, ok := value.(string)
+	if !ok {
+		return ""
+	}
+	return str
 }

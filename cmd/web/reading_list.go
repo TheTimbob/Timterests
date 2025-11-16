@@ -8,6 +8,7 @@ import (
 	"reflect"
 	"slices"
 	"strconv"
+	"timterests/internal/auth"
 	"timterests/internal/storage"
 	"timterests/internal/types"
 
@@ -25,11 +26,11 @@ type ReadingList struct {
 	Status         string `yaml:"status"`
 }
 
-func ReadingListPageHandler(w http.ResponseWriter, r *http.Request, storageInstance storage.Storage, currentTag, design string) {
+func ReadingListPageHandler(w http.ResponseWriter, r *http.Request, s storage.Storage, currentTag, design string) {
 	var component templ.Component
 	var tags []string
 
-	readingList, err := ListBooks(storageInstance, currentTag)
+	readingList, err := ListBooks(s, currentTag)
 	if err != nil {
 		message := "Failed to fetch reading list"
 		http.Error(w, fmt.Sprintf("%s: %v", message, err), http.StatusInternalServerError)
@@ -55,9 +56,9 @@ func ReadingListPageHandler(w http.ResponseWriter, r *http.Request, storageInsta
 	}
 }
 
-func GetReadingListBook(w http.ResponseWriter, r *http.Request, storageInstance storage.Storage, bookID string) {
+func GetReadingListBook(w http.ResponseWriter, r *http.Request, s storage.Storage, bookID string) {
 	var component templ.Component = nil
-	readingList, err := ListBooks(storageInstance, "all")
+	readingList, err := ListBooks(s, "all")
 	if err != nil {
 		http.Error(w, "Failed to fetch books", http.StatusInternalServerError)
 		return
@@ -65,11 +66,11 @@ func GetReadingListBook(w http.ResponseWriter, r *http.Request, storageInstance 
 
 	for _, book := range readingList {
 		if book.ID == bookID {
-			isAuthenticated := IsAuthenticated(r)
+			authenticated := auth.IsAuthenticated(r)
 			if r.Header.Get("HX-Request") == "true" {
-				component = BookDisplay(book, isAuthenticated)
+				component = BookDisplay(book, authenticated)
 			} else {
-				component = BookPage(book, isAuthenticated)
+				component = BookPage(book, authenticated)
 			}
 			err = component.Render(r.Context(), w)
 			if err != nil {
@@ -80,12 +81,12 @@ func GetReadingListBook(w http.ResponseWriter, r *http.Request, storageInstance 
 	}
 }
 
-func ListBooks(storageInstance storage.Storage, tag string) ([]ReadingList, error) {
+func ListBooks(s storage.Storage, tag string) ([]ReadingList, error) {
 	var readingList []ReadingList
 
 	// Get all readingList from the storage
 	prefix := "reading-list/"
-	files, err := storage.ListObjects(context.Background(), storageInstance, prefix)
+	files, err := s.ListS3Objects(context.Background(), prefix)
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +98,7 @@ func ListBooks(storageInstance storage.Storage, tag string) ([]ReadingList, erro
 			continue
 		}
 
-		book, err := GetBook(key, id, storageInstance)
+		book, err := GetBook(key, id, s)
 		if err != nil {
 			return nil, err
 		}
@@ -110,16 +111,16 @@ func ListBooks(storageInstance storage.Storage, tag string) ([]ReadingList, erro
 	return readingList, nil
 }
 
-func GetBook(key string, id int, storageInstance storage.Storage) (*ReadingList, error) {
+func GetBook(key string, id int, s storage.Storage) (*ReadingList, error) {
 	var book ReadingList
 	book.ID = strconv.Itoa(id)
 	book.S3Key = key
-	err := storage.GetPreparedFile(key, &book, storageInstance)
+	err := s.GetPreparedFile(key, &book)
 	if err != nil {
 		return nil, err
 	}
 
-	localImagePath, err := storage.GetImageFromS3(storageInstance, book.Image)
+	localImagePath, err := s.GetImageFromS3(book.Image)
 	if err != nil {
 		log.Printf("Failed to download image: %v", err)
 		return nil, err
