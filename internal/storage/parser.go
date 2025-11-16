@@ -2,7 +2,6 @@ package storage
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"log"
 	"path"
@@ -29,14 +28,22 @@ func BodyToHTML(document any) error {
 	// Get reflect value of the document
 	v := reflect.ValueOf(document)
 	if v.Kind() != reflect.Ptr || v.IsNil() {
-		return errors.New("document must be a non-nil pointer to a struct")
+		return fmt.Errorf("document must be a non-nil pointer to a struct")
 	}
 	v = v.Elem()
 
+	// Check if the underlying value is a struct before getting Body
+	if v.Kind() != reflect.Struct {
+		return fmt.Errorf("document must point to a struct")
+	}
+
 	// Set the Body field to the modified HTML content
 	bodyField := v.FieldByName("Body")
-	body := bodyField.String()
+	if !bodyField.IsValid() || bodyField.Kind() != reflect.String {
+		return fmt.Errorf("document does not have a valid Body field of type string")
+	}
 
+	body := bodyField.String()
 	if err := md.Convert([]byte(body), &buf); err != nil {
 		log.Printf("failed to convert body to HTML: %v", err)
 		return fmt.Errorf("conversion error: %w", err)
@@ -67,6 +74,8 @@ func GetTags(v reflect.Value, tags []string) []string {
 		embeddedDoc := v.FieldByName("Document")
 		if embeddedDoc.IsValid() {
 			field = embeddedDoc.FieldByName("Tags")
+		} else {
+			return tags
 		}
 	}
 

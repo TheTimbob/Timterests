@@ -38,7 +38,6 @@ node_modules
 prompts/*
 s3/*
 utils/*
-testdata/*
 
 # Keep empty directories
 !.gitkeep

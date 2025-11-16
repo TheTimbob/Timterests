@@ -167,6 +167,12 @@ func (s *Storage) GetPreparedFile(key string, document any) error {
 		return err
 	}
 
+	defer func() {
+		if err := file.Close(); err != nil {
+			log.Printf("error closing file: %v", err)
+		}
+	}()
+
 	if err := DecodeFile(file, document); err != nil {
 		return err
 	}
@@ -192,6 +198,12 @@ func (s *Storage) GetFile(key, localPath string) (*os.File, error) {
 	if err != nil {
 		return file, err
 	}
+
+	defer func() {
+		if err := file.Close(); err != nil {
+			log.Printf("error closing file: %v", err)
+		}
+	}()
 
 	return file, nil
 }

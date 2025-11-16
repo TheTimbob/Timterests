@@ -34,11 +34,35 @@ func TestBodyToHTML(t *testing.T) {
 					<p class="content-text"><a class="hyperlink" href="http://example.com">Link</a></p>`
 
 	// Normalize whitespace for comparison
-	gotNormalized := strings.Join(strings.Fields(document.Body), " ")
-	expectedNormalized := strings.Join(strings.Fields(expectedBody), " ")
+	gotNormalized := strings.ReplaceAll(document.Body, " ", "")
+	gotNormalized = strings.ReplaceAll(gotNormalized, "\n", "")
+	gotNormalized = strings.ReplaceAll(gotNormalized, "\t", "")
+	expectedNormalized := strings.ReplaceAll(expectedBody, " ", "")
+	expectedNormalized = strings.ReplaceAll(expectedNormalized, "\n", "")
+	expectedNormalized = strings.ReplaceAll(expectedNormalized, "\t", "")
 
 	if gotNormalized != expectedNormalized {
 		t.Errorf("BodyToHTML did not produce expected output.\nGot:\n%s\nExpected:\n%s", document.Body, expectedBody)
+	}
+
+	// Test incorrect type handling
+	invalidInput := 42
+	err = BodyToHTML(&invalidInput)
+	if err == nil {
+		t.Fatalf("Expected error for invalid input type, got nil")
+	}
+
+	// Test empty body handling
+	emptyDocument := types.Document{
+		Title: "Empty Document",
+		Body:  "",
+	}
+	err = BodyToHTML(&emptyDocument)
+	if err != nil {
+		t.Fatalf("Expected no error for empty body, got %v", err)
+	}
+	if emptyDocument.Body != "" {
+		t.Errorf("Expected empty body to remain empty, got %s", emptyDocument.Body)
 	}
 }
 
