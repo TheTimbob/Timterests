@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/joho/godotenv"
 	"github.com/openai/openai-go"
@@ -60,4 +62,25 @@ func GetInstruction(file string) (string, error) {
 		return "", err
 	}
 	return string(content), nil
+}
+
+func GetInstructionOptionList(promptPath string) ([]string, error) {
+	entries, err := os.ReadDir(promptPath)
+	if err != nil {
+		return nil, err
+	}
+
+	var options []string
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+		name := entry.Name()
+		// Only include .txt files.
+		if filepath.Ext(name) == ".txt" {
+			fileWithoutExt := strings.TrimSuffix(name, ".txt")
+			options = append(options, fileWithoutExt)
+		}
+	}
+	return options, nil
 }

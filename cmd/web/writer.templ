@@ -1,9 +1,13 @@
 package web
 
 import (
-    "timterests/cmd/web/components"
-	"timterests/internal/types"
+    "os"
+    "path/filepath"
     "strings"
+
+    "timterests/cmd/web/components"
+    "timterests/internal/ai"
+    "timterests/internal/types"
 )
 
 templ WriterPage(content any) {
@@ -16,6 +20,7 @@ templ WriterDisplay(content any) {
     <div id="writer-container" class="form-container">
         <h1 class="category-title">Create a Document</h1>
         @FormContentByType(content)
+        <hr>
         @OpenAISuggestion()
     </div>
 }
@@ -149,10 +154,37 @@ templ OpenAISuggestion() {
                 hx-indicator="#ai-loading">
             Get Suggestion
         </button>
+        @PromptSelectOptions()
         <span id="ai-loading" class="htmx-indicator">Loading...</span>
     </div>
     <div class="form-field" id="suggestion-container" style="display: none;">
         <span class="form-textarea" id="suggestion"></span>
+    </div>
+}
+
+templ PromptSelectOptions() {
+    {{
+        var options []string
+        var err error
+        rootDir, err := os.Getwd()
+        if err == nil {
+	        promptsDir := filepath.Join(rootDir, "prompts")
+            options, err = ai.GetInstructionOptionList(promptsDir)
+        }
+    }}
+    <div class="form-field">
+        <label class="form-label" for="prompt-option">Select a Prompt:</label>
+        if err != nil {
+            <select class="form-select" id="prompt-option" name="prompt-option" disabled>
+                <option value="">Unable to load prompts</option>
+            </select>
+        } else {
+            <select class="form-select" id="prompt-option" name="prompt-option">
+                for _, option := range options {
+                    <option value={option}>{option}</option>
+                }
+            </select>
+        }
     </div>
 }
 

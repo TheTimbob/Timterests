@@ -199,12 +199,6 @@ func (s *Storage) GetFile(key, localPath string) (*os.File, error) {
 		return file, err
 	}
 
-	defer func() {
-		if err := file.Close(); err != nil {
-			log.Printf("error closing file: %v", err)
-		}
-	}()
-
 	return file, nil
 }
 
