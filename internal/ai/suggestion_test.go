@@ -4,7 +4,6 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
-	"strings"
 	"testing"
 )
 
@@ -27,22 +26,29 @@ func TestLoadAPIKey(t *testing.T) {
 }
 
 func TestGetInstruction(t *testing.T) {
-	tmp, err := os.CreateTemp("", "instruction-*.txt")
+	if err := os.MkdirAll("prompts", 0755); err != nil {
+		t.Fatalf("failed to ensure prompts dir: %v", err)
+	}
+
+	tmp, err := os.CreateTemp("prompts", "instruction-*.txt")
 	if err != nil {
 		t.Fatalf("CreateTemp failed: %v", err)
 	}
-	defer func() {
-		if err := os.Remove(tmp.Name()); err != nil {
-			t.Fatalf("failed to remove temp file %s: %v", tmp.Name(), err)
+	defer func(name string) {
+		if err := os.Remove(name); err != nil {
+			t.Fatalf("failed to remove temp file %s: %v", name, err)
 		}
-	}()
+	}(tmp.Name())
+
 	content := "System instruction line"
 	if _, err := tmp.WriteString(content); err != nil {
 		t.Fatalf("write to tmp failed: %v", err)
 	}
-	_ = tmp.Close()
+	if err := tmp.Close(); err != nil {
+		t.Fatalf("failed to close temp file: %v", err)
+	}
 
-	instruction, err := GetInstruction(tmp.Name())
+	instruction, err := GetInstruction(filepath.Base(tmp.Name()))
 	if err != nil {
 		t.Fatalf("Failed to get instruction: %v", err)
 	}
@@ -76,15 +82,29 @@ func TestGetInstructionOptionList(t *testing.T) {
 		}
 	}()
 
-	options, err := GetInstructionOptionList(promptsDir)
+	titles, filePaths, err := GetInstructionOptionList(promptsDir)
 	if err != nil {
-		t.Fatalf("Failed to get instruction option list: %v", err)
+		t.Fatalf("Failed to get instruction option lists: %v", err)
 	}
-	if len(options) == 0 {
-		t.Fatal("Instruction option list is empty")
+	if len(titles) == 0 || len(filePaths) == 0 {
+		t.Fatal("Instruction option lists are empty")
 	}
-	fileName := strings.TrimSuffix(filepath.Base(tmpName), ".txt")
-	if slices.Contains(options, fileName) == false {
-		t.Fatalf("Expected %s in options: %v", fileName, options)
+	title := formatPromptFileName(tmpName)
+	if slices.Contains(titles, title) == false {
+		t.Fatalf("Expected %s in titles: %v", title, titles)
+	}
+
+	if slices.Contains(filePaths, filepath.Base(tmpName)) == false {
+		t.Fatalf("Expected %s in filePaths: %v", filepath.Base(tmpName), filePaths)
+	}
+}
+
+func TestFormatPromptFileName(t *testing.T) {
+	promptFile := "best_article.txt"
+	expected := "Best Article"
+	formatted := formatPromptFileName(promptFile)
+
+	if formatted != expected {
+		t.Fatalf("got %q, want %q", formatted, expected)
 	}
 }

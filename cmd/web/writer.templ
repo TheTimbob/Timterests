@@ -21,6 +21,7 @@ templ WriterDisplay(content any) {
         <h1 class="category-title">Create a Document</h1>
         @FormContentByType(content)
         <hr>
+        <h2 class="category-subtitle">AI Suggestions</h2>
         @OpenAISuggestion()
     </div>
 }
@@ -147,14 +148,14 @@ templ ProjectFormContent(project *Project) {
 
 templ OpenAISuggestion() {
     <div class="form-field">
+        @PromptSelectOptions()
         <button type="button" class="button ai-button"
                 hx-post="/write/suggest"
                 hx-target="#suggestion"
-                hx-include="#writer-form"
+                hx-include="#writer-form, #prompt-select"
                 hx-indicator="#ai-loading">
             Get Suggestion
         </button>
-        @PromptSelectOptions()
         <span id="ai-loading" class="htmx-indicator">Loading...</span>
     </div>
     <div class="form-field" id="suggestion-container" style="display: none;">
@@ -164,24 +165,25 @@ templ OpenAISuggestion() {
 
 templ PromptSelectOptions() {
     {{
-        var options []string
+        var titleNames []string
+        var filePaths []string
         var err error
         rootDir, err := os.Getwd()
         if err == nil {
 	        promptsDir := filepath.Join(rootDir, "prompts")
-            options, err = ai.GetInstructionOptionList(promptsDir)
+            titleNames, filePaths, err = ai.GetInstructionOptionList(promptsDir)
         }
     }}
     <div class="form-field">
-        <label class="form-label" for="prompt-option">Select a Prompt:</label>
+        <label class="form-label" for="prompt-select">Select a Prompt:</label>
         if err != nil {
-            <select class="form-select" id="prompt-option" name="prompt-option" disabled>
+            <select class="form-select" id="prompt-select" name="prompt-select" disabled>
                 <option value="">Unable to load prompts</option>
             </select>
         } else {
-            <select class="form-select" id="prompt-option" name="prompt-option">
-                for _, option := range options {
-                    <option value={option}>{option}</option>
+            <select class="form-select" id="prompt-select" name="prompt-select">
+                for i, titleName := range titleNames {
+                    <option value={filePaths[i]}>{titleName}</option>
                 }
             </select>
         }

@@ -13,6 +13,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.32
 	github.com/openai/openai-go v1.12.0
 	golang.org/x/crypto v0.44.0
+	golang.org/x/text v0.31.0
 )
 
 require (

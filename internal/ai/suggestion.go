@@ -10,6 +10,8 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/option"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 func LoadAPIKey() (string, error) {
@@ -57,6 +59,7 @@ func GenerateSuggestion(ctx context.Context, prompt, instructionFile string) (st
 }
 
 func GetInstruction(file string) (string, error) {
+	file = filepath.Join("prompts", filepath.Clean(file))
 	content, err := os.ReadFile(file)
 	if err != nil {
 		return "", err
@@ -64,13 +67,14 @@ func GetInstruction(file string) (string, error) {
 	return string(content), nil
 }
 
-func GetInstructionOptionList(promptPath string) ([]string, error) {
+func GetInstructionOptionList(promptPath string) ([]string, []string, error) {
 	entries, err := os.ReadDir(promptPath)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	var options []string
+	var filePaths []string
+	var titles []string
 	for _, entry := range entries {
 		if entry.IsDir() {
 			continue
@@ -78,9 +82,25 @@ func GetInstructionOptionList(promptPath string) ([]string, error) {
 		name := entry.Name()
 		// Only include .txt files.
 		if filepath.Ext(name) == ".txt" {
-			fileWithoutExt := strings.TrimSuffix(name, ".txt")
-			options = append(options, fileWithoutExt)
+			titleName := formatPromptFileName(name)
+			titles = append(titles, titleName)
+
+			filePaths = append(filePaths, name)
 		}
 	}
-	return options, nil
+	return titles, filePaths, nil
+}
+
+func formatPromptFileName(promptFile string) string {
+
+	// Extract the base name without extension
+	name := filepath.Base(promptFile)
+	name = strings.TrimSuffix(name, filepath.Ext(name))
+
+	// Replace underscores with spaces and convert to title case
+	name = strings.ReplaceAll(name, "_", " ")
+	caser := cases.Title(language.English)
+	name = caser.String(name)
+
+	return name
 }
