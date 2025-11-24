@@ -169,10 +169,10 @@ func WriterSuggestionHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	instructionFile := r.FormValue("prompt-select")
-	instructionFile = filepath.Clean(instructionFile)
-	if strings.TrimSpace(instructionFile) == "" {
-		http.Error(w, "No prompt selected", http.StatusBadRequest)
-		log.Printf("No prompt selected.")
+	instructionFile = filepath.Base(filepath.Clean(instructionFile))
+	if strings.TrimSpace(instructionFile) == "" || strings.Contains(instructionFile, string(filepath.Separator)) {
+		http.Error(w, "Invalid prompt file", http.StatusBadRequest)
+		log.Printf("Invalid prompt file: %s", instructionFile)
 		return
 	}
 

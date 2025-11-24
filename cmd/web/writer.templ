@@ -2,6 +2,7 @@ package web
 
 import (
     "os"
+    "log"
     "path/filepath"
     "strings"
 
@@ -172,6 +173,9 @@ templ PromptSelectOptions() {
         if err == nil {
 	        promptsDir := filepath.Join(rootDir, "prompts")
             titleNames, filePaths, err = ai.GetInstructionOptionList(promptsDir)
+            if err != nil {
+                log.Printf("Failed to load prompt options: %v", err)
+            }
         }
     }}
     <div class="form-field">

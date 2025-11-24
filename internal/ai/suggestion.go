@@ -59,7 +59,9 @@ func GenerateSuggestion(ctx context.Context, prompt, instructionFile string) (st
 }
 
 func GetInstruction(file string) (string, error) {
-	file = filepath.Join("prompts", filepath.Clean(file))
+	// Ensure only filename, no path components
+	file = filepath.Base(filepath.Clean(file))
+	file = filepath.Join("prompts", file)
 	content, err := os.ReadFile(file)
 	if err != nil {
 		return "", err
@@ -92,7 +94,6 @@ func GetInstructionOptionList(promptPath string) ([]string, []string, error) {
 }
 
 func formatPromptFileName(promptFile string) string {
-
 	// Extract the base name without extension
 	name := filepath.Base(promptFile)
 	name = strings.TrimSuffix(name, filepath.Ext(name))

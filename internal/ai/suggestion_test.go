@@ -8,14 +8,24 @@ import (
 )
 
 func TestLoadAPIKey(t *testing.T) {
-	if err := os.WriteFile(".env", []byte("OPENAI_API_KEY=test-key\n"), 0600); err != nil {
-		t.Fatalf("failed to create local .env: %v", err)
+	tmpDir := t.TempDir()
+	envPath := filepath.Join(tmpDir, ".env")
+	if err := os.WriteFile(envPath, []byte("OPENAI_API_KEY=test-key\n"), 0600); err != nil {
+		t.Fatalf("failed to create .env: %v", err)
+	}
+
+	oldWd, _ := os.Getwd()
+	err := os.Chdir(tmpDir)
+	if err != nil {
+		t.Fatalf("Chdir failed: %v", err)
 	}
 	defer func() {
-		if err := os.Remove(".env"); err != nil {
-			t.Fatalf("failed to remove .env: %v", err)
+		err := os.Chdir(oldWd)
+		if err != nil {
+			t.Fatalf("Chdir failed: %v", err)
 		}
 	}()
+
 	apiKey, err := LoadAPIKey()
 	if err != nil {
 		t.Fatalf("LoadAPIKey error: %v", err)
@@ -26,11 +36,25 @@ func TestLoadAPIKey(t *testing.T) {
 }
 
 func TestGetInstruction(t *testing.T) {
-	if err := os.MkdirAll("prompts", 0755); err != nil {
+	tmpDir := t.TempDir()
+	promptsDir := filepath.Join(tmpDir, "prompts")
+	if err := os.MkdirAll(promptsDir, 0755); err != nil {
 		t.Fatalf("failed to ensure prompts dir: %v", err)
 	}
 
-	tmp, err := os.CreateTemp("prompts", "instruction-*.txt")
+	oldWd, _ := os.Getwd()
+	err := os.Chdir(tmpDir)
+	if err != nil {
+		t.Fatalf("Chdir failed: %v", err)
+	}
+	defer func() {
+		err := os.Chdir(oldWd)
+		if err != nil {
+			t.Fatalf("Chdir failed: %v", err)
+		}
+	}()
+
+	tmp, err := os.CreateTemp(promptsDir, "instruction-*.txt")
 	if err != nil {
 		t.Fatalf("CreateTemp failed: %v", err)
 	}
@@ -90,11 +114,11 @@ func TestGetInstructionOptionList(t *testing.T) {
 		t.Fatal("Instruction option lists are empty")
 	}
 	title := formatPromptFileName(tmpName)
-	if slices.Contains(titles, title) == false {
+	if !slices.Contains(titles, title) {
 		t.Fatalf("Expected %s in titles: %v", title, titles)
 	}
 
-	if slices.Contains(filePaths, filepath.Base(tmpName)) == false {
+	if !slices.Contains(filePaths, filepath.Base(tmpName)) {
 		t.Fatalf("Expected %s in filePaths: %v", filepath.Base(tmpName), filePaths)
 	}
 }
