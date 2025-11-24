@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"timterests/internal/ai"
@@ -13,8 +14,6 @@ import (
 
 	"github.com/a-h/templ"
 )
-
-const instructionFile = "prompts/article.txt"
 
 func WriterPageHandler(w http.ResponseWriter, r *http.Request, s storage.Storage, docType, key string, typeID int) {
 	var content any
@@ -166,6 +165,14 @@ func WriterSuggestionHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Service temporarily unavailable", http.StatusBadRequest)
 			log.Printf("Error rendering in WriterSuggestionHandler: %v", err)
 		}
+		return
+	}
+
+	instructionFile := r.FormValue("prompt-select")
+	instructionFile = filepath.Base(filepath.Clean(instructionFile))
+	if strings.TrimSpace(instructionFile) == "" || strings.Contains(instructionFile, string(filepath.Separator)) {
+		http.Error(w, "Invalid prompt file", http.StatusBadRequest)
+		log.Printf("Invalid prompt file: %s", instructionFile)
 		return
 	}
 

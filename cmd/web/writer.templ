@@ -1,9 +1,14 @@
 package web
 
 import (
-    "timterests/cmd/web/components"
-	"timterests/internal/types"
+    "os"
+    "log"
+    "path/filepath"
     "strings"
+
+    "timterests/cmd/web/components"
+    "timterests/internal/ai"
+    "timterests/internal/types"
 )
 
 templ WriterPage(content any) {
@@ -16,6 +21,8 @@ templ WriterDisplay(content any) {
     <div id="writer-container" class="form-container">
         <h1 class="category-title">Create a Document</h1>
         @FormContentByType(content)
+        <hr>
+        <h2 class="category-subtitle">AI Suggestions</h2>
         @OpenAISuggestion()
     </div>
 }
@@ -142,10 +149,11 @@ templ ProjectFormContent(project *Project) {
 
 templ OpenAISuggestion() {
     <div class="form-field">
+        @PromptSelectOptions()
         <button type="button" class="button ai-button"
                 hx-post="/write/suggest"
                 hx-target="#suggestion"
-                hx-include="#writer-form"
+                hx-include="#writer-form, #prompt-select"
                 hx-indicator="#ai-loading">
             Get Suggestion
         </button>
@@ -153,6 +161,36 @@ templ OpenAISuggestion() {
     </div>
     <div class="form-field" id="suggestion-container" style="display: none;">
         <span class="form-textarea" id="suggestion"></span>
+    </div>
+}
+
+templ PromptSelectOptions() {
+    {{
+        var titleNames []string
+        var filePaths []string
+        var err error
+        rootDir, err := os.Getwd()
+        if err == nil {
+	        promptsDir := filepath.Join(rootDir, "prompts")
+            titleNames, filePaths, err = ai.GetInstructionOptionList(promptsDir)
+            if err != nil {
+                log.Printf("Failed to load prompt options: %v", err)
+            }
+        }
+    }}
+    <div class="form-field">
+        <label class="form-label" for="prompt-select">Select a Prompt:</label>
+        if err != nil {
+            <select class="form-select" id="prompt-select" name="prompt-select" disabled>
+                <option value="">Unable to load prompts</option>
+            </select>
+        } else {
+            <select class="form-select" id="prompt-select" name="prompt-select">
+                for i, titleName := range titleNames {
+                    <option value={filePaths[i]}>{titleName}</option>
+                }
+            </select>
+        }
     </div>
 }
 
