@@ -20,35 +20,6 @@ func NewSQLiteDatabase(dbPath string) (*sql.DB, error) {
 	return db, nil
 }
 
-// InitDB creates database tables based on the defined models.
-func InitDB() error {
-
-	path := "database/timterests.db"
-	db, err := NewSQLiteDatabase(path)
-
-	if err != nil {
-		return fmt.Errorf("failed to connect to database: %v", err)
-	}
-
-	// Check if the database is already initialized.
-	var count int
-	err = db.QueryRow("SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='users'").Scan(&count)
-
-	if err != nil {
-		return fmt.Errorf("failed to check if users table exists: %v", err)
-	}
-
-	if count == 0 {
-		// Create the users table if it doesn't exist.
-		err = CreatUserTable(db)
-		if err != nil {
-			return fmt.Errorf("failed to create users table: %v", err)
-		}
-	}
-
-	return nil
-}
-
 func GetDB() (*sql.DB, error) {
 	db, err := sql.Open("sqlite3", "database/timterests.db")
 	if err != nil {

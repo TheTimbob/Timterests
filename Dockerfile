@@ -1,5 +1,5 @@
 # Golang build image
-FROM golang:1.23-alpine AS build
+FROM golang:1.24-alpine AS build
 RUN apk add --no-cache alpine-sdk
 
 WORKDIR /app
@@ -14,7 +14,7 @@ RUN go install github.com/a-h/templ/cmd/templ@latest && \
 RUN CGO_ENABLED=1 GOOS=linux go build -o main cmd/api/main.go
 
 # Production image
-FROM alpine:3.20.1 AS prod
+FROM alpine:3.22.2 AS prod
 
 WORKDIR /app
 
