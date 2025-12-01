@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"timterests/internal/server"
+	"timterests/internal/storage"
 )
 
 func gracefulShutdown(apiServer *http.Server, done chan bool) {
@@ -37,6 +38,12 @@ func gracefulShutdown(apiServer *http.Server, done chan bool) {
 }
 
 func main() {
+
+	dbPath := "database/timterests.db"
+	// Initialize the database
+	if err := storage.InitDB(dbPath); err != nil {
+		log.Printf("Failed to initialize database: %v", err)
+	}
 
 	// Initialize the server
 	server := server.NewServer()
