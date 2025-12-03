@@ -3,13 +3,19 @@ package storage
 import (
 	"database/sql"
 	"fmt"
+	"os"
+	"path/filepath"
 
 	_ "github.com/mattn/go-sqlite3"
 )
 
-// NewSQLiteDatabase initializes and returns a SQLite3 database connection.
-func NewSQLiteDatabase(dbPath string) (*sql.DB, error) {
-	db, err := sql.Open("sqlite3", dbPath)
+// GetDB initializes and returns a SQLite3 database connection.
+func GetDB() (*sql.DB, error) {
+	path, err := getDBPath()
+	if err != nil {
+		return nil, err
+	}
+	db, err := sql.Open("sqlite3", path)
 	if err != nil {
 		return nil, err
 	}
@@ -21,8 +27,8 @@ func NewSQLiteDatabase(dbPath string) (*sql.DB, error) {
 }
 
 // InitDB creates database tables based on the defined models.
-func InitDB(path string) error {
-	db, err := NewSQLiteDatabase(path)
+func InitDB() error {
+	db, err := GetDB()
 
 	if err != nil {
 		return fmt.Errorf("failed to connect to database: %v", err)
@@ -47,12 +53,29 @@ func InitDB(path string) error {
 	return nil
 }
 
-func GetDB() (*sql.DB, error) {
-	db, err := sql.Open("sqlite3", "database/timterests.db")
+func getDBPath() (string, error) {
+	currentDir, err := os.Getwd()
 	if err != nil {
-		return nil, fmt.Errorf("failed to connect to database: %v", err)
+		return "", err
 	}
-	return db, nil
+
+	for {
+		databaseDir := filepath.Join(currentDir, "database")
+
+		// Check if the database directory exists
+		if info, err := os.Stat(databaseDir); err == nil && info.IsDir() {
+			dbPath := filepath.Join(databaseDir, "timterests.db")
+			return dbPath, nil
+		}
+
+		parentDir := filepath.Dir(currentDir)
+
+		if parentDir == currentDir {
+			return "", fmt.Errorf("could not find 'database' directory in parent tree")
+		}
+
+		currentDir = parentDir
+	}
 }
 
 func CreatUserTable(db *sql.DB) error {

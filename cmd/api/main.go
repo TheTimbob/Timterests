@@ -39,9 +39,8 @@ func gracefulShutdown(apiServer *http.Server, done chan bool) {
 
 func main() {
 
-	dbPath := "database/timterests.db"
 	// Initialize the database
-	if err := storage.InitDB(dbPath); err != nil {
+	if err := storage.InitDB(); err != nil {
 		log.Printf("Failed to initialize database: %v", err)
 	}
 

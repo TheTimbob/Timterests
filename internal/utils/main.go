@@ -3,26 +3,20 @@ package main
 import (
 	"fmt"
 	"os"
-	"path/filepath"
+	"timterests/internal/storage"
 	"timterests/internal/utils/scripts"
 )
 
-func getDBPath() (string, error) {
-
-	cwd, err := os.Getwd()
-	if err != nil {
-		fmt.Printf("Failed to get working directory: %v", err)
-		return "", err
-	}
-	rootDir := filepath.Dir(filepath.Dir(cwd))
-	dbPath := filepath.Join(rootDir, "database", "timterests.db")
-
-	return dbPath, err
-}
-
 func main() {
-	command := os.Args[1]
-	arguements := os.Args[2:]
+	var command string
+	var arguements []string
+	if len(os.Args) < 2 {
+		command = "help"
+	} else {
+		command = os.Args[1]
+		arguements = os.Args[2:]
+	}
+
 	switch command {
 	case "help":
 		fmt.Println("Usage: go run main.go <command> [arguments]")
@@ -30,11 +24,11 @@ func main() {
 		fmt.Println("  create-user <firstName> <lastName> <email> <password>  Create a new user")
 		return
 	case "create-user":
-		dbPath, err := getDBPath()
+		err := storage.InitDB()
 		if err != nil {
 			panic(err)
 		}
-		err = scripts.CreateUser(dbPath, arguements[0], arguements[1], arguements[2], arguements[3])
+		err = scripts.CreateUser(arguements[0], arguements[1], arguements[2], arguements[3])
 		if err != nil {
 			panic(err)
 		}

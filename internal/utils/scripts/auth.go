@@ -7,13 +7,12 @@ import (
 	"timterests/internal/storage"
 )
 
-func CreateUser(dbPath, firstName, lastName, email, password string) error {
+func CreateUser(firstName, lastName, email, password string) error {
 	if email == "" || password == "" {
 		return errors.New("email and password cannot be empty")
 	}
 
-	fmt.Println("dbPath:", dbPath)
-	if err := storage.InitDB(dbPath); err != nil {
+	if err := storage.InitDB(); err != nil {
 		fmt.Println(err)
 		return err
 	}
