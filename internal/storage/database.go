@@ -44,7 +44,7 @@ func InitDB() error {
 
 	if count == 0 {
 		// Create the users table if it doesn't exist.
-		err = CreatUserTable(db)
+		err = CreateUserTable(db)
 		if err != nil {
 			return fmt.Errorf("failed to create users table: %v", err)
 		}
@@ -78,7 +78,7 @@ func getDBPath() (string, error) {
 	}
 }
 
-func CreatUserTable(db *sql.DB) error {
+func CreateUserTable(db *sql.DB) error {
 
 	usersSql := `
     CREATE TABLE IF NOT EXISTS users (
