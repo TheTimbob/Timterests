@@ -33,7 +33,6 @@ node_modules
 # OS X generated file
 .DS_Store
 
-
 # Directories that should be ignored
 prompts/*
 s3/*
@@ -41,3 +40,6 @@ utils/*
 
 # Keep empty directories
 !.gitkeep
+
+# Keep DB schema
+!database/schema.db
