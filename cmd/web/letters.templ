@@ -7,7 +7,7 @@ import (
 templ LettersListPage(letters []Letter, tags []string, design string) {
 	@Base() {
 		<div id="letters-container" class="category-container">
-		    <div class="flex justify-between items-center mb-2">
+		    <div class="header-controls">
 				<h1 class="category-title">Letters</h1>
 				<div>
                 	@components.FilterTags("/letters", tags)
@@ -20,7 +20,7 @@ templ LettersListPage(letters []Letter, tags []string, design string) {
 }
 
 templ LettersList(letters []Letter, design string) {
-    <ul id="page-list">
+    <ul id="page-list" class="page-list">
 		if design == "grid" {
 			for i := 0; i < len(letters); i += 4 {
 				<li class="grid-list-element">
@@ -63,7 +63,7 @@ templ LetterDisplay(letter Letter, userIsAdmin bool) {
 
 templ EditLetterButton(letter Letter, userIsAdmin bool) {
     if userIsAdmin {
-        <form hx-post="/writer" hx-target="body" style="display: inline;">
+        <form hx-post="/writer" hx-target="body" class="action-form">
             <input type="hidden" name="document-type" value="letters"/>
             <input type="hidden" name="document-key" value={letter.S3Key}/>
             <input type="hidden" name="type-id" value={letter.ID}/>

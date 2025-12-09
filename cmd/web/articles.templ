@@ -7,7 +7,7 @@ import (
 templ ArticlesListPage(articles []Article, tags []string, design string) {
 	@Base() {
 		<div id="articles-container" class="category-container">
-		    <div class="flex justify-between items-center mb-2">
+		    <div class="header-controls">
 				<h1 class="category-title">Articles</h1>
 				<div>
 					@components.FilterTags("/articles", tags)
@@ -20,7 +20,7 @@ templ ArticlesListPage(articles []Article, tags []string, design string) {
 }
 
 templ ArticlesList(articles []Article, design string) {
-    <ul id="page-list">
+    <ul id="page-list" class="page-list">
 		if design == "grid" {
 			for i := 0; i < len(articles); i += 4 {
 				<li class="grid-list-element">
@@ -63,7 +63,7 @@ templ ArticleDisplay(article Article, userIsAdmin bool) {
 
 templ EditArticleButton(article Article, userIsAdmin bool) {
     if userIsAdmin {
-        <form hx-post="/writer" hx-target="body" style="display: inline;">
+        <form hx-post="/writer" hx-target="body" class="action-form">
             <input type="hidden" name="document-type" value="articles"/>
             <input type="hidden" name="document-key" value={article.S3Key}/>
             <input type="hidden" name="type-id" value={article.ID}/>

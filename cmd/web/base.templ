@@ -17,7 +17,7 @@ templ Base() {
 		<script src="/assets/js/dark-mode.js"></script>
 		<script src="https://kit.fontawesome.com/3453ab8a44.js" crossorigin="anonymous"></script>
 		<link href="/assets/css/dark-mode-switch.css" rel="stylesheet" />
-		<link href="/assets/css/output.css" rel="stylesheet" />
+		<link href="/assets/css/styles.css" rel="stylesheet" />
 		<link rel="icon" type="image/x-icon" href="/favicon.ico">
 	</head>
 		<body>
@@ -34,11 +34,11 @@ templ Base() {
 				<p class="banner-subtitle">Tim's interests</p>
 			</header>
 			<nav class="nav-header">
-				<a href="/home" class="nav-link"><i class="fa-solid fa-house text-xl"></i> Home</a>
-				<a href="/articles" class="nav-link"><i class="fa-solid fa-newspaper text-xl"></i> Articles</a>
-				<a href="/projects" class="nav-link"><i class="fa-brands fa-github text-xl"></i> Projects</a>
-				<a href="/reading-list" class="nav-link"><i class="fa-solid fa-book text-xl"></i> Reading List</a>
-				<a href="/about" class="nav-link"><i class="fa-solid fa-question text-xl"></i> About</a>
+				<a href="/home" class="nav-link"><i class="fa-solid fa-house"></i> Home</a>
+				<a href="/articles" class="nav-link"><i class="fa-solid fa-newspaper"></i> Articles</a>
+				<a href="/projects" class="nav-link"><i class="fa-brands fa-github"></i> Projects</a>
+				<a href="/reading-list" class="nav-link"><i class="fa-solid fa-book"></i> Reading List</a>
+				<a href="/about" class="nav-link"><i class="fa-solid fa-question"></i> About</a>
 			</nav>
 			<main id="main-content" class="main-content">
 				{ children... }
@@ -52,10 +52,9 @@ templ Base() {
 					<a href="/about" class="nav-footer-link">About</a>
 				</nav>
 				<p class="copywrite-text">
-					<a href="https://github.com/TheTimbob/timterests">&copy; { strconv.Itoa(time.Now().Year()) } Tim Scott</a>
+					<a href="https://github.com/TheTimbob/timterests" class="nav-footer-link">&copy; { strconv.Itoa(time.Now().Year()) } Tim Scott</a>
 				</p>
 			</footer>
 		</body>
 	</html>
 }
-

@@ -27,8 +27,8 @@ func TestBodyToHTML(t *testing.T) {
 
 	expectedBody := `<p class="content-text">This is a test body.</p>
 					<ul>
-					<li class="content-text">- Item 1</li>
-					<li class="content-text">- Item 2</li>
+					<li class="content-text">Item 1</li>
+					<li class="content-text">Item 2</li>
 					</ul>
 					<h2 class="category-subtitle">Subtitle</h2>
 					<p class="content-text"><a class="hyperlink" href="http://example.com">Link</a></p>`

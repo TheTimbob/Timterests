@@ -7,7 +7,7 @@ templ Card(title, subtitle, date, body, imagePath, get string, tags []string) {
                 <img src={ string(templ.SafeURL(imagePath)) } alt="Card image">
             </div>
         }
-        <div class="w-full">
+        <div class="card-content">
             @CardTitleContainer(title, subtitle)
             <div class="card-body">
                 @templ.Raw(body)
@@ -26,12 +26,10 @@ templ Card(title, subtitle, date, body, imagePath, get string, tags []string) {
 
 templ MiniCard(title, date, imagePath, get string, tags []string) {
 	<div class="mini-card-container" hx-get={ get } hx-target="#main-content" hx-swap="innerHTML" hx-push-url="true" tabindex="0">
-		if imagePath != "" {
-            <div class="mr-2">
-                <img src={ string(templ.SafeURL(imagePath)) } alt="Mini card image" class="card-image">
-            </div>
+        if imagePath != "" {
+            <img src={ string(templ.SafeURL(imagePath)) } alt="Mini card image" class="card-image">
         }
-        <div class="w-full">
+        <div class="card-content">
 			<div class="card-title-container">
 				<h2 class="card-subtitle">{ title }</h2>
 			</div>

@@ -7,7 +7,7 @@ import (
 templ ProjectsListPage(projects []Project, tags []string, design string) {
 	@Base() {
 		<div id="projects-container" class="category-container">
-		    <div class="flex justify-between items-center mb-2">
+		    <div class="header-controls">
 				<h1 class="category-title">Projects</h1>
 				<div>
 					@components.FilterTags("/projects", tags)
@@ -20,7 +20,7 @@ templ ProjectsListPage(projects []Project, tags []string, design string) {
 }
 
 templ ProjectsList(projects []Project, design string) {
-	<ul id="page-list">
+	<ul id="page-list" class="page-list">
 		if design == "grid" {
 			for i := 0; i < len(projects); i += 4 {
 				<li class="grid-list-element">
@@ -66,7 +66,7 @@ templ ProjectDisplay(project Project, userIsAdmin bool) {
 
 templ EditProjectButton(project Project, userIsAdmin bool) {
     if userIsAdmin {
-        <form hx-post="/writer" hx-target="body" style="display: inline;">
+        <form hx-post="/writer" hx-target="body" class="action-form">
             <input type="hidden" name="document-type" value="projects"/>
             <input type="hidden" name="document-key" value={project.S3Key}/>
             <input type="hidden" name="type-id" value={project.ID}/>

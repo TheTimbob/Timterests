@@ -7,7 +7,7 @@ import (
 templ ReadingListPage(readingLists []ReadingList, tags []string, design string) {
 	@Base() {
 		<div id="reading-list-container" class="category-container">
-			<div class="flex justify-between items-center mb-2">
+			<div class="header-controls">
 				<h1 class="category-title">Reading List</h1>
                 <div>
                     @components.FilterTags("/reading-list", tags)
@@ -20,7 +20,7 @@ templ ReadingListPage(readingLists []ReadingList, tags []string, design string) 
 }
 
 templ ReadingListList(readingList []ReadingList, design string) {
-	<ul id="page-list">
+	<ul id="page-list" class="page-list">
     	if design == "grid" {
 			for i := 0; i < len(readingList); i += 4 {
 				<li class="grid-list-element">
@@ -70,7 +70,7 @@ templ BookDisplay(readingList ReadingList, userIsAdmin bool) {
 
 templ EditBookButton(readingList ReadingList, userIsAdmin bool) {
     if userIsAdmin {
-        <form hx-post="/writer" hx-target="body" style="display: inline;">
+        <form hx-post="/writer" hx-target="body" class="action-form">
             <input type="hidden" name="document-type" value="reading-list"/>
             <input type="hidden" name="document-key" value={readingList.S3Key}/>
             <input type="hidden" name="type-id" value={readingList.ID}/>
