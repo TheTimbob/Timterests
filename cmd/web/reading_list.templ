@@ -6,7 +6,7 @@ import (
 
 templ ReadingListPage(readingLists []ReadingList, tags []string, design string) {
 	@Base() {
-		<div id="reading-list-container" class="category-container">
+		<div id="reading-list-container">
 			<div class="header-controls">
 				<h1 class="category-title">Reading List</h1>
                 <div>
@@ -60,7 +60,7 @@ templ BookDisplay(readingList ReadingList, userIsAdmin bool) {
 		<p>Author: { readingList.Author }</p>
 		<p>Published: { readingList.Published }</p>
 		<p>ISBN: { readingList.ISBN }</p>
-		<p>Website: <a href={ templ.SafeURL(readingList.Website) } class="hyperlink" target="_blank">{ readingList.Website }</a></p>
+		<p>Website: <a href={ templ.SafeURL(readingList.Website) } target="_blank">{ readingList.Website }</a></p>
 		<p>Status: { readingList.Status }</p>
 		@templ.Raw(readingList.Body)
 		<br>

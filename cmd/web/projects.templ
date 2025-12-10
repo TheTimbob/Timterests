@@ -6,7 +6,7 @@ import (
 
 templ ProjectsListPage(projects []Project, tags []string, design string) {
 	@Base() {
-		<div id="projects-container" class="category-container">
+		<div id="projects-container">
 		    <div class="header-controls">
 				<h1 class="category-title">Projects</h1>
 				<div>
@@ -58,7 +58,7 @@ templ ProjectDisplay(project Project, userIsAdmin bool) {
         <h1 class="category-title">{ project.Title }</h1>
         <h2 class="category-subtitle">{ project.Subtitle }</h2>
 		if project.Repository != "Private" {
-			<p class="content-text"><i class="fa-brands fa-github"></i> Repository: <a href={ templ.SafeURL(project.Repository) } class="content-text hyperlink" target="_blank">{ project.Repository }</a></p>
+			<p class="content-text"><i class="fa-brands fa-github"></i> Repository: <a href={ templ.SafeURL(project.Repository) } class="content-text" target="_blank">{ project.Repository }</a></p>
 		}
         @templ.Raw(project.Body)
     </div>

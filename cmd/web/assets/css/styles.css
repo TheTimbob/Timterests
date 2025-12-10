@@ -133,6 +133,7 @@ a:hover {
 .main-content {
   width: 100%;
   max-width: 1280px;
+  margin: 0 auto;
   padding: 0.75rem;
   border-radius: 0.25rem;
   box-shadow: var(--shadow-lg);
@@ -497,7 +498,7 @@ a:hover {
 }
 
 .dark .home-footer {
-  background-color: var(--text-light);
+  background-color: var(--bg-dark-accent);
 }
 
 .header-controls {
@@ -626,11 +627,17 @@ a:hover {
 .highlight-green {
   color: var(--green);
 }
+.highlight-blue {
+  color: var(--blue);
+}
 .highlight-purple {
   color: var(--purple);
 }
 .dark .highlight-green {
   color: var(--green);
+}
+.dark .highlight-blue {
+  color: var(--blue);
 }
 .dark .highlight-purple {
   color: var(--purple);

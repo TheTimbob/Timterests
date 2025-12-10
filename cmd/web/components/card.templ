@@ -46,7 +46,7 @@ templ MiniCard(title, date, imagePath, get string, tags []string) {
 }
 
 templ Link(title, date, get string) {
-    <div class="hyperlink" hx-get={ get } hx-target="#main-content" hx-swap="innerHTML" hx-push-url="true" tabindex="0">
+    <div hx-get={ get } hx-target="#main-content" hx-swap="innerHTML" hx-push-url="true" tabindex="0">
         if date != "" {
             <p>{ date } - { title } </p>
         } else {

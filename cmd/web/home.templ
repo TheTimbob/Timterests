@@ -7,7 +7,7 @@ templ HomeForm(latestArticle *Article, featuredProject *Project) {
 }
 
 templ HomeContent(latestArticle *Article, featuredProject *Project) {
-	<div class="category-container">
+	<div id="home-container">
         @Introduction()
         @ContentBreakdown()
 		<div class="section-grid-2">
@@ -86,7 +86,7 @@ templ HomeFooter() {
     <p class="intro-text">
         Discover my thoughts on programming languages, development practices, and ideas.
     </p>
-    <div class="footer-actions">
+    <div>
         <a href="/articles" class="button">
             Read Articles
         </a>
@@ -114,7 +114,7 @@ templ LatestArticle(latestArticle *Article) {
                 </div>
                 <div class="card-footer-split">
                     <span class="card-date">{ latestArticle.Date }</span>
-                    <a href={ templ.SafeURL("/article?id=" + latestArticle.ID) } class="hyperlink card-body">
+                    <a href={ templ.SafeURL("/article?id=" + latestArticle.ID) } class="card-body">
                         Read more →
                     </a>
                 </div>
@@ -143,7 +143,7 @@ templ FeaturedProject(featuredProject *Project) {
                             <p class="card-tag">{ tag }</p>
                         }
                     </div>
-                    <a href={ templ.SafeURL("/project?id=" + featuredProject.ID) } class="hyperlink card-body">
+                    <a href={ templ.SafeURL("/project?id=" + featuredProject.ID) } class="card-body">
                         View project →
                     </a>
                 </div>
