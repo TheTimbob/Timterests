@@ -6,35 +6,14 @@ Tools and platforms utized for this project:
 - Go
 - Templ
 - HTMX
-- TailwindCSS
 - Docker
 - AWS
 - GitHub Actions
 
 ## Getting Started
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
-
-## Tailwind
-
-For any style updates in tailwindcss, a tailwindcss standalone cli binary needs to be installed from below.
-<https://tailwindcss.com/blog/standalone-cli>
-
-Available versions:
-<https://github.com/tailwindlabs/tailwindcss/releases/tag/v3.4.17>
-
-To run an update to the css, perform one of the following. I stored the binary in a directory called utils.
-For a minified version:
-
-```bash
-utils/tailwindcss -i ./cmd/web/assets/css/styles.css -o ./cmd/web/assets/css/output.css --minify
-```
-
-For a watch version for dev environments:
-
-```bash
-utils/tailwindcss -i ./cmd/web/assets/css/styles.css -o ./cmd/web/assets/css/output.css --watch
-```
+These instructions will get you a copy of the project up and running on
+your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
 
 ## MakeFile
 

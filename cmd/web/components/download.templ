@@ -2,7 +2,7 @@ package components
 
 templ DownloadDocumentButton(title string, userIsAdmin bool) {
     if userIsAdmin {
-        <form action="/download" method="get" style="display: inline;">
+        <form action="/download" method="get" class="action-form">
             <input type="hidden" name="title" value={title}/>
             <button type="submit" class="button">Download</button>
         </form>

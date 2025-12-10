@@ -32,11 +32,6 @@ repos:
         files: \.(html|css|md)$
         language_version: system
 
-  - repo: https://github.com/markdownlint/markdownlint
-    rev: v0.12.0
-    hooks:
-      - id: markdownlint
-
   - repo: local
     hooks:
     - id: clean-prettier-cache

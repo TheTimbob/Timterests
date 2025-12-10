@@ -7,14 +7,18 @@ templ LoginPage() {
 }
 
 templ LoginContainer() {
-	<div id="login-container" class="category-container">
+	<div id="login-container">
 		<h1 class="category-title">Login</h1>
 		<form method="POST" action="/login">
-			<label for="email" class="category-subtitle">Email:</label>
-			<input type="text" id="email" name="email" class="login-input">
-			<label for="password" class="category-subtitle">Password:</label>
-			<input type="password" id="password" name="password" class="login-input">
-			<input type="submit" class="button" value="Login">
+			<div>
+				<label for="email" class="category-subtitle">Email:</label>
+				<input type="text" id="email" name="email" class="login-input"/>
+			</div>
+			<div>
+				<label for="password" class="category-subtitle">Password:</label>
+				<input type="password" id="password" name="password" class="login-input"/>
+			</div>
+			<input type="submit" class="button" value="Login"/>
 		</form>
 	</div>
 }

@@ -53,8 +53,7 @@ func BodyToHTML(document any) error {
 
 	body = strings.ReplaceAll(body, "<p>", `<p class="content-text">`)
 	body = strings.ReplaceAll(body, "<h2>", `<h2 class="category-subtitle">`)
-	body = strings.ReplaceAll(body, "<a ", `<a class="hyperlink"`)
-	body = strings.ReplaceAll(body, "<li>", `<li class="content-text">- `)
+	body = strings.ReplaceAll(body, "<li>", `<li class="content-text">`)
 
 	if bodyField.CanSet() {
 		bodyField.SetString(body)
