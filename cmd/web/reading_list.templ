@@ -5,13 +5,13 @@ import (
 )
 
 templ ReadingListPage(readingLists []ReadingList, tags []string, design string) {
-	@Base() {
+	@Base("reading-list") {
 		<div id="reading-list-container">
 			<div class="header-controls">
 				<h1 class="category-title">Reading List</h1>
                 <div>
                     @components.FilterTags("/reading-list", tags)
-                    @components.FilterDesign("/reading-list")
+                    @components.FilterDesign("/reading-list", design)
                 </div>
 			</div>
 			@ReadingListList(readingLists, design)
@@ -46,7 +46,7 @@ templ ReadingListList(readingList []ReadingList, design string) {
 }
 
 templ BookPage(readingList ReadingList, userIsAdmin bool) {
-    @Base() {
+    @Base("reading-list") {
         @BookDisplay(readingList, userIsAdmin)
     }
 }

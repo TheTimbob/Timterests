@@ -5,13 +5,13 @@ import (
 )
 
 templ LettersListPage(letters []Letter, tags []string, design string) {
-	@Base() {
+	@Base("letters") {
 		<div id="letters-container">
 		    <div class="header-controls">
 				<h1 class="category-title">Letters</h1>
 				<div>
                 	@components.FilterTags("/letters", tags)
-                    @components.FilterDesign("/letters")
+                    @components.FilterDesign("/letters", design)
 				</div>
 			</div>
 			@LettersList(letters, design)
@@ -46,7 +46,7 @@ templ LettersList(letters []Letter, design string) {
 }
 
 templ LetterPage(letter Letter, userIsAdmin bool){
-    @Base() {
+    @Base("letters") {
         @LetterDisplay(letter, userIsAdmin)
     }
 }

@@ -15,16 +15,43 @@ templ FilterTags(get string, tags []string) {
     </select>
 }
 
-templ FilterDesign(get string) {
-    <select
-        class="filter-select"
-        hx-get={ get }
-        hx-target="#page-list"
-        hx-trigger="change"
-        hx-include="[name='tag']"
-        name="design">
-            <option value="list">List</option>
-            <option value="grid">Grid</option>
-            <option value="links">Links</option>
-    </select>
+templ FilterDesign(get string, currentDesign string) {
+    <div class="view-options">
+        <button
+            class={ "view-btn", templ.KV("active", currentDesign == "list" || currentDesign == "") }
+            onclick="handleViewChange(this)"
+            hx-get={ get }
+            hx-target="#page-list"
+            hx-include="[name='tag']"
+            hx-vals='{"design": "list"}'
+            title="List View">
+            <i class="fa-solid fa-bars"></i>
+        </button>
+        <button
+            class={ "view-btn", templ.KV("active", currentDesign == "grid") }
+            onclick="handleViewChange(this)"
+            hx-get={ get }
+            hx-target="#page-list"
+            hx-include="[name='tag']"
+            hx-vals='{"design": "grid"}'
+            title="Grid View">
+            <i class="fa-solid fa-border-all"></i>
+        </button>
+        <button
+            class={ "view-btn", templ.KV("active", currentDesign == "links") }
+            onclick="handleViewChange(this)"
+            hx-get={ get }
+            hx-target="#page-list"
+            hx-include="[name='tag']"
+            hx-vals='{"design": "links"}'
+            title="Links View">
+            <i class="fa-solid fa-list-ul"></i>
+        </button>
+    </div>
+    <script>
+        function handleViewChange(button) {
+            button.parentElement.querySelectorAll('.view-btn').forEach(e=>e.classList.remove('active'));
+            button.classList.add('active');
+        }
+    </script>
 }

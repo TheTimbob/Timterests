@@ -5,13 +5,13 @@ import (
 )
 
 templ ProjectsListPage(projects []Project, tags []string, design string) {
-	@Base() {
+	@Base("projects") {
 		<div id="projects-container">
 		    <div class="header-controls">
 				<h1 class="category-title">Projects</h1>
 				<div>
 					@components.FilterTags("/projects", tags)
-                    @components.FilterDesign("/projects")
+                    @components.FilterDesign("/projects", design)
 				</div>
 			</div>
 			@ProjectsList(projects, design)
@@ -46,7 +46,7 @@ templ ProjectsList(projects []Project, design string) {
 }
 
 templ ProjectPage(project Project, userIsAdmin bool) {
-    @Base() {
+    @Base("projects") {
         @ProjectDisplay(project, userIsAdmin)
     }
 }

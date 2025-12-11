@@ -1,7 +1,7 @@
 package web
 
 templ HomeForm(latestArticle *Article, featuredProject *Project) {
-    @Base() {
+    @Base("home") {
         @HomeContent(latestArticle, featuredProject)
     }
 }
@@ -9,25 +9,28 @@ templ HomeForm(latestArticle *Article, featuredProject *Project) {
 templ HomeContent(latestArticle *Article, featuredProject *Project) {
 	<div id="home-container">
         @Introduction()
-        @ContentBreakdown()
-		<div class="section-grid-2">
+        <div class="animate-slide-up animate-delay-1">
+            @ContentBreakdown()
+        </div>
+		<div class="section-grid-2 animate-slide-up animate-delay-2">
             @LatestArticle(latestArticle)
             @FeaturedProject(featuredProject)
 		</div>
-        @CurrentFocus()
-        @HomeFooter()
+        <div class="animate-slide-up animate-delay-3">
+            @CurrentFocus()
+        </div>
 	</div>
 }
 
 templ Introduction() {
-    <div class="intro-section">
+    <div class="intro-section animate-slide-up">
         <h1 class="home-title">
             Welcome to Timterests
         </h1>
         <p class="intro-text">
             A developer's journey through programming languages, frameworks, and technologies.
-            This is my personal repository of knowledge, discoveries, and interests that span
-            over 8 years of programming.
+            <br/>
+            My personal repository of knowledge, discoveries, and interests from 8+ years of coding.
         </p>
     </div>
 }
@@ -78,26 +81,6 @@ templ CurrentFocus() {
             </div>
         </div>
     </div>
-}
-
-templ HomeFooter() {
-    <div class="home-footer">
-    <h2 class="category-subtitle">Explore My Interests</h2>
-    <p class="intro-text">
-        Discover my thoughts on programming languages, development practices, and ideas.
-    </p>
-    <div>
-        <a href="/articles" class="button">
-            Read Articles
-        </a>
-        <a href="/projects" class="button">
-            View Projects
-        </a>
-        <a href="/about" class="button">
-            About Me
-        </a>
-    </div>
-</div>
 }
 
 templ LatestArticle(latestArticle *Article) {

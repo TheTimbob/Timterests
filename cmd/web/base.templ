@@ -5,7 +5,7 @@ import (
 	"strconv"
 )
 
-templ Base() {
+templ Base(activePage string) {
 	<!DOCTYPE html>
 	<html lang="en" class="dark">
 
@@ -34,13 +34,13 @@ templ Base() {
 				<p class="banner-subtitle">Tim's interests</p>
 			</header>
 			<nav class="nav-header">
-				<a href="/home" class="nav-link"><i class="fa-solid fa-house"></i> Home</a>
-				<a href="/articles" class="nav-link"><i class="fa-solid fa-newspaper"></i> Articles</a>
-				<a href="/projects" class="nav-link"><i class="fa-brands fa-github"></i> Projects</a>
-				<a href="/reading-list" class="nav-link"><i class="fa-solid fa-book"></i> Reading List</a>
-				<a href="/about" class="nav-link"><i class="fa-solid fa-question"></i> About</a>
+				<a href="/home" class={ "nav-link", templ.KV("active", activePage == "home") }><i class="fa-solid fa-house"></i> Home</a>
+				<a href="/articles" class={ "nav-link", templ.KV("active", activePage == "articles") }><i class="fa-solid fa-newspaper"></i> Articles</a>
+				<a href="/projects" class={ "nav-link", templ.KV("active", activePage == "projects") }><i class="fa-brands fa-github"></i> Projects</a>
+				<a href="/reading-list" class={ "nav-link", templ.KV("active", activePage == "reading-list") }><i class="fa-solid fa-book"></i> Reading List</a>
+				<a href="/about" class={ "nav-link", templ.KV("active", activePage == "about") }><i class="fa-solid fa-question"></i> About</a>
 			</nav>
-			<main id="main-content" class="main-content">
+			<main id="main-content" class="main-content animate-fade-in">
 				{ children... }
 			</main>
 			<footer class="banner-footer">

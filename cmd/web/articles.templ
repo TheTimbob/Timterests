@@ -5,13 +5,13 @@ import (
 )
 
 templ ArticlesListPage(articles []Article, tags []string, design string) {
-	@Base() {
+	@Base("articles") {
 		<div id="articles-container">
 		    <div class="header-controls">
 				<h1 class="category-title">Articles</h1>
 				<div>
 					@components.FilterTags("/articles", tags)
-                    @components.FilterDesign("/articles")
+                    @components.FilterDesign("/articles", design)
 				</div>
 			</div>
 			@ArticlesList(articles, design)
@@ -46,7 +46,7 @@ templ ArticlesList(articles []Article, design string) {
 }
 
 templ ArticlePage(article Article, userIsAdmin bool) {
-    @Base() {
+    @Base("articles") {
         @ArticleDisplay(article, userIsAdmin)
     }
 }
