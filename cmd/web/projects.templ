@@ -25,7 +25,7 @@ templ ProjectsList(projects []Project, design string) {
 			for i := 0; i < len(projects); i += 4 {
 				<li class="grid-list-element">
 					for j := i; j < i+4 && j < len(projects); j++ {
-						@components.MiniCard(projects[j].Title, "", projects[j].Image, "/project?id=" + projects[j].ID, projects[j].Tags)
+						@components.MiniCard(projects[j].Title, "", projects[j].Image, "/project?id=" + projects[j].ID, projects[j].Tags, j)
 					}
 				</li>
 			}
@@ -36,9 +36,9 @@ templ ProjectsList(projects []Project, design string) {
                 </li>
             }
 		} else {
-			for _, project := range projects {
+			for i, project := range projects {
 			<li>
-				@components.Card(project.Title, project.Subtitle, "", project.Body, project.Image, "/project?id=" + project.ID, project.Tags)
+				@components.Card(project.Title, project.Subtitle, "", project.Body, project.Image, "/project?id=" + project.ID, project.Tags, i)
 			</li>
 			}
 		}

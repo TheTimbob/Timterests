@@ -79,6 +79,7 @@
 
 html,
 body {
+  overscroll-behavior-y: none;
   height: 100%;
   width: 100%;
   margin: 0;
@@ -107,7 +108,7 @@ body {
 
 body::before {
   content: "";
-  position: absolute;
+  position: fixed;
   inset: 0;
   background-image: url("/assets/images/background.jpg");
   background-size: cover;
