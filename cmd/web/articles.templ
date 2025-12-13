@@ -25,20 +25,20 @@ templ ArticlesList(articles []Article, design string) {
 			for i := 0; i < len(articles); i += 4 {
 				<li class="grid-list-element">
 					for j := i; j < i+4 && j < len(articles); j++ {
-						@components.MiniCard(articles[j].Title, articles[j].Date, "", "/article?id=" + articles[j].ID, articles[j].Tags, j)
-					}
+                        @articles[j].ToCard(j).MiniCard()
+                    }
 				</li>
 			}
 		} else if design == "links" {
-            for _, article := range articles {
+            for i, article := range articles {
                 <li>
-                    @components.Link(article.Title, article.Date, "/article?id=" + article.ID)
+                    @article.ToCard(i).LinkCard()
                 </li>
             }
         } else {
 			for i, article := range articles {
 				<li>
-					@components.Card(article.Title, article.Subtitle, article.Date, article.Body, "", "/article?id=" + article.ID, article.Tags, i)
+                    @article.ToCard(i).LargeCard()
 				</li>
 			}
 		}

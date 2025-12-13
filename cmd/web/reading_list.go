@@ -8,6 +8,7 @@ import (
 	"reflect"
 	"slices"
 	"strconv"
+	"timterests/cmd/web/components"
 	"timterests/internal/auth"
 	"timterests/internal/storage"
 	"timterests/internal/types"
@@ -128,4 +129,17 @@ func GetBook(key string, id int, s storage.Storage) (*ReadingList, error) {
 
 	book.Image = localImagePath
 	return &book, nil
+}
+
+func (r ReadingList) ToCard(i int) components.Card {
+	return components.Card{
+		Title:     r.Title,
+		Subtitle:  r.Subtitle,
+		Date:      "",
+		Body:      r.Body,
+		ImagePath: r.Image,
+		Get:       "/book?id=" + r.ID,
+		Tags:      r.Tags,
+		Index:     i,
+	}
 }

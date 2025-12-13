@@ -8,6 +8,7 @@ import (
 	"reflect"
 	"slices"
 	"strconv"
+	"timterests/cmd/web/components"
 	"timterests/internal/auth"
 	"timterests/internal/storage"
 	"timterests/internal/types"
@@ -149,4 +150,17 @@ func GetFeaturedProject(s storage.Storage) (*Project, error) {
 	}
 	featuredProject.Body = storage.RemoveHTMLTags(featuredProject.Body)
 	return &featuredProject, nil
+}
+
+func (p Project) ToCard(i int) components.Card {
+	return components.Card{
+		Title:     p.Title,
+		Subtitle:  p.Subtitle,
+		Date:      "",
+		Body:      p.Body,
+		ImagePath: p.Image,
+		Get:       "/project?id=" + p.ID,
+		Tags:      p.Tags,
+		Index:     i,
+	}
 }

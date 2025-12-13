@@ -8,6 +8,7 @@ import (
 	"reflect"
 	"sort"
 	"strconv"
+	"timterests/cmd/web/components"
 	"timterests/internal/auth"
 	"timterests/internal/storage"
 	"timterests/internal/types"
@@ -133,4 +134,17 @@ func GetLetter(key string, id int, s storage.Storage) (*Letter, error) {
 	}
 
 	return &letter, nil
+}
+
+func (l Letter) ToCard(i int) components.Card {
+	return components.Card{
+		Title:     l.Title,
+		Subtitle:  l.Subtitle,
+		Date:      l.Date,
+		Body:      l.Body,
+		ImagePath: "",
+		Get:       "/letter?id=" + l.ID,
+		Tags:      l.Tags,
+		Index:     i,
+	}
 }

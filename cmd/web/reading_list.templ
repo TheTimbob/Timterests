@@ -25,20 +25,20 @@ templ ReadingListList(readingList []ReadingList, design string) {
 			for i := 0; i < len(readingList); i += 4 {
 				<li class="grid-list-element">
 					for j := i; j < i+4 && j < len(readingList); j++ {
-						@components.MiniCard(readingList[j].Title, "", readingList[j].Image, "/book?id=" + readingList[j].ID, readingList[j].Tags, j)
+						@readingList[j].ToCard(j).MiniCard()
 					}
 				</li>
 			}
         } else if design == "links" {
-            for _, book := range readingList {
+            for i, book := range readingList {
                 <li>
-                    @components.Link(book.Title, book.Author, "/book?id=" + book.ID)
+                    @book.ToCard(i).LinkCard()
                 </li>
             }
 		} else {
             for i, book := range readingList {
                 <li>
-                    @components.Card(book.Title, book.Subtitle, "", book.Body, book.Image, "/book?id=" + book.ID, book.Tags, i)
+                    @book.ToCard(i).LargeCard()
                 </li>
             }
         }
