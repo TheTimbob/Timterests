@@ -2,57 +2,76 @@ package components
 
 import "fmt"
 
-templ Card(title, subtitle, date, body, imagePath, get string, tags []string, index int) {
-	<div class="card-container animate-slide-up" style={ fmt.Sprintf("animation-delay: %.1fs", float64(index)*0.1) } hx-get={ get } hx-target="#main-content" hx-swap="innerHTML" hx-push-url="true" tabindex="0">
-        if imagePath != "" {
-            <div class="card-image">
-                <img src={ string(templ.SafeURL(imagePath)) } alt="Card image">
-            </div>
-        }
+type Card struct {
+    Title       string
+    Subtitle    string
+    Date        string
+    Body        string
+    ImagePath   string
+    Get         string
+    Tags        []string
+    Index       int
+}
+
+func (c Card) animationDelay() string {
+    return fmt.Sprintf("animation-delay: %.1fs", float64(c.Index)*0.1)
+}
+
+templ (c Card) LargeCard() {
+	<div class="card-container animate-slide-up" style={ c.animationDelay() } hx-get={ c.Get } hx-target="#main-content" hx-swap="innerHTML" hx-push-url="true" tabindex="0">
+        @c.renderImage("Card image")
         <div class="card-content">
-            @CardTitleContainer(title, subtitle)
+            @CardTitleContainer(c.Title, c.Subtitle)
             <div class="card-body">
-                @templ.Raw(body)
+                @templ.Raw(c.Body)
             </div>
-            if date != "" {
-                <p class="card-date">{ date }</p>
-            }
-            <div class="tag-container">
-                for _, tag := range tags {
-                    <p class="card-tag">{ tag }</p>
-                }
-            </div>
+            @c.renderDate()
+            @c.renderTags()
         </div>
 	</div>
 }
 
-templ MiniCard(title, date, imagePath, get string, tags []string, index int) {
-	<div class="mini-card-container animate-slide-up" style={ fmt.Sprintf("animation-delay: %.1fs", float64(index)*0.1) } hx-get={ get } hx-target="#main-content" hx-swap="innerHTML" hx-push-url="true" tabindex="0">
-        if imagePath != "" {
-            <img src={ string(templ.SafeURL(imagePath)) } alt="Mini card image" class="card-image">
-        }
+templ (c Card) MiniCard() {
+	<div class="mini-card-container animate-slide-up" style={ c.animationDelay() } hx-get={ c.Get } hx-target="#main-content" hx-swap="innerHTML" hx-push-url="true" tabindex="0">
+        @c.renderImage("Mini card image")
         <div class="card-content">
 			<div class="card-title-container">
-				<h2 class="card-subtitle">{ title }</h2>
+				<h2 class="card-subtitle">{ c.Title }</h2>
 			</div>
-            if date != "" {
-			    <p class="card-date">{ date }</p>
-            }
-            <div class="tag-container">
-                for _, tag := range tags {
-                    <p class="card-tag">{ tag }</p>
-                }
-            </div>
+            @c.renderDate()
+            @c.renderTags()
 		</div>
 	</div>
 }
 
-templ Link(title, date, get string) {
-    <div class="link-item animate-slide-up" hx-get={ get } hx-target="#main-content" hx-swap="innerHTML" hx-push-url="true">
-        if date != "" {
-            <p>{ date } - { title } </p>
+templ (c Card) LinkCard() {
+    <div class="link-item animate-slide-up" style={ c.animationDelay() } hx-get={ c.Get } hx-target="#main-content" hx-swap="innerHTML" hx-push-url="true" tabindex="0">
+        if c.Date != "" {
+            <p>{ c.Date } - { c.Title } </p>
         } else {
-            <p>{ title }</p>
+            <p>{ c.Title }</p>
+        }
+    </div>
+}
+
+templ (c Card) renderImage(altText string) {
+    if c.ImagePath != "" {
+        <div class="card-image">
+            <img src={ string(templ.SafeURL(c.ImagePath)) } alt={ altText }>
+        </div>
+    }
+}
+
+templ (c Card) renderDate() {
+    if c.Date != "" {
+        <p class="card-date">{ c.Date }</p>
+    }
+}
+
+templ (c Card) renderTags() {
+    <div class="tag-container">
+        for _, tag := range c.Tags {
+            <p class="card-tag">{ tag }</p>
         }
     </div>
 }

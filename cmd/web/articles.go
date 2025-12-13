@@ -10,6 +10,7 @@ import (
 	"sort"
 	"strconv"
 	"time"
+	"timterests/cmd/web/components"
 	"timterests/internal/auth"
 	"timterests/internal/storage"
 	"timterests/internal/types"
@@ -141,6 +142,19 @@ func GetLatestArticle(s storage.Storage) (*Article, error) {
 	}
 
 	return nil, nil
+}
+
+func (a Article) ToCard(i int) components.Card {
+	return components.Card{
+		Title:     a.Title,
+		Subtitle:  a.Subtitle,
+		Date:      a.Date,
+		Body:      a.Body,
+		ImagePath: "",
+		Get:       "/article?id=" + a.ID,
+		Tags:      a.Tags,
+		Index:     i,
+	}
 }
 
 func FormatDateForFilename(dateStr string) string {
