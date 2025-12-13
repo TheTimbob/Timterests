@@ -5,13 +5,13 @@ import (
 )
 
 templ ArticlesListPage(articles []Article, tags []string, design string) {
-	@Base() {
+	@Base("articles") {
 		<div id="articles-container">
 		    <div class="header-controls">
 				<h1 class="category-title">Articles</h1>
 				<div>
 					@components.FilterTags("/articles", tags)
-                    @components.FilterDesign("/articles")
+                    @components.FilterDesign("/articles", design)
 				</div>
 			</div>
 			@ArticlesList(articles, design)
@@ -25,7 +25,7 @@ templ ArticlesList(articles []Article, design string) {
 			for i := 0; i < len(articles); i += 4 {
 				<li class="grid-list-element">
 					for j := i; j < i+4 && j < len(articles); j++ {
-						@components.MiniCard(articles[j].Title, articles[j].Date, "", "/article?id=" + articles[j].ID, articles[j].Tags)
+						@components.MiniCard(articles[j].Title, articles[j].Date, "", "/article?id=" + articles[j].ID, articles[j].Tags, j)
 					}
 				</li>
 			}
@@ -36,9 +36,9 @@ templ ArticlesList(articles []Article, design string) {
                 </li>
             }
         } else {
-			for _, article := range articles {
+			for i, article := range articles {
 				<li>
-					@components.Card(article.Title, article.Subtitle, article.Date, article.Body, "", "/article?id=" + article.ID, article.Tags)
+					@components.Card(article.Title, article.Subtitle, article.Date, article.Body, "", "/article?id=" + article.ID, article.Tags, i)
 				</li>
 			}
 		}
@@ -46,7 +46,7 @@ templ ArticlesList(articles []Article, design string) {
 }
 
 templ ArticlePage(article Article, userIsAdmin bool) {
-    @Base() {
+    @Base("articles") {
         @ArticleDisplay(article, userIsAdmin)
     }
 }

@@ -12,7 +12,7 @@ import (
 )
 
 templ WriterPage(content any) {
-    @Base() {
+    @Base("writer") {
         @WriterDisplay(content)
     }
 }

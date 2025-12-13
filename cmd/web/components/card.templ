@@ -1,7 +1,9 @@
 package components
 
-templ Card(title, subtitle, date, body, imagePath, get string, tags []string) {
-	<div class="card-container" hx-get={ get } hx-target="#main-content" hx-swap="innerHTML" hx-push-url="true" tabindex="0">
+import "fmt"
+
+templ Card(title, subtitle, date, body, imagePath, get string, tags []string, index int) {
+	<div class="card-container animate-slide-up" style={ fmt.Sprintf("animation-delay: %.1fs", float64(index)*0.1) } hx-get={ get } hx-target="#main-content" hx-swap="innerHTML" hx-push-url="true" tabindex="0">
         if imagePath != "" {
             <div class="card-image">
                 <img src={ string(templ.SafeURL(imagePath)) } alt="Card image">
@@ -24,8 +26,8 @@ templ Card(title, subtitle, date, body, imagePath, get string, tags []string) {
 	</div>
 }
 
-templ MiniCard(title, date, imagePath, get string, tags []string) {
-	<div class="mini-card-container" hx-get={ get } hx-target="#main-content" hx-swap="innerHTML" hx-push-url="true" tabindex="0">
+templ MiniCard(title, date, imagePath, get string, tags []string, index int) {
+	<div class="mini-card-container animate-slide-up" style={ fmt.Sprintf("animation-delay: %.1fs", float64(index)*0.1) } hx-get={ get } hx-target="#main-content" hx-swap="innerHTML" hx-push-url="true" tabindex="0">
         if imagePath != "" {
             <img src={ string(templ.SafeURL(imagePath)) } alt="Mini card image" class="card-image">
         }
@@ -46,7 +48,7 @@ templ MiniCard(title, date, imagePath, get string, tags []string) {
 }
 
 templ Link(title, date, get string) {
-    <div hx-get={ get } hx-target="#main-content" hx-swap="innerHTML" hx-push-url="true" tabindex="0">
+    <div class="link-item animate-slide-up" hx-get={ get } hx-target="#main-content" hx-swap="innerHTML" hx-push-url="true">
         if date != "" {
             <p>{ date } - { title } </p>
         } else {

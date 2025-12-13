@@ -5,13 +5,13 @@ import (
 )
 
 templ LettersListPage(letters []Letter, tags []string, design string) {
-	@Base() {
+	@Base("letters") {
 		<div id="letters-container">
 		    <div class="header-controls">
 				<h1 class="category-title">Letters</h1>
 				<div>
                 	@components.FilterTags("/letters", tags)
-                    @components.FilterDesign("/letters")
+                    @components.FilterDesign("/letters", design)
 				</div>
 			</div>
 			@LettersList(letters, design)
@@ -25,7 +25,7 @@ templ LettersList(letters []Letter, design string) {
 			for i := 0; i < len(letters); i += 4 {
 				<li class="grid-list-element">
 					for j := i; j < i+4 && j < len(letters); j++ {
-						@components.MiniCard(letters[j].Title, letters[j].Date, "", "/letter?id=" + letters[j].ID, letters[j].Tags)
+						@components.MiniCard(letters[j].Title, letters[j].Date, "", "/letter?id=" + letters[j].ID, letters[j].Tags, j)
 					}
 				</li>
 			}
@@ -36,9 +36,9 @@ templ LettersList(letters []Letter, design string) {
                 </li>
             }
 		} else {
-        	for _, letter := range letters {
+        	for i, letter := range letters {
 				<li>
-    		        @components.Card(letter.Title, letter.Subtitle, letter.Date, letter.Body, "", "/letter?id=" + letter.ID, letter.Tags)
+    		        @components.Card(letter.Title, letter.Subtitle, letter.Date, letter.Body, "", "/letter?id=" + letter.ID, letter.Tags, i)
 				</li>
 			}
 		}
@@ -46,7 +46,7 @@ templ LettersList(letters []Letter, design string) {
 }
 
 templ LetterPage(letter Letter, userIsAdmin bool){
-    @Base() {
+    @Base("letters") {
         @LetterDisplay(letter, userIsAdmin)
     }
 }

@@ -5,13 +5,13 @@ import (
 )
 
 templ ReadingListPage(readingLists []ReadingList, tags []string, design string) {
-	@Base() {
+	@Base("reading-list") {
 		<div id="reading-list-container">
 			<div class="header-controls">
 				<h1 class="category-title">Reading List</h1>
                 <div>
                     @components.FilterTags("/reading-list", tags)
-                    @components.FilterDesign("/reading-list")
+                    @components.FilterDesign("/reading-list", design)
                 </div>
 			</div>
 			@ReadingListList(readingLists, design)
@@ -25,7 +25,7 @@ templ ReadingListList(readingList []ReadingList, design string) {
 			for i := 0; i < len(readingList); i += 4 {
 				<li class="grid-list-element">
 					for j := i; j < i+4 && j < len(readingList); j++ {
-						@components.MiniCard(readingList[j].Title, "", readingList[j].Author, readingList[j].Image, readingList[j].Tags)
+						@components.MiniCard(readingList[j].Title, "", readingList[j].Image, "/book?id=" + readingList[j].ID, readingList[j].Tags, j)
 					}
 				</li>
 			}
@@ -36,9 +36,9 @@ templ ReadingListList(readingList []ReadingList, design string) {
                 </li>
             }
 		} else {
-            for _, book := range readingList {
+            for i, book := range readingList {
                 <li>
-                    @components.Card(book.Title, book.Subtitle, "", book.Body, book.Image, "/book?id=" + book.ID, book.Tags)
+                    @components.Card(book.Title, book.Subtitle, "", book.Body, book.Image, "/book?id=" + book.ID, book.Tags, i)
                 </li>
             }
         }
@@ -46,7 +46,7 @@ templ ReadingListList(readingList []ReadingList, design string) {
 }
 
 templ BookPage(readingList ReadingList, userIsAdmin bool) {
-    @Base() {
+    @Base("reading-list") {
         @BookDisplay(readingList, userIsAdmin)
     }
 }
