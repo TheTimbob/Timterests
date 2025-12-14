@@ -47,7 +47,6 @@
 }
 
 .animate-slide-up {
-  opacity: 0;
   animation: slideUp 0.8s ease-out forwards;
 }
 
@@ -68,6 +67,7 @@
   *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
+    animation-delay: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
 }
