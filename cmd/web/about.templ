@@ -20,7 +20,7 @@ templ AboutForm(about About) {
 templ BioTab(about About) {
     <div>
         <p class="content-text">Name: { about.Name }</p>
-        <p class="content-text">Speciality: { about.Speciality }</p>
+        <p class="content-text">Focus: { about.Focus }</p>
         <p class="content-text">Location: { about.Location }</p>
         <p class="content-text">
             <a href={ templ.URL("mailto:" + about.Email) } class="content-text">
@@ -45,9 +45,6 @@ templ ExperienceTab(jobs []Experience) {
                 <div class="timeline-date">{ job.StartDate } - { job.EndDate }</div>
                 <h3 class="timeline-title">{ job.Role }</h3>
                 <div class="timeline-subtitle">{ job.Company }</div>
-                if job.Location != "" {
-                    <div class="timeline-location">{ job.Location }</div>
-                }
                 <div class="timeline-description">
                     @templ.Raw(job.Description)
                 </div>
@@ -64,12 +61,6 @@ templ EducationTab(education []Education) {
                 <div class="timeline-date">{ edu.StartDate } - { edu.EndDate }</div>
                 <h3 class="timeline-title">{ edu.Degree }</h3>
                 <div class="timeline-subtitle">{ edu.Institution }</div>
-                if edu.Location != "" {
-                    <div class="timeline-location">{ edu.Location }</div>
-                }
-                <div class="timeline-description">
-                    @templ.Raw(edu.Description)
-                </div>
             </div>
         }
     </div>

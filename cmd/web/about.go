@@ -14,7 +14,6 @@ type Experience struct {
 	StartDate   string `yaml:"start_date"`
 	EndDate     string `yaml:"end_date"`
 	Description string `yaml:"description"`
-	Location    string `yaml:"location"`
 }
 
 type Education struct {
@@ -24,7 +23,9 @@ type Education struct {
 	EndDate     string `yaml:"end_date"`
 	Description string `yaml:"description"`
 	Location    string `yaml:"location"`
-} type Skill struct {
+}
+
+type Skill struct {
 	Name  string   `yaml:"name"`
 	Items []string `yaml:"items"`
 }
@@ -32,10 +33,9 @@ type Education struct {
 // About represents About page content.
 type About struct {
 	Title      string       `yaml:"title"`
-	Subtitle   string       `yaml:"subtitle"`
 	Name       string       `yaml:"name"`
 	Location   string       `yaml:"location"`
-	Speciality string       `yaml:"speciality"`
+	Focus      string       `yaml:"focus"`
 	Github     string       `yaml:"github"`
 	Email      string       `yaml:"email"`
 	Body       string       `yaml:"body"`
