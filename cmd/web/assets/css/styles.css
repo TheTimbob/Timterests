@@ -800,6 +800,176 @@ a:hover {
   color: var(--green-light);
 }
 
+/* About Page */
+.about-tabs {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 2rem;
+  gap: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.dark .about-tabs {
+  border-color: var(--bg-dark-accent);
+}
+
+.tab-btn {
+  background: none;
+  border: none;
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -1px;
+}
+
+.tab-btn.active {
+  color: var(--green);
+  border-bottom-color: var(--green);
+}
+
+.dark .tab-btn.active {
+  color: var(--green-accent);
+  border-bottom-color: var(--green-accent);
+}
+
+.timeline-container {
+  padding-left: 2rem;
+  border-left: 2px solid var(--border);
+  margin: 1rem 0 0 0.5rem;
+}
+
+.dark .timeline-container {
+  border-left-color: var(--bg-dark-accent);
+}
+
+.timeline-item {
+  position: relative;
+  margin-bottom: 2rem;
+}
+
+.timeline-marker {
+  position: absolute;
+  left: -2.4rem;
+  top: 0;
+  width: 0.75rem;
+  height: 0.75rem;
+  background-color: var(--green);
+  border-radius: 50%;
+  border: 3px solid var(--bg-light);
+}
+
+.dark .timeline-marker {
+  border-color: var(--bg-dark-transparent);
+}
+
+.timeline-date {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.timeline-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-light);
+  margin: 0.25rem 0;
+}
+
+.dark .timeline-title {
+  color: var(--text-dark);
+}
+
+.timeline-subtitle {
+  color: var(--green);
+  font-weight: 600;
+}
+
+.dark .timeline-subtitle {
+  color: var(--green-accent);
+}
+
+.timeline-location {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.timeline-description {
+  color: var(--text-light);
+  margin-top: 0.5rem;
+}
+
+.dark .timeline-description {
+  color: var(--text-dark);
+}
+
+.skills-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.skill-item {
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background-color: white;
+}
+
+.dark .skill-item {
+  background-color: var(--bg-dark-accent);
+  border-color: var(--bg-dark-accent);
+}
+
+.skill-header {
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text-light);
+}
+
+.dark .skill-header {
+  color: var(--text-dark);
+}
+
+.skill-header i {
+  transition: transform 0.3s;
+  color: var(--green);
+}
+
+.skill-item.active .skill-header i {
+  transform: rotate(180deg);
+}
+
+.skill-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s;
+}
+
+.skill-list {
+  padding: 0 1rem 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.skill-tag {
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  background-color: var(--green-tag);
+  color: var(--text-muted);
+}
+
+.dark .skill-tag {
+  background-color: var(--green-dark);
+  color: var(--text-dark);
+}
+
 /* Font Awesome Icon Colors */
 .fa-newspaper {
   color: var(--blue);

@@ -2,10 +2,95 @@ package web
 
 templ AboutForm(about About) {
 	@Base("about") {
-		<div id="about-container">
-            <h1 class="category-title">{ about.Title }</h1>
-            <h2 class="category-subtitle">{ about.Subtitle }</h2>
-            @templ.Raw(about.Body)
-        </div>
+		<div id="about-container" class="animate-fade-in">
+			<h1 class="category-title">{ about.Title }</h1>
+            <div class="about-tabs">
+                <button class="tab-btn active" hx-get="/about?tab=bio" hx-target=".tab-content" hx-swap="innerHTML" onclick="setActiveTab(this)">Bio</button>
+                <button class="tab-btn" hx-get="/about?tab=education" hx-target=".tab-content" hx-swap="innerHTML" onclick="setActiveTab(this)">Education</button>
+                <button class="tab-btn" hx-get="/about?tab=work" hx-target=".tab-content" hx-swap="innerHTML" onclick="setActiveTab(this)">Experience</button>
+                <button class="tab-btn" hx-get="/about?tab=skills" hx-target=".tab-content" hx-swap="innerHTML" onclick="setActiveTab(this)">Skills</button>
+            </div>
+            <div class="tab-content">
+                @BioTab(about)
+            </div>
+		</div>
 	}
+}
+
+templ BioTab(about About) {
+    <div>
+        <p class="content-text">Name: { about.Name }</p>
+        <p class="content-text">Speciality: { about.Speciality }</p>
+        <p class="content-text">Location: { about.Location }</p>
+        <p class="content-text">
+            <a href={ templ.URL("mailto:" + about.Email) } class="content-text">
+                <i class="fas fa-envelope highlight-blue"></i> Email: { about.Email }
+            </a>
+        </p>
+        <p class="content-text">
+            <a href={ templ.URL(about.Github) } target="_blank" rel="noopener noreferrer" class="content-text">
+                <i class="fab fa-github"></i> GitHub: { about.Github }
+            </a>
+        </p>
+    </div>
+    <hr>
+    @templ.Raw(about.Body)
+}
+
+templ ExperienceTab(jobs []Experience) {
+    <div id="work" class="timeline-container">
+        for _, job := range jobs {
+            <div class="timeline-item">
+                <div class="timeline-marker"></div>
+                <div class="timeline-date">{ job.StartDate } - { job.EndDate }</div>
+                <h3 class="timeline-title">{ job.Role }</h3>
+                <div class="timeline-subtitle">{ job.Company }</div>
+                if job.Location != "" {
+                    <div class="timeline-location">{ job.Location }</div>
+                }
+                <div class="timeline-description">
+                    @templ.Raw(job.Description)
+                </div>
+            </div>
+        }
+    </div>
+}
+
+templ EducationTab(education []Education) {
+    <div id="education" class="timeline-container">
+        for _, edu := range education {
+            <div class="timeline-item">
+                <div class="timeline-marker"></div>
+                <div class="timeline-date">{ edu.StartDate } - { edu.EndDate }</div>
+                <h3 class="timeline-title">{ edu.Degree }</h3>
+                <div class="timeline-subtitle">{ edu.Institution }</div>
+                if edu.Location != "" {
+                    <div class="timeline-location">{ edu.Location }</div>
+                }
+                <div class="timeline-description">
+                    @templ.Raw(edu.Description)
+                </div>
+            </div>
+        }
+    </div>
+}
+
+templ SkillsTab(skills []Skill) {
+    <div id="skills" class="skills-container">
+        for _, skill := range skills {
+            <div class="skill-item">
+                <div class="skill-header" onclick="toggleSkill(this)">
+                    <span>{ skill.Name }</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="skill-content">
+                    <div class="skill-list">
+                        for _, item := range skill.Items {
+                            <span class="skill-tag">{ item }</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
 }

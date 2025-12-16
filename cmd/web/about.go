@@ -4,20 +4,50 @@ import (
 	"log"
 	"net/http"
 	"timterests/internal/storage"
+
+	"github.com/a-h/templ"
 )
+
+type Experience struct {
+	Company     string `yaml:"company"`
+	Role        string `yaml:"role"`
+	StartDate   string `yaml:"start_date"`
+	EndDate     string `yaml:"end_date"`
+	Description string `yaml:"description"`
+	Location    string `yaml:"location"`
+}
+
+type Education struct {
+	Institution string `yaml:"institution"`
+	Degree      string `yaml:"degree"`
+	StartDate   string `yaml:"start_date"`
+	EndDate     string `yaml:"end_date"`
+	Description string `yaml:"description"`
+	Location    string `yaml:"location"`
+} type Skill struct {
+	Name  string   `yaml:"name"`
+	Items []string `yaml:"items"`
+}
 
 // About represents About page content.
 type About struct {
-	Title    string `yaml:"title"`
-	Subtitle string `yaml:"subtitle"`
-	Body     string `yaml:"body"`
+	Title      string       `yaml:"title"`
+	Subtitle   string       `yaml:"subtitle"`
+	Name       string       `yaml:"name"`
+	Location   string       `yaml:"location"`
+	Speciality string       `yaml:"speciality"`
+	Github     string       `yaml:"github"`
+	Email      string       `yaml:"email"`
+	Body       string       `yaml:"body"`
+	Experience []Experience `yaml:"experience"`
+	Education  []Education  `yaml:"education"`
+	Skills     []Skill      `yaml:"skills"`
 }
 
 // AboutHandler handles requests to the About page and serves its content.
 func AboutHandler(w http.ResponseWriter, r *http.Request, s storage.Storage) {
 	var about About
 
-	// Get all articles from the storage
 	prefix := "about/"
 
 	aboutFile, err := s.ListObjects(r.Context(), prefix)
@@ -37,7 +67,22 @@ func AboutHandler(w http.ResponseWriter, r *http.Request, s storage.Storage) {
 		return
 	}
 
-	component := AboutForm(about)
+	// Check if this is a tab request
+	tab := r.URL.Query().Get("tab")
+	var component templ.Component
+
+	switch tab {
+	case "bio":
+		component = BioTab(about)
+	case "education":
+		component = EducationTab(about.Education)
+	case "work":
+		component = ExperienceTab(about.Experience)
+	case "skills":
+		component = SkillsTab(about.Skills)
+	default:
+		component = AboutForm(about)
+	}
 
 	err = component.Render(r.Context(), w)
 	if err != nil {
