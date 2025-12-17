@@ -38,3 +38,11 @@ jobs:
 
       - name: Test
         run: go test -v ./...
+
+      - name: generate test coverage
+        run: go test ./... -coverprofile=tmp/cover.out -covermode=atomic -coverpkg=./...
+
+      - name: check test coverage
+        uses: vladopajic/go-test-coverage/action/source@v2
+        with:
+          config: ./.testcoverage.yaml

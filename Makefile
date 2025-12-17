@@ -49,6 +49,13 @@ test:
 	@echo "Testing..."
 	@go test ./... -v
 
+# Coverage report
+coverage:
+	@echo "Generating coverage report..."
+	@go test -coverprofile=tmp/coverage.out -covermode=atomic ./...
+	@cat tmp/coverage.out | grep -v "_templ.go" > tmp/cover.out
+	@go tool cover -func=tmp/cover.out
+
 # Clean the binary
 clean:
 	@echo "Cleaning..."

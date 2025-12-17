@@ -1,0 +1,12 @@
+profile: tmp/cover.out
+threshold:
+  file: 70
+  package: 80
+  total: 95
+exclude:
+  paths:
+    - \*_templ.go$    # excludes all templ template files
+
+# (optional; default false)
+# When true, requires all coverage-ignore annotations to include explanatory comments
+force-annotation-comment: false
