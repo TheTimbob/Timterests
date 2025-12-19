@@ -49,7 +49,7 @@ func WriteYAMLDocument(localFilePath string, formData map[string]any) error {
 		}
 	}()
 
-	err = enc.Encode(formData);
+	err = enc.Encode(formData)
 	if err != nil {
 		log.Printf("Couldn't encode document to YAML. Here's why: %v\n", err)
 

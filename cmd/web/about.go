@@ -13,7 +13,7 @@ type About struct {
 	Body     string `yaml:"body"`
 }
 
-// AboutHandler handles requests to the About page and serves it's content.
+// AboutHandler handles requests to the About page and serves its content.
 func AboutHandler(w http.ResponseWriter, r *http.Request, s storage.Storage) {
 	var about About
 

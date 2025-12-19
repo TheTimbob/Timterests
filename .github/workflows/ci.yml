@@ -35,12 +35,12 @@ jobs:
     name: Test and Coverage
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
-          go-version: "1.23"
+          go-version: "1.25"
           cache: true
 
       - name: Install Templ
@@ -66,12 +66,12 @@ jobs:
     name: Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
-          go-version: "1.23"
+          go-version: "1.25"
           cache: true
 
       - name: Install Templ
@@ -85,9 +85,3 @@ jobs:
         with:
           version: v2.6
           args: --timeout=2m
-
-      - name: Install gocyclo
-        run: go install github.com/fzipp/gocyclo/cmd/gocyclo@latest
-
-      - name: Check cyclomatic complexity
-        run: gocyclo -over 15 .

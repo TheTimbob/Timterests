@@ -117,7 +117,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 		web.GetArticleHandler(w, r, *s.storage, articleID)
 	}))
 	mux.Handle("/articles/list", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, err := web.ListArticles(r.Context(), *s.storage, "all");
+		_, err := web.ListArticles(r.Context(), *s.storage, "all")
 		if err != nil {
 			http.Error(w, "Failed to list articles", http.StatusInternalServerError)
 
@@ -136,7 +136,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 		web.GetProjectHandler(w, r, *s.storage, projectID)
 	}))
 	mux.Handle("/projects/list", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, err := web.ListProjects(r.Context(), *s.storage, "all");
+		_, err := web.ListProjects(r.Context(), *s.storage, "all")
 		if err != nil {
 			http.Error(w, "Failed to list articles", http.StatusInternalServerError)
 
@@ -155,7 +155,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 		web.GetReadingListBook(w, r, *s.storage, articleID)
 	}))
 	mux.Handle("/reading-list/list", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, err := web.ListBooks(r.Context(), *s.storage, "all");
+		_, err := web.ListBooks(r.Context(), *s.storage, "all")
 		if err != nil {
 			http.Error(w, "Failed to list articles", http.StatusInternalServerError)
 
@@ -174,7 +174,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 		web.GetLetterHandler(w, r, *s.storage, letterID)
 	}))
 	mux.Handle("/letters/list", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, err := web.ListLetters(r.Context(), *s.storage, "all");
+		_, err := web.ListLetters(r.Context(), *s.storage, "all")
 		if err != nil {
 			http.Error(w, "Failed to list letters.", http.StatusInternalServerError)
 
