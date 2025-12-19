@@ -10,10 +10,12 @@ import (
 	"timterests/internal/storage"
 )
 
+// DownloadDocumentHandler handles document download requests for authenticated users.
 func DownloadDocumentHandler(w http.ResponseWriter, r *http.Request, title string) {
 	// Only admins can download documents
 	if !auth.IsAuthenticated(r) {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+
 		return
 	}
 
@@ -27,16 +29,20 @@ func DownloadDocumentHandler(w http.ResponseWriter, r *http.Request, title strin
 	http.ServeFile(w, r, filePath)
 }
 
+// DownloadNewDocumentHandler handles requests to download a new document based on form data.
 func DownloadNewDocumentHandler(w http.ResponseWriter, r *http.Request) {
 	// Only admins can download documents
 	if !auth.IsAuthenticated(r) {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+
 		return
 	}
 
 	// Parse form
-	if err := r.ParseForm(); err != nil {
+	err := r.ParseForm()
+	if err != nil {
 		http.Error(w, "Failed to parse form", http.StatusBadRequest)
+
 		return
 	}
 
@@ -44,6 +50,7 @@ func DownloadNewDocumentHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Convert url.Values to map[string]any
 	formData := make(map[string]any)
+
 	for key, values := range r.Form {
 		if len(values) == 1 {
 			formData[key] = values[0]
@@ -51,18 +58,22 @@ func DownloadNewDocumentHandler(w http.ResponseWriter, r *http.Request) {
 			formData[key] = values
 		}
 	}
+
 	delete(formData, "document-type")
 
 	localFilePath := path.Join("s3", filename)
-	err := storage.WriteYAMLDocument(localFilePath, formData)
+
+	err = storage.WriteYAMLDocument(localFilePath, formData)
 	if err != nil {
 		http.Error(w, "Failed to write YAML document", http.StatusInternalServerError)
+
 		return
 	}
 
 	// Cleanup temporary file after serving
 	defer func() {
-		if err := os.Remove(localFilePath); err != nil {
+		err := os.Remove(localFilePath)
+		if err != nil {
 			fmt.Printf("Failed to remove temporary file: %v", err)
 		}
 	}()
@@ -70,8 +81,10 @@ func DownloadNewDocumentHandler(w http.ResponseWriter, r *http.Request) {
 	title, ok := formData["title"].(string)
 	if !ok || title == "" {
 		http.Error(w, "Missing or invalid title field", http.StatusBadRequest)
+
 		return
 	}
+
 	downloadFilename := storage.SanitizeFilename(title) + ".yaml"
 
 	// Set headers to force download

@@ -8,11 +8,13 @@ import (
 	"github.com/a-h/templ"
 )
 
+// AdminPageHandler handles requests to the admin page for authenticated users.
 func AdminPageHandler(w http.ResponseWriter, r *http.Request) {
 	var component templ.Component
 
 	if !auth.IsAuthenticated(r) {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
+
 		return
 	}
 

@@ -5,6 +5,7 @@ import (
 	"timterests/internal/auth"
 )
 
+// LoginHandler handles user authentication and login requests.
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	// Check if the request method is POST
 	if r.Method == http.MethodPost {
@@ -12,19 +13,21 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		password := r.FormValue("password")
 
 		// Perform authentication
-		authenticated, err := auth.Authenticate(w, r, email, password)
+		authenticated, err := auth.Authenticate(r.Context(), w, r, email, password)
 		if authenticated && err == nil {
 			http.Redirect(w, r, "/admin", http.StatusSeeOther)
-			return
-		} else {
-			http.Error(w, "Authentication: "+err.Error(), http.StatusInternalServerError)
+
 			return
 		}
+
+		http.Error(w, "Authentication: "+err.Error(), http.StatusInternalServerError)
+
+		return
 	}
 
 	// Render the login page for the initial load
 	component := LoginPage()
-	if r.Header.Get("HX-Request") == "true" {
+	if r.Header.Get("Hx-Request") == "true" {
 		// Render the login container for main inner html replacement
 		component = LoginContainer()
 	}
@@ -32,6 +35,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	err := component.Render(r.Context(), w)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
+
 		return
 	}
 }

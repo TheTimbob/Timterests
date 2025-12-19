@@ -2,6 +2,7 @@ package web
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -10,27 +11,34 @@ import (
 	"strconv"
 	"timterests/cmd/web/components"
 	"timterests/internal/auth"
+	"timterests/internal/model"
 	"timterests/internal/storage"
-	"timterests/internal/types"
 
 	"github.com/a-h/templ"
 	"github.com/aws/aws-sdk-go-v2/aws"
 )
 
+// Project represents a personal software project.
 type Project struct {
-	types.Document `yaml:",inline"`
-	Repository     string `yaml:"repository"`
-	Image          string `yaml:"image-path"`
+	model.Document `yaml:",inline"`
+
+	Repository string `yaml:"repository"`
+	Image      string `yaml:"imagePath"`
 }
 
+// ProjectsPageHandler handles requests to the projects page,
+// ensuring authentication and rendering the appropriate content.
 func ProjectsPageHandler(w http.ResponseWriter, r *http.Request, s storage.Storage, currentTag, design string) {
-	var component templ.Component
-	var tags []string
+	var (
+		component templ.Component
+		tags      []string
+	)
 
-	projects, err := ListProjects(s, currentTag)
+	projects, err := ListProjects(r.Context(), s, currentTag)
 	if err != nil {
 		message := "Failed to fetch projects"
 		http.Error(w, fmt.Sprintf("%s: %v", message, err), http.StatusInternalServerError)
+
 		return
 	}
 
@@ -40,7 +48,7 @@ func ProjectsPageHandler(w http.ResponseWriter, r *http.Request, s storage.Stora
 		tags = storage.GetTags(v, tags)
 	}
 
-	if r.Header.Get("HX-Request") == "true" {
+	if r.Header.Get("Hx-Request") == "true" {
 		component = ProjectsList(projects, design)
 	} else {
 		component = ProjectsListPage(projects, tags, design)
@@ -53,23 +61,27 @@ func ProjectsPageHandler(w http.ResponseWriter, r *http.Request, s storage.Stora
 	}
 }
 
+// GetProjectHandler handles requests to get a specific project by its ID.
 func GetProjectHandler(w http.ResponseWriter, r *http.Request, s storage.Storage, projectID string) {
-	projects, err := ListProjects(s, "all")
+	projects, err := ListProjects(r.Context(), s, "all")
 	if err != nil {
 		http.Error(w, "Failed to fetch projects", http.StatusInternalServerError)
+
 		return
 	}
 
 	for _, project := range projects {
 		if project.ID == projectID {
 			var component templ.Component
+
 			authenticated := auth.IsAuthenticated(r)
 
-			if r.Header.Get("HX-Request") == "true" {
+			if r.Header.Get("Hx-Request") == "true" {
 				component = ProjectDisplay(project, authenticated)
 			} else {
 				component = ProjectPage(project, authenticated)
 			}
+
 			err = component.Render(r.Context(), w)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)
@@ -77,17 +89,19 @@ func GetProjectHandler(w http.ResponseWriter, r *http.Request, s storage.Storage
 			}
 		}
 	}
-
 }
 
-func ListProjects(s storage.Storage, tag string) ([]Project, error) {
+// ListProjects retrieves a list of projects from storage,
+// optionally filtering by tag.
+func ListProjects(ctx context.Context, s storage.Storage, tag string) ([]Project, error) {
 	var projects []Project
 
 	// Get all projects from the storage
 	prefix := "projects/"
-	projectFiles, err := s.ListS3Objects(context.Background(), prefix)
+
+	projectFiles, err := s.ListS3Objects(ctx, prefix)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to list S3 objects: %w", err)
 	}
 
 	for id, obj := range projectFiles {
@@ -97,9 +111,10 @@ func ListProjects(s storage.Storage, tag string) ([]Project, error) {
 			continue
 		}
 
-		project, err := GetProject(key, id, s)
+		project, err := GetProject(ctx, key, id, s)
 		if err != nil {
 			log.Printf("Failed to get project: %v", err)
+
 			return nil, err
 		}
 
@@ -111,47 +126,57 @@ func ListProjects(s storage.Storage, tag string) ([]Project, error) {
 	return projects, nil
 }
 
-func GetProject(key string, id int, s storage.Storage) (*Project, error) {
+// GetProject retrieves a single project from storage based on its S3 key and ID.
+func GetProject(ctx context.Context, key string, id int, s storage.Storage) (*Project, error) {
 	var project Project
+
 	project.ID = strconv.Itoa(id)
 	project.S3Key = key
-	err := s.GetPreparedFile(key, &project)
+
+	err := s.GetPreparedFile(ctx, key, &project)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get prepared file: %w", err)
 	}
 
-	localImagePath, err := s.GetImageFromS3(project.Image)
+	localImagePath, err := s.GetImageFromS3(ctx, project.Image)
 	if err != nil {
 		log.Printf("Failed to download image: %v", err)
-		return nil, err
+
+		return nil, fmt.Errorf("failed to get image from S3: %w", err)
 	}
+
 	project.Image = localImagePath
 
 	return &project, nil
 }
 
-func GetFeaturedProject(s storage.Storage) (*Project, error) {
-
-	projects, err := ListProjects(s, "all")
+// GetFeaturedProject retrieves the Timterests Project.
+func GetFeaturedProject(ctx context.Context, s storage.Storage) (*Project, error) {
+	projects, err := ListProjects(ctx, s, "all")
 	if err != nil {
 		return nil, err
 	}
 
 	if len(projects) == 0 {
-		return nil, fmt.Errorf("no projects found")
+		return nil, errors.New("no projects found")
 	}
 
 	featuredProjectTitle := "Timterests"
+
 	var featuredProject Project
+
 	for _, project := range projects {
 		if project.Title == featuredProjectTitle {
 			featuredProject = project
 		}
 	}
+
 	featuredProject.Body = storage.RemoveHTMLTags(featuredProject.Body)
+
 	return &featuredProject, nil
 }
 
+// ToCard converts a Project to a Card component for display in lists.
 func (p Project) ToCard(i int) components.Card {
 	return components.Card{
 		Title:     p.Title,

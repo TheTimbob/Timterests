@@ -1,6 +1,8 @@
 package web
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -15,21 +17,26 @@ import (
 	"github.com/a-h/templ"
 )
 
+// WriterPageHandler handles requests to the writer page, ensuring authentication and rendering the appropriate content.
 func WriterPageHandler(w http.ResponseWriter, r *http.Request, s storage.Storage, docType, key string, typeID int) {
-	var content any
-	var err error
-	var component templ.Component
+	var (
+		content   any
+		err       error
+		component templ.Component
+	)
 
 	if !auth.IsAuthenticated(r) {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
+
 		return
 	}
 
 	// If key is provided, get the content to load the existing document
 	if key != "" {
-		content, err = GetTypeContentFromID(docType, key, typeID, s)
+		content, err = GetTypeContentFromID(r.Context(), docType, key, typeID, s)
 		if err != nil {
 			http.Error(w, "Failed to load document: "+err.Error(), http.StatusInternalServerError)
+
 			return
 		}
 	} else {
@@ -48,7 +55,7 @@ func WriterPageHandler(w http.ResponseWriter, r *http.Request, s storage.Storage
 		}
 	}
 
-	if r.Header.Get("HX-Request") == "true" && key == "" {
+	if r.Header.Get("Hx-Request") == "true" && key == "" {
 		component = FormContentByType(content)
 	} else {
 		component = WriterPage(content)
@@ -61,83 +68,61 @@ func WriterPageHandler(w http.ResponseWriter, r *http.Request, s storage.Storage
 	}
 }
 
+// WriteDocumentHandler handles the submission of the writer form to create or update documents.
 func WriteDocumentHandler(w http.ResponseWriter, r *http.Request, s storage.Storage) {
-
 	if !auth.IsAuthenticated(r) {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
+
 		return
 	}
 
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+
 		return
 	}
 
-	if err := r.ParseForm(); err != nil {
+	formData, s3Upload, err := extractFormData(r)
+	if err != nil {
 		http.Error(w, "Failed to parse form data", http.StatusBadRequest)
 		log.Printf("Error parsing form: %v", err)
+
 		return
 	}
 
-	// Check if S3 upload should be performed
-	s3Upload := r.FormValue("s3-upload") == "on"
-	delete(r.Form, "s3-upload")
+	docType, err := extractDocType(formData)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		log.Printf("%v", err)
 
-	// Extract form data
-	formData := make(map[string]any)
-	for key, values := range r.Form {
-		if key == "tags" {
-			tags := strings.Split(values[0], ",")
-			for i, tag := range tags {
-				tags[i] = strings.TrimSpace(tag)
-			}
-			formData[key] = tags
-		} else if len(values) > 0 {
-			formData[key] = values[0]
-		}
-	}
-
-	docType, ok := formData["document-type"].(string)
-	if !ok || strings.TrimSpace(docType) == "" {
-		http.Error(w, "Invalid or missing document type in form data", http.StatusBadRequest)
-		log.Printf("Invalid or missing document type in form data")
-		return
-	}
-	delete(formData, "document-type")
-
-	// Create file name
-	title, ok := formData["title"].(string)
-	if !ok || strings.TrimSpace(title) == "" {
-		http.Error(w, "Invalid or missing title in form data", http.StatusBadRequest)
-		log.Printf("Invalid or missing title in form data")
 		return
 	}
 
-	sanitizedTitle := storage.SanitizeFilename(title)
+	filename, err := generateFilename(formData, docType)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		log.Printf("%v", err)
 
-	var filename string
-	if docType == "articles" {
-		articleDate := FormatDateForFilename(formData["date"].(string))
-		filename = fmt.Sprintf("%s-%s.yaml", sanitizedTitle, articleDate)
-	} else {
-		filename = fmt.Sprintf("%s.yaml", sanitizedTitle)
+		return
 	}
 
-	// Create document
 	localFilePath := path.Join("s3", filename)
-	err := storage.WriteYAMLDocument(localFilePath, formData)
+
+	err = storage.WriteYAMLDocument(localFilePath, formData)
 	if err != nil {
 		http.Error(w, "Failed to save document", http.StatusInternalServerError)
 		log.Printf("Error writing document: %v", err)
+
 		return
 	}
 
 	if s3Upload {
-		// Upload to S3
 		s3Path := docType + "/" + filename
+
 		err = s.UploadFileToS3(r.Context(), s3Path, localFilePath)
 		if err != nil {
 			http.Error(w, "Failed to upload document to storage", http.StatusInternalServerError)
+
 			return
 		}
 	}
@@ -145,34 +130,41 @@ func WriteDocumentHandler(w http.ResponseWriter, r *http.Request, s storage.Stor
 	http.Redirect(w, r, "/writer", http.StatusSeeOther)
 }
 
+// WriterSuggestionHandler handles AI-powered content suggestions for the writer.
 func WriterSuggestionHandler(w http.ResponseWriter, r *http.Request) {
-
 	if !auth.IsAuthenticated(r) {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
+
 		return
 	}
 
-	if err := r.ParseForm(); err != nil {
+	err := r.ParseForm()
+	if err != nil {
 		http.Error(w, "Failed to parse form", http.StatusBadRequest)
+
 		return
 	}
 
 	bodyContent := r.FormValue("body")
 	if strings.TrimSpace(bodyContent) == "" {
 		component := AISuggestionError("Please enter some content in the body field first.")
+
 		err := component.Render(r.Context(), w)
 		if err != nil {
 			http.Error(w, "Service temporarily unavailable", http.StatusBadRequest)
 			log.Printf("Error rendering in WriterSuggestionHandler: %v", err)
 		}
+
 		return
 	}
 
 	instructionFile := r.FormValue("prompt-select")
+
 	instructionFile = filepath.Base(filepath.Clean(instructionFile))
 	if strings.TrimSpace(instructionFile) == "" || strings.Contains(instructionFile, string(filepath.Separator)) {
 		http.Error(w, "Invalid prompt file", http.StatusBadRequest)
 		log.Printf("Invalid prompt file: %s", instructionFile)
+
 		return
 	}
 
@@ -185,28 +177,100 @@ func WriterSuggestionHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			log.Printf("Error rendering in WriterSuggestionHandler: %v", err)
 		}
+
 		return
 	}
 
 	component := AISuggestionResponse(suggestion)
+
 	err = component.Render(r.Context(), w)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
+
 		return
 	}
 }
 
-func GetTypeContentFromID(docType, key string, id int, s storage.Storage) (any, error) {
+// GetTypeContentFromID retrieves content based on document type, S3 key, and ID.
+func GetTypeContentFromID(ctx context.Context, docType, key string, id int, s storage.Storage) (any, error) {
 	switch docType {
 	case "articles":
-		return GetArticle(key, id, s)
+		return GetArticle(ctx, key, id, s)
 	case "projects":
-		return GetProject(key, id, s)
+		return GetProject(ctx, key, id, s)
 	case "reading-list":
-		return GetBook(key, id, s)
+		return GetBook(ctx, key, id, s)
 	case "letters":
-		return GetLetter(key, id, s)
+		return GetLetter(ctx, key, id, s)
 	default:
 		return nil, fmt.Errorf("unsupported document type: %s", docType)
 	}
+}
+
+// extractFormData parses form data and returns the processed data, S3 upload flag, and any error.
+func extractFormData(r *http.Request) (map[string]any, bool, error) {
+	err := r.ParseForm()
+	if err != nil {
+		return nil, false, fmt.Errorf("failed to parse form: %w", err)
+	}
+
+	s3Upload := r.FormValue("s3-upload") == "on"
+	delete(r.Form, "s3-upload")
+
+	formData := make(map[string]any)
+
+	for key, values := range r.Form {
+		if key == "tags" {
+			tags := strings.Split(values[0], ",")
+			for i, tag := range tags {
+				tags[i] = strings.TrimSpace(tag)
+			}
+
+			formData[key] = tags
+		} else if len(values) > 0 {
+			formData[key] = values[0]
+		}
+	}
+
+	return formData, s3Upload, nil
+}
+
+// extractDocType validates and extracts the document type from form data.
+func extractDocType(formData map[string]any) (string, error) {
+	docTypeAny, ok := formData["document-type"]
+	if !ok {
+		return "", errors.New("missing document type in form data")
+	}
+
+	docType, ok := docTypeAny.(string)
+	if !ok || strings.TrimSpace(docType) == "" {
+		return "", errors.New("invalid or missing document type in form data")
+	}
+
+	delete(formData, "document-type")
+
+	return docType, nil
+}
+
+// generateFilename creates a filename based on the document type and form data.
+func generateFilename(formData map[string]any, docType string) (string, error) {
+	title, ok := formData["title"].(string)
+	if !ok || strings.TrimSpace(title) == "" {
+		return "", errors.New("invalid or missing title in form data")
+	}
+
+	sanitizedTitle := storage.SanitizeFilename(title)
+
+	if docType == "articles" {
+		articleDate, ok := formData["date"].(string)
+		if !ok {
+			return "", errors.New("invalid date in form data")
+		}
+
+		articleDate = FormatDateForFilename(articleDate)
+
+		return fmt.Sprintf("%s-%s.yaml", sanitizedTitle, articleDate), nil
+	}
+
+	return sanitizedTitle + ".yaml", nil
 }

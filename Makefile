@@ -26,6 +26,7 @@ build: templ-install
 # Run the application
 run:
 	@go run cmd/api/main.go
+
 # Create DB container
 docker-run:
 	@if docker compose up --build 2>/dev/null; then \
@@ -49,10 +50,34 @@ test:
 	@echo "Testing..."
 	@go test ./... -v
 
-# Clean the binary
+# Coverage report
+coverage:
+	@echo "Generating coverage report..."
+	@go test -coverprofile=tmp/coverage.out -covermode=atomic ./...
+	@cat tmp/coverage.out | grep -v "_templ.go" > tmp/cover.out
+	@go tool cover -func=tmp/cover.out
+
+complexity:
+	@echo "Calculating code complexity..."
+	@if command -v gocyclo > /dev/null; then \
+		gocyclo -over 15 .; \
+	else \
+		read -p "Go's 'gocyclo' is not installed on your machine. Do you want to install it? [Y/n] " choice; \
+		if [ "$$choice" != "n" ] && [ "$$choice" != "N" ]; then \
+			go install github.com/fzipp/gocyclo@latest; \
+			gocyclo -over 15 .; \
+		else \
+			echo "You chose not to install gocyclo. Exiting..."; \
+			exit 1; \
+		fi; \
+	fi
+
+# Clean the binary and temp files
 clean:
 	@echo "Cleaning..."
 	@rm -f main
+	@rm -rf tmp/*
+	@go clean
 
 # Live Reload
 watch:
@@ -82,4 +107,4 @@ deploy:
 	fi
 
 
-.PHONY: all build run test clean watch templ-install
+.PHONY: all build run test coverage clean watch templ-install

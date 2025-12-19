@@ -8,7 +8,7 @@ import (
 
     "timterests/cmd/web/components"
     "timterests/internal/ai"
-    "timterests/internal/types"
+    "timterests/internal/model"
 )
 
 templ WriterPage(content any) {
@@ -27,7 +27,7 @@ templ WriterDisplay(content any) {
     </div>
 }
 
-templ WriterFormContent(content types.Document, component templ.Component, docType string) {
+templ WriterFormContent(content model.Document, component templ.Component, docType string) {
     <form id="writer-form" action="/write" method="post">
         <div>
             <label class="form-label" for="s3-upload">Upload to S3:</label>

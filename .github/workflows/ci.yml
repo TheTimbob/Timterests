@@ -1,0 +1,87 @@
+# This workflow will build a golang project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
+
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: "1.25"
+          cache: true
+
+      - name: Install Templ
+        run: go install github.com/a-h/templ/cmd/templ@latest
+
+      - name: Generate Templ files
+        run: templ generate
+
+      - name: Build
+        run: go build -v ./...
+
+  test:
+    name: Test and Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: "1.25"
+          cache: true
+
+      - name: Install Templ
+        run: go install github.com/a-h/templ/cmd/templ@latest
+
+      - name: Generate Templ files
+        run: templ generate
+
+      - name: Run tests
+        run: go test -v ./...
+
+      - name: Generate test coverage
+        run: |
+          mkdir -p tmp
+          go test ./... -coverprofile=tmp/cover.out -covermode=atomic -coverpkg=./...
+
+      - name: Check test coverage
+        uses: vladopajic/go-test-coverage/action/source@v2
+        with:
+          config: ./.testcoverage.yaml
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: "1.25"
+          cache: true
+
+      - name: Install Templ
+        run: go install github.com/a-h/templ/cmd/templ@latest
+
+      - name: Generate Templ files
+        run: templ generate
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v9
+        with:
+          version: v2.6
+          args: --timeout=2m

@@ -1,0 +1,46 @@
+version: "2"
+run:
+  timeout: 2m
+  tests: true
+
+linters:
+  default: all
+  enable:
+    - wsl_v5
+  disable:
+    - contextcheck # too many false positives with templ generated files
+    - cyclop # conflicts with gocyclo
+    - dupl # false positives
+    - err113 # conflicts with errcheck
+    - exhaustruct # too verbose for large structs
+    - forbidigo # too restrictive for error messages
+    - funlen # handleRoutes function is long, and complexity is better measured with gocyclo
+    - gochecknoinits # init is only used in util files, no settings to limit its scope
+    - mnd # some magic numbers are obvious in context
+    - revive # too many false positives with templ generated files
+    - varnamelen # naming is based on type and context
+    - wsl # replaced by wsl_v5
+  settings:
+    errcheck:
+      check-blank: true
+      exclude-functions:
+        - (*database/sql.Rows).Close
+        - (*os.File).Close
+    goconst:
+      min-occurrences: 20
+    gocyclo:
+      min-complexity: 15
+    depguard:
+      rules:
+        scripts:
+          files:
+            - "**/utils/scripts/**/*.go"
+          allow:
+            - timterests/internal
+    wsl_v5:
+      allow-first-in-block: true
+      allow-whole-block: false
+      branch-max-lines: 2
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
