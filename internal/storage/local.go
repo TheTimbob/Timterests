@@ -9,40 +9,51 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// Decodes a YAML file into the provided output structure
+// DecodeFile decodes a YAML file into the provided output structure.
 func DecodeFile(file io.Reader, out any) error {
 	decoder := yaml.NewDecoder(file)
-	if err := decoder.Decode(out); err != nil {
+
+	err := decoder.Decode(out)
+	if err != nil {
 		log.Printf("failed to decode file: %v", err)
+
 		return fmt.Errorf("decode error: %w", err)
 	}
+
 	return nil
 }
 
-// WriteYAMLDocument writes a YAML document to local storage
+// WriteYAMLDocument writes a YAML document to local storage.
 func WriteYAMLDocument(localFilePath string, formData map[string]any) error {
-
+	// #nosec G304 -- localFilePath is constructed from sanitized user input and restricted to s3/ directory
 	file, err := os.Create(localFilePath)
 	if err != nil {
 		log.Printf("Couldn't create file %v. Here's why: %v\n", localFilePath, err)
-		return err
+
+		return fmt.Errorf("failed to create file: %w", err)
 	}
+
 	defer func() {
-		if err := file.Close(); err != nil {
+		err := file.Close()
+		if err != nil {
 			log.Printf("error closing file: %v", err)
 		}
 	}()
 
 	enc := yaml.NewEncoder(file)
+
 	defer func() {
-		if err := enc.Close(); err != nil {
+		err := enc.Close()
+		if err != nil {
 			log.Printf("error closing encoder: %v", err)
 		}
 	}()
 
-	if err := enc.Encode(formData); err != nil {
+	err = enc.Encode(formData);
+	if err != nil {
 		log.Printf("Couldn't encode document to YAML. Here's why: %v\n", err)
-		return err
+
+		return fmt.Errorf("failed to encode YAML: %w", err)
 	}
 
 	return nil

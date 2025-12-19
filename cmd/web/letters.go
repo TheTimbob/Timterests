@@ -6,37 +6,47 @@ import (
 	"log"
 	"net/http"
 	"reflect"
+	"slices"
 	"sort"
 	"strconv"
 	"timterests/cmd/web/components"
 	"timterests/internal/auth"
+	"timterests/internal/model"
 	"timterests/internal/storage"
-	"timterests/internal/types"
 
 	"github.com/a-h/templ"
 	"github.com/aws/aws-sdk-go-v2/aws"
 )
 
+// Letter represents a personal letter with date and occasion.
 type Letter struct {
-	types.Document `yaml:",inline"`
-	Date           string `yaml:"date"`
-	Occasion       string `yaml:"occasion"`
+	model.Document `yaml:",inline"`
+
+	Date     string `yaml:"date"`
+	Occasion string `yaml:"occasion"`
 }
 
+// LettersPageHandler handles requests to the letters page,
+// ensuring authentication and rendering the appropriate content.
 func LettersPageHandler(w http.ResponseWriter, r *http.Request, s storage.Storage, currentTag, design string) {
-	var component templ.Component
-	var tags []string
+	var (
+		component templ.Component
+		tags      []string
+	)
 
 	// Check if user is authenticated
+
 	if !auth.IsAuthenticated(r) {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
+
 		return
 	}
 
-	letters, err := ListLetters(s)
+	letters, err := ListLetters(r.Context(), s, currentTag)
 	if err != nil {
 		message := "Failed to fetch letters"
 		http.Error(w, fmt.Sprintf("%s: %v", message, err), http.StatusInternalServerError)
+
 		return
 	}
 
@@ -46,7 +56,7 @@ func LettersPageHandler(w http.ResponseWriter, r *http.Request, s storage.Storag
 		tags = storage.GetTags(v, tags)
 	}
 
-	if r.Header.Get("HX-Request") == "true" {
+	if r.Header.Get("Hx-Request") == "true" {
 		component = LettersList(letters, design)
 	} else {
 		component = LettersListPage(letters, tags, design)
@@ -59,29 +69,33 @@ func LettersPageHandler(w http.ResponseWriter, r *http.Request, s storage.Storag
 	}
 }
 
+// GetLetterHandler retrieves a specific letter by its ID and renders it.
 func GetLetterHandler(w http.ResponseWriter, r *http.Request, s storage.Storage, letterID string) {
 	// Check if user is authenticated
 	authenticated := auth.IsAuthenticated(r)
 	if !authenticated {
 		log.Printf("User not authenticated, redirecting to login")
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
+
 		return
 	}
 
-	letters, err := ListLetters(s)
+	letters, err := ListLetters(r.Context(), s, "all")
 	if err != nil {
 		http.Error(w, "Failed to fetch letters", http.StatusInternalServerError)
+
 		return
 	}
 
 	for _, letter := range letters {
 		if letter.ID == letterID {
 			var component templ.Component
-			if r.Header.Get("HX-Request") == "true" {
+			if r.Header.Get("Hx-Request") == "true" {
 				component = LetterDisplay(letter, authenticated)
 			} else {
 				component = LetterPage(letter, authenticated)
 			}
+
 			err = component.Render(r.Context(), w)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)
@@ -89,18 +103,19 @@ func GetLetterHandler(w http.ResponseWriter, r *http.Request, s storage.Storage,
 			}
 		}
 	}
-
 }
 
-func ListLetters(s storage.Storage) ([]Letter, error) {
-	var letters []Letter
-
+// ListLetters retrieves all letters from storage, and returns a slice of Letter structs.
+func ListLetters(ctx context.Context, s storage.Storage, tag string) ([]Letter, error) {
 	// Get all letters from the storage
 	prefix := "letters/"
-	letterFiles, err := s.ListS3Objects(context.Background(), prefix)
+
+	letterFiles, err := s.ListS3Objects(ctx, prefix)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to list S3 objects: %w", err)
 	}
+
+	letters := make([]Letter, 0, len(letterFiles))
 
 	for id, obj := range letterFiles {
 		key := aws.ToString(obj.Key)
@@ -109,12 +124,14 @@ func ListLetters(s storage.Storage) ([]Letter, error) {
 			continue
 		}
 
-		letter, err := GetLetter(key, id, s)
+		letter, err := GetLetter(ctx, key, id, s)
 		if err != nil {
 			return nil, err
 		}
 
-		letters = append(letters, *letter)
+		if slices.Contains(letter.Tags, tag) || tag == "all" || tag == "" {
+			letters = append(letters, *letter)
+		}
 	}
 
 	sort.Slice(letters, func(i, j int) bool {
@@ -124,18 +141,22 @@ func ListLetters(s storage.Storage) ([]Letter, error) {
 	return letters, nil
 }
 
-func GetLetter(key string, id int, s storage.Storage) (*Letter, error) {
+// GetLetter retrieves a single letter by its S3 key and ID.
+func GetLetter(ctx context.Context, key string, id int, s storage.Storage) (*Letter, error) {
 	var letter Letter
+
 	letter.ID = strconv.Itoa(id)
 	letter.S3Key = key
-	err := s.GetPreparedFile(key, &letter)
+
+	err := s.GetPreparedFile(ctx, key, &letter)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get prepared file: %w", err)
 	}
 
 	return &letter, nil
 }
 
+// ToCard converts a Letter to a Card component for display in lists.
 func (l Letter) ToCard(i int) components.Card {
 	return components.Card{
 		Title:     l.Title,

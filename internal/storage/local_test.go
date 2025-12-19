@@ -1,10 +1,12 @@
-package storage
+package storage_test
 
 import (
 	"os"
 	"testing"
 	"testing/fstest"
-	"timterests/internal/types"
+
+	"timterests/internal/model"
+	"timterests/internal/storage"
 )
 
 func getYAMLDocument() *fstest.MapFile {
@@ -19,9 +21,12 @@ tags:
 	}
 }
 func TestDecodeFile(t *testing.T) {
+	t.Parallel()
 
-	var document types.Document
-	var filename = "document.yaml"
+	var (
+		document model.Document
+		filename = "document.yaml"
+	)
 
 	fs := &fstest.MapFS{
 		filename: getYAMLDocument(),
@@ -32,7 +37,7 @@ func TestDecodeFile(t *testing.T) {
 		t.Fatalf("Expected no error, got %v", err)
 	}
 
-	err = DecodeFile(file, &document)
+	err = storage.DecodeFile(file, &document)
 	if err != nil {
 		t.Fatalf("Expected no error, got %v", err)
 	}
@@ -44,6 +49,8 @@ func TestDecodeFile(t *testing.T) {
 }
 
 func TestWriteYAMLDocument(t *testing.T) {
+	t.Parallel()
+
 	formData := map[string]any{
 		"title":    "Test Document",
 		"subtitle": "Test Subtitle",
@@ -54,13 +61,14 @@ func TestWriteYAMLDocument(t *testing.T) {
 	tempDir := t.TempDir()
 	localFilePath := tempDir + "/test-document.yaml"
 
-	err := WriteYAMLDocument(localFilePath, formData)
+	err := storage.WriteYAMLDocument(localFilePath, formData)
 	if err != nil {
 		t.Fatalf("Expected no error, got %v", err)
 	}
 
 	// Verify the file was created
-	if _, err := os.Stat(localFilePath); os.IsNotExist(err) {
+	_, err = os.Stat(localFilePath)
+	if os.IsNotExist(err) {
 		t.Fatalf("File was not created: %v", err)
 	}
 }

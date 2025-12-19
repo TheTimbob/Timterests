@@ -2,6 +2,7 @@ package web
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -12,26 +13,33 @@ import (
 	"time"
 	"timterests/cmd/web/components"
 	"timterests/internal/auth"
+	"timterests/internal/model"
 	"timterests/internal/storage"
-	"timterests/internal/types"
 
 	"github.com/a-h/templ"
 	"github.com/aws/aws-sdk-go-v2/aws"
 )
 
+// Article represents a blog article with metadata and content.
 type Article struct {
-	types.Document `yaml:",inline"`
-	Date           string `yaml:"date"`
+	model.Document `yaml:",inline"`
+
+	Date string `yaml:"date"`
 }
 
+// ArticlesPageHandler handles requests to the articles page,
+// ensuring authentication and rendering the appropriate content.
 func ArticlesPageHandler(w http.ResponseWriter, r *http.Request, s storage.Storage, currentTag, design string) {
-	var component templ.Component
-	var tags []string
+	var (
+		component templ.Component
+		tags      []string
+	)
 
-	articles, err := ListArticles(s, currentTag)
+	articles, err := ListArticles(r.Context(), s, currentTag)
 	if err != nil {
 		message := "Failed to fetch articles"
 		http.Error(w, fmt.Sprintf("%s: %v", message, err), http.StatusInternalServerError)
+
 		return
 	}
 
@@ -41,7 +49,7 @@ func ArticlesPageHandler(w http.ResponseWriter, r *http.Request, s storage.Stora
 		tags = storage.GetTags(v, tags)
 	}
 
-	if r.Header.Get("HX-Request") == "true" {
+	if r.Header.Get("Hx-Request") == "true" {
 		component = ArticlesList(articles, design)
 	} else {
 		component = ArticlesListPage(articles, tags, design)
@@ -54,23 +62,27 @@ func ArticlesPageHandler(w http.ResponseWriter, r *http.Request, s storage.Stora
 	}
 }
 
+// GetArticleHandler retrieves and renders a specific article by its ID.
 func GetArticleHandler(w http.ResponseWriter, r *http.Request, s storage.Storage, articleID string) {
-	articles, err := ListArticles(s, "all")
+	articles, err := ListArticles(r.Context(), s, "all")
 	if err != nil {
 		http.Error(w, "Failed to fetch articles", http.StatusInternalServerError)
+
 		return
 	}
 
 	for _, article := range articles {
 		if article.ID == articleID {
 			var component templ.Component
+
 			authenticated := auth.IsAuthenticated(r)
 
-			if r.Header.Get("HX-Request") == "true" {
+			if r.Header.Get("Hx-Request") == "true" {
 				component = ArticleDisplay(article, authenticated)
 			} else {
 				component = ArticlePage(article, authenticated)
 			}
+
 			err = component.Render(r.Context(), w)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)
@@ -78,17 +90,18 @@ func GetArticleHandler(w http.ResponseWriter, r *http.Request, s storage.Storage
 			}
 		}
 	}
-
 }
 
-func ListArticles(s storage.Storage, tag string) ([]Article, error) {
+// ListArticles retrieves a list of articles from storage, optionally filtering by tag.
+func ListArticles(ctx context.Context, s storage.Storage, tag string) ([]Article, error) {
 	var articles []Article
 
 	// Get all articles from the storage
 	prefix := "articles/"
-	articleFiles, err := s.ListS3Objects(context.Background(), prefix)
+
+	articleFiles, err := s.ListS3Objects(ctx, prefix)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to list S3 objects: %w", err)
 	}
 
 	for id, obj := range articleFiles {
@@ -98,7 +111,7 @@ func ListArticles(s storage.Storage, tag string) ([]Article, error) {
 			continue
 		}
 
-		article, err := GetArticle(key, id, s)
+		article, err := GetArticle(ctx, key, id, s)
 		if err != nil {
 			return nil, err
 		}
@@ -115,21 +128,24 @@ func ListArticles(s storage.Storage, tag string) ([]Article, error) {
 	return articles, nil
 }
 
-func GetArticle(key string, id int, s storage.Storage) (*Article, error) {
+// GetArticle retrieves a single article by its S3 key and ID.
+func GetArticle(ctx context.Context, key string, id int, s storage.Storage) (*Article, error) {
 	var article Article
+
 	article.ID = strconv.Itoa(id)
 	article.S3Key = key
-	err := s.GetPreparedFile(key, &article)
+
+	err := s.GetPreparedFile(ctx, key, &article)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get prepared file: %w", err)
 	}
 
 	return &article, nil
 }
 
-func GetLatestArticle(s storage.Storage) (*Article, error) {
-
-	articles, err := ListArticles(s, "all")
+// GetLatestArticle retrieves the most recent article from storage.
+func GetLatestArticle(ctx context.Context, s storage.Storage) (*Article, error) {
+	articles, err := ListArticles(ctx, s, "all")
 	if err != nil {
 		return nil, err
 	}
@@ -138,12 +154,14 @@ func GetLatestArticle(s storage.Storage) (*Article, error) {
 		// Articles are sorted, first article is the latest
 		latestArticle := articles[0]
 		latestArticle.Body = storage.RemoveHTMLTags(latestArticle.Body)
+
 		return &latestArticle, nil
 	}
 
-	return nil, nil
+	return nil, errors.New("no articles found")
 }
 
+// ToCard converts an Article to a Card component for display in lists.
 func (a Article) ToCard(i int) components.Card {
 	return components.Card{
 		Title:     a.Title,
@@ -157,11 +175,13 @@ func (a Article) ToCard(i int) components.Card {
 	}
 }
 
+// FormatDateForFilename converts a date string to a filename-safe format.
 func FormatDateForFilename(dateStr string) string {
 	// Parse the date string (assuming YYYY-MM-DD format)
 	t, err := time.Parse("2006-01-02", dateStr)
 	if err != nil {
 		log.Printf("FormatDateForFilename: failed to parse date '%s': %v", dateStr, err)
+
 		return dateStr
 	}
 	// Format as MM-DD-YYYY

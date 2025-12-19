@@ -1,15 +1,16 @@
-package storage
+package storage_test
 
 import (
 	"reflect"
 	"strings"
 	"testing"
 
-	"timterests/internal/types"
+	"timterests/internal/model"
+	"timterests/internal/storage"
 )
 
-func getTestDocument() types.Document {
-	return types.Document{
+func getTestDocument() model.Document {
+	return model.Document{
 		Title:    "Test Document",
 		Subtitle: "Test Subtitle",
 		Body:     "This is a test body.\n\n- Item 1\n- Item 2\n\n## Subtitle\n\n[Link](http://example.com)",
@@ -18,9 +19,11 @@ func getTestDocument() types.Document {
 }
 
 func TestBodyToHTML(t *testing.T) {
+	t.Parallel()
+
 	document := getTestDocument()
 
-	err := BodyToHTML(&document)
+	err := storage.BodyToHTML(&document)
 	if err != nil {
 		t.Fatalf("Expected no error, got %v", err)
 	}
@@ -47,30 +50,41 @@ func TestBodyToHTML(t *testing.T) {
 
 	// Test incorrect type handling
 	invalidInput := 42
-	err = BodyToHTML(&invalidInput)
+
+	err = storage.BodyToHTML(&invalidInput)
 	if err == nil {
 		t.Fatalf("Expected error for invalid input type, got nil")
 	}
 
 	// Test empty body handling
-	emptyDocument := types.Document{
-		Title: "Empty Document",
-		Body:  "",
+	emptyDocument := model.Document{
+		ID:       "",
+		S3Key:    "",
+		Title:    "Empty Document",
+		Subtitle: "",
+		Body:     "",
+		Tags:     []string{},
 	}
-	err = BodyToHTML(&emptyDocument)
+
+	err = storage.BodyToHTML(&emptyDocument)
 	if err != nil {
 		t.Fatalf("Expected no error for empty body, got %v", err)
 	}
+
 	if emptyDocument.Body != "" {
 		t.Errorf("Expected empty body to remain empty, got %s", emptyDocument.Body)
 	}
 }
 
 func TestGetTags(t *testing.T) {
+	t.Parallel()
+
 	document := getTestDocument()
+
 	var tags []string
+
 	v := reflect.ValueOf(document)
-	tags = GetTags(v, tags)
+	tags = storage.GetTags(v, tags)
 
 	expectedTags := []string{"test", "document"}
 	if len(tags) != len(expectedTags) {
@@ -85,39 +99,53 @@ func TestGetTags(t *testing.T) {
 }
 
 func TestRemoveHTMLTags(t *testing.T) {
+	t.Parallel()
+
 	input := `<p>This is a <strong>test</strong> string with <a href="#">HTML</a> tags.</p>`
 	expected := "This is a test string with HTML tags."
-	result := RemoveHTMLTags(input)
+
+	result := storage.RemoveHTMLTags(input)
+
 	if result != expected {
 		t.Errorf("Expected %s, got %s", expected, result)
 	}
 }
 
 func TestSanitizeFilename(t *testing.T) {
+	t.Parallel()
+
 	longFilename := "This is a Very Long Filename without Special Characters"
 	expectedLF := "this-is-a-very-long-filename-without-special-chara"
-	sanitizedLF := SanitizeFilename(longFilename)
+
+	sanitizedLF := storage.SanitizeFilename(longFilename)
+
 	if sanitizedLF != expectedLF {
 		t.Errorf("Expected sanitized filename to be %s, got %s", expectedLF, sanitizedLF)
 	}
 
 	specialCharFilename := "Inva|id/Filename!.yaml"
 	expectedSCF := "filenameyaml"
-	sanitizedSCF := SanitizeFilename(specialCharFilename)
+
+	sanitizedSCF := storage.SanitizeFilename(specialCharFilename)
+
 	if sanitizedSCF != expectedSCF {
 		t.Errorf("Expected sanitized filename to be %s, got %s", expectedSCF, sanitizedSCF)
 	}
 
 	exploitFilename := "../../etc/.ssh/rsa_key"
 	expectedEF := "rsa_key"
-	sanitizedEF := SanitizeFilename(exploitFilename)
+
+	sanitizedEF := storage.SanitizeFilename(exploitFilename)
+
 	if sanitizedEF != expectedEF {
 		t.Errorf("Expected sanitized filename to be %s, got %s", expectedEF, sanitizedEF)
 	}
 
 	missingFilename := ""
 	expectedMF := ""
-	sanitizedMF := SanitizeFilename(missingFilename)
+
+	sanitizedMF := storage.SanitizeFilename(missingFilename)
+
 	if sanitizedMF == expectedMF {
 		t.Errorf("Expected sanitized filename to not be empty")
 	}

@@ -1,3 +1,4 @@
+// Package main provides the API server entry point for the timterests application.
 package main
 
 import (
@@ -27,7 +28,9 @@ func gracefulShutdown(apiServer *http.Server, done chan bool) {
 	// the request it is currently handling
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	if err := apiServer.Shutdown(ctx); err != nil {
+
+	err := apiServer.Shutdown(ctx)
+	if err != nil {
 		log.Printf("Server forced to shutdown with error: %v", err)
 	}
 
@@ -38,9 +41,9 @@ func gracefulShutdown(apiServer *http.Server, done chan bool) {
 }
 
 func main() {
-
 	// Initialize the database
-	if err := storage.InitDB(); err != nil {
+	err := storage.InitDB(context.Background())
+	if err != nil {
 		log.Printf("Failed to initialize database: %v", err)
 	}
 
@@ -58,14 +61,16 @@ func main() {
 
 	tlsStarted := false
 
-	if _, err := os.Stat(certFile); err == nil {
-		if _, err := os.Stat(keyFile); err == nil {
+	_, err = os.Stat(certFile)
+	if err == nil {
+		_, err := os.Stat(keyFile)
+		if err == nil {
 			err := server.ListenAndServeTLS(certFile, keyFile)
 			if err != nil {
 				log.Fatalf("Failed to start server with TLS: %v", err)
-			} else {
-				tlsStarted = true
 			}
+
+			tlsStarted = true
 		}
 	}
 

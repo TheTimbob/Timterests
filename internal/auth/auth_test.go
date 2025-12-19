@@ -1,10 +1,17 @@
-package auth
+package auth_test
 
-import "testing"
+import (
+	"testing"
+
+	"timterests/internal/auth"
+)
 
 func TestGenerateHash(t *testing.T) {
+	t.Parallel()
+
 	password := "Password1234!"
-	hash, err := GenerateHash(password)
+
+	hash, err := auth.GenerateHash(password)
 	if err != nil {
 		t.Fatalf("Failed to generate hash: %v", err)
 	}
@@ -15,17 +22,20 @@ func TestGenerateHash(t *testing.T) {
 }
 
 func TestValidatePassword(t *testing.T) {
+	t.Parallel()
+
 	password := "Password1234!"
-	hash, err := GenerateHash(password)
+
+	hash, err := auth.GenerateHash(password)
 	if err != nil {
 		t.Fatalf("Failed to generate hash: %v", err)
 	}
 
-	if !ValidatePassword(password, hash) {
+	if !auth.ValidatePassword(password, hash) {
 		t.Errorf("Expected password to be valid")
 	}
 
-	if ValidatePassword("wrongpassword", hash) {
+	if auth.ValidatePassword("wrongpassword", hash) {
 		t.Errorf("Expected password to be invalid")
 	}
 }

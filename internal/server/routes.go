@@ -1,3 +1,4 @@
+// Package server provides HTTP server and routing configuration.
 package server
 
 import (
@@ -9,6 +10,7 @@ import (
 	"timterests/cmd/web"
 )
 
+// RegisterRoutes configures all HTTP routes and returns the handler.
 func (s *Server) RegisterRoutes() http.Handler {
 	mux := http.NewServeMux()
 
@@ -41,12 +43,16 @@ func (s *Server) RegisterRoutes() http.Handler {
 	}))
 
 	mux.Handle("/writer", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		var docType, key string
-		var typeID int
+		var (
+			docType, key string
+			typeID       int
+		)
 
 		// Handle POST request - parse form data
-		if err := r.ParseForm(); err != nil {
+		err := r.ParseForm()
+		if err != nil {
 			http.Error(w, "Failed to parse form", http.StatusBadRequest)
+
 			return
 		}
 
@@ -58,9 +64,11 @@ func (s *Server) RegisterRoutes() http.Handler {
 		typeIDString := r.FormValue("type-id")
 		if typeIDString != "" {
 			var err error
+
 			typeID, err = strconv.Atoi(typeIDString)
 			if err != nil {
 				http.Error(w, "Invalid type ID: expected integer, got '"+typeIDString+"'", http.StatusBadRequest)
+
 				return
 			}
 		}
@@ -109,8 +117,10 @@ func (s *Server) RegisterRoutes() http.Handler {
 		web.GetArticleHandler(w, r, *s.storage, articleID)
 	}))
 	mux.Handle("/articles/list", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if _, err := web.ListArticles(*s.storage, "all"); err != nil {
+		_, err := web.ListArticles(r.Context(), *s.storage, "all");
+		if err != nil {
 			http.Error(w, "Failed to list articles", http.StatusInternalServerError)
+
 			return
 		}
 	}))
@@ -126,8 +136,10 @@ func (s *Server) RegisterRoutes() http.Handler {
 		web.GetProjectHandler(w, r, *s.storage, projectID)
 	}))
 	mux.Handle("/projects/list", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if _, err := web.ListProjects(*s.storage, "all"); err != nil {
+		_, err := web.ListProjects(r.Context(), *s.storage, "all");
+		if err != nil {
 			http.Error(w, "Failed to list articles", http.StatusInternalServerError)
+
 			return
 		}
 	}))
@@ -143,8 +155,10 @@ func (s *Server) RegisterRoutes() http.Handler {
 		web.GetReadingListBook(w, r, *s.storage, articleID)
 	}))
 	mux.Handle("/reading-list/list", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if _, err := web.ListBooks(*s.storage, "all"); err != nil {
+		_, err := web.ListBooks(r.Context(), *s.storage, "all");
+		if err != nil {
 			http.Error(w, "Failed to list articles", http.StatusInternalServerError)
+
 			return
 		}
 	}))
@@ -160,8 +174,10 @@ func (s *Server) RegisterRoutes() http.Handler {
 		web.GetLetterHandler(w, r, *s.storage, letterID)
 	}))
 	mux.Handle("/letters/list", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if _, err := web.ListLetters(*s.storage); err != nil {
+		_, err := web.ListLetters(r.Context(), *s.storage, "all");
+		if err != nil {
 			http.Error(w, "Failed to list letters.", http.StatusInternalServerError)
+
 			return
 		}
 	}))
@@ -181,6 +197,7 @@ func (s *Server) corsMiddleware(next http.Handler) http.Handler {
 		// Handle preflight OPTIONS requests
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusNoContent)
+
 			return
 		}
 
@@ -189,28 +206,38 @@ func (s *Server) corsMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func (s *Server) HelloWorldHandler(w http.ResponseWriter, r *http.Request) {
+// HelloWorldHandler responds with a simple "Hello World" message ensuring server is running.
+func (s *Server) HelloWorldHandler(w http.ResponseWriter, _ *http.Request) {
 	resp := map[string]string{"message": "Hello World"}
+
 	jsonResp, err := json.Marshal(resp)
 	if err != nil {
 		http.Error(w, "Failed to marshal response", http.StatusInternalServerError)
+
 		return
 	}
+
 	w.Header().Set("Content-Type", "application/json")
-	if _, err := w.Write(jsonResp); err != nil {
+
+	_, err = w.Write(jsonResp)
+	if err != nil {
 		log.Printf("Failed to write response: %v", err)
 	}
 }
 
-func (s *Server) healthHandler(w http.ResponseWriter, r *http.Request) {
-	//Marshal the health check response
+func (s *Server) healthHandler(w http.ResponseWriter, _ *http.Request) {
+	// Marshal the health check response
 	resp, err := json.Marshal(s.storage.Health())
 	if err != nil {
 		http.Error(w, "Failed to marshal health check response", http.StatusInternalServerError)
+
 		return
 	}
+
 	w.Header().Set("Content-Type", "application/json")
-	if _, err := w.Write(resp); err != nil {
+
+	_, err = w.Write(resp)
+	if err != nil {
 		log.Printf("Failed to write response: %v", err)
 	}
 }
