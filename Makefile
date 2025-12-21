@@ -55,6 +55,7 @@ coverage:
 	@echo "Generating coverage report..."
 	@go test -coverprofile=tmp/coverage.out -covermode=atomic ./...
 	@cat tmp/coverage.out | grep -v "_templ.go" > tmp/cover.out
+	@rm tmp/coverage.out
 	@go tool cover -func=tmp/cover.out
 
 complexity:

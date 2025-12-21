@@ -20,55 +20,57 @@ tags:
 `),
 	}
 }
-func TestDecodeFile(t *testing.T) {
+func TestYAMLDocument(t *testing.T) {
 	t.Parallel()
+	t.Run("decode YAML document", func(t *testing.T) {
+		t.Parallel()
 
-	var (
-		document model.Document
-		filename = "document.yaml"
-	)
+		var (
+			document model.Document
+			filename = "document.yaml"
+		)
 
-	fs := &fstest.MapFS{
-		filename: getYAMLDocument(),
-	}
+		fs := &fstest.MapFS{
+			filename: getYAMLDocument(),
+		}
 
-	file, err := fs.Open(filename)
-	if err != nil {
-		t.Fatalf("Expected no error, got %v", err)
-	}
+		file, err := fs.Open(filename)
+		if err != nil {
+			t.Fatalf("Expected no error, got %v", err)
+		}
 
-	err = storage.DecodeFile(file, &document)
-	if err != nil {
-		t.Fatalf("Expected no error, got %v", err)
-	}
+		err = storage.DecodeFile(file, &document)
+		if err != nil {
+			t.Fatalf("Expected no error, got %v", err)
+		}
 
-	expectedBody := "Test Body"
-	if document.Body != expectedBody {
-		t.Errorf("Expected body '%s', got %v", expectedBody, document.Body)
-	}
-}
+		expectedBody := "Test Body"
+		if document.Body != expectedBody {
+			t.Errorf("Expected body '%s', got %v", expectedBody, document.Body)
+		}
+	})
+	t.Run("write YAML document", func(t *testing.T) {
+		t.Parallel()
 
-func TestWriteYAMLDocument(t *testing.T) {
-	t.Parallel()
+		formData := map[string]any{
+			"title":    "Test Document",
+			"subtitle": "Test Subtitle",
+			"body":     "Test Body",
+			"tags":     []string{"test", "document"},
+		}
 
-	formData := map[string]any{
-		"title":    "Test Document",
-		"subtitle": "Test Subtitle",
-		"body":     "Test Body",
-		"tags":     []string{"test", "document"},
-	}
+		tempDir := t.TempDir()
+		localFilePath := tempDir + "/test-document.yaml"
 
-	tempDir := t.TempDir()
-	localFilePath := tempDir + "/test-document.yaml"
+		err := storage.WriteYAMLDocument(localFilePath, formData)
+		if err != nil {
+			t.Fatalf("Expected no error, got %v", err)
+		}
 
-	err := storage.WriteYAMLDocument(localFilePath, formData)
-	if err != nil {
-		t.Fatalf("Expected no error, got %v", err)
-	}
-
-	// Verify the file was created
-	_, err = os.Stat(localFilePath)
-	if os.IsNotExist(err) {
-		t.Fatalf("File was not created: %v", err)
-	}
+		// Verify the file was created
+		_, err = os.Stat(localFilePath)
+		if os.IsNotExist(err) {
+			t.Fatalf("File was not created: %v", err)
+		}
+	})
 }

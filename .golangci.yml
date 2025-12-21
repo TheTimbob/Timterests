@@ -10,6 +10,7 @@ linters:
   disable:
     - contextcheck # too many false positives with templ generated files
     - cyclop # conflicts with gocyclo
+    - gocognit # conflicts with gocyclo
     - dupl # false positives
     - err113 # conflicts with errcheck
     - exhaustruct # too verbose for large structs
@@ -41,6 +42,13 @@ linters:
       allow-first-in-block: true
       allow-whole-block: false
       branch-max-lines: 2
+  exclusions:
+    rules:
+    - path: _test\.go
+      linters:
+        - gocyclo
+        - errcheck
+        - gosec
 issues:
   max-issues-per-linter: 0
   max-same-issues: 0
