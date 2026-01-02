@@ -99,7 +99,7 @@ func ListArticles(ctx context.Context, s storage.Storage, tag string) ([]Article
 	// Get all articles from the storage
 	prefix := "articles/"
 
-	articleFiles, err := s.ListS3Objects(ctx, prefix)
+	articleFiles, err := s.ListObjects(ctx, prefix)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list S3 objects: %w", err)
 	}

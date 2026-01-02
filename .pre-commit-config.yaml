@@ -27,10 +27,11 @@ repos:
     hooks:
     - id: golangci-lint
       name: golangci-lint
-      entry: golangci-lint run --config .golangci.yml --fix
+      entry: golangci-lint run --config .golangci.yml --fix ./...
       types: [go]
       language: system
       pass_filenames: false
+      always_run: true
     - id: clean-prettier-cache
       name: final project clean.
       entry: bash -c 'rm -rf node_modules/.cache'

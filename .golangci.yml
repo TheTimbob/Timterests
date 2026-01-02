@@ -16,9 +16,12 @@ linters:
     - exhaustruct # too verbose for large structs
     - forbidigo # too restrictive for error messages
     - funlen # handleRoutes function is long, and complexity is better measured with gocyclo
+    - funcorder # doesn't align with project structure
     - gochecknoinits # init is only used in util files, no settings to limit its scope
     - mnd # some magic numbers are obvious in context
     - revive # too many false positives with templ generated files
+    - paralleltest # conflicts with tests that need to use file system
+    - tparallel # conflicts with tests that need to use file system
     - varnamelen # naming is based on type and context
     - wsl # replaced by wsl_v5
   settings:

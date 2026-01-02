@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -26,14 +27,15 @@ func NewServer() *http.Server {
 		panic(fmt.Sprintf("failed to parse PORT: %v", err))
 	}
 
-	s, err := storage.NewS3Storage()
+	// Initialize Storage (handles both S3 and local)
+	store, err := storage.NewStorage(context.Background())
 	if err != nil {
 		panic(fmt.Sprintf("failed to initialize storage: %v", err))
 	}
 
 	NewServer := &Server{
 		port:    port,
-		storage: s,
+		storage: store,
 	}
 
 	// Declare Server config

@@ -99,6 +99,10 @@ func ValidatePassword(password, passwordHash string) bool {
 
 // GenerateHash generates a bcrypt hash of the given password.
 func GenerateHash(password string) (string, error) {
+	if password == "" {
+		return "", errors.New("password must not be empty")
+	}
+
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate password hash: %w", err)

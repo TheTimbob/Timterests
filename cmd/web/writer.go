@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"path"
 	"path/filepath"
 	"strings"
 
@@ -106,7 +105,7 @@ func WriteDocumentHandler(w http.ResponseWriter, r *http.Request, s storage.Stor
 		return
 	}
 
-	localFilePath := path.Join("s3", filename)
+	localFilePath := filepath.Join(s.BaseDir, filename)
 
 	err = storage.WriteYAMLDocument(localFilePath, formData)
 	if err != nil {
@@ -119,7 +118,7 @@ func WriteDocumentHandler(w http.ResponseWriter, r *http.Request, s storage.Stor
 	if s3Upload {
 		s3Path := docType + "/" + filename
 
-		err = s.UploadFileToS3(r.Context(), s3Path, localFilePath)
+		err = s.UploadFileToS3(r.Context(), s3Path)
 		if err != nil {
 			http.Error(w, "Failed to upload document to storage", http.StatusInternalServerError)
 

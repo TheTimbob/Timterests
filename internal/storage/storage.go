@@ -1,0 +1,411 @@
+package storage
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"io"
+	"log"
+	"os"
+	"path/filepath"
+	"sort"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"gopkg.in/yaml.v2"
+)
+
+// Storage provides storage operations with support for S3 and local filesystem.
+type Storage struct {
+	UseS3      bool
+	BucketName string
+	BaseDir    string // Directory for local storage, defaults to "storage"
+	S3Client   *s3.Client
+}
+
+// NewStorage initializes a new Storage instance.
+func NewStorage(ctx context.Context) (*Storage, error) {
+	// The USE_S3 environment variable determines whether to use S3 or local storage.
+	useS3 := os.Getenv("USE_S3") == "true"
+	bucketName := os.Getenv("AWS_BUCKET_NAME")
+	region := os.Getenv("AWS_REGION")
+
+	cwd, err := os.Getwd()
+	if err != nil {
+		log.Printf("Failed to get current working directory, defaulting to '.': %v", err)
+
+		cwd = "."
+	}
+
+	baseDir := filepath.Join(cwd, "storage")
+
+	if useS3 {
+		if bucketName == "" || region == "" {
+			return nil, errors.New("AWS_BUCKET_NAME or AWS_REGION is not set in the environment variables")
+		}
+
+		cfg, err := config.LoadDefaultConfig(ctx, config.WithRegion(region))
+		if err != nil {
+			return nil, fmt.Errorf("unable to load SDK config, %w", err)
+		}
+
+		client := s3.NewFromConfig(cfg)
+
+		return &Storage{
+			UseS3:      true,
+			BucketName: bucketName,
+			BaseDir:    baseDir,
+			S3Client:   client,
+		}, nil
+	}
+
+	return &Storage{
+		UseS3:      false,
+		BucketName: "",
+		BaseDir:    baseDir,
+		S3Client:   nil,
+	}, nil
+}
+
+// ListObjects lists the objects in the storage.
+func (s *Storage) ListObjects(ctx context.Context, prefix string) ([]types.Object, error) {
+	if s.UseS3 {
+		return s.listS3Objects(ctx, prefix)
+	}
+
+	return s.listLocalObjects(prefix)
+}
+
+func (s *Storage) listS3Objects(ctx context.Context, prefix string) ([]types.Object, error) {
+	var (
+		err     error
+		output  *s3.ListObjectsV2Output
+		objects []types.Object
+	)
+
+	input := &s3.ListObjectsV2Input{
+		Bucket: aws.String(s.BucketName),
+		Prefix: aws.String(prefix),
+	}
+
+	objectPaginator := s3.NewListObjectsV2Paginator(s.S3Client, input)
+	for objectPaginator.HasMorePages() {
+		output, err = objectPaginator.NextPage(ctx)
+		if err != nil {
+			var noBucket *types.NoSuchBucket
+			if errors.As(err, &noBucket) {
+				log.Printf("Bucket %s does not exist.\n", s.BucketName)
+
+				return nil, noBucket
+			}
+
+			return nil, fmt.Errorf("listing S3 objects: %w", err)
+		}
+
+		objects = append(objects, output.Contents...)
+	}
+
+	// Default sort objects by date, from most current to least current
+	sort.Slice(objects, func(i, j int) bool {
+		return objects[i].LastModified.After(*objects[j].LastModified)
+	})
+
+	return objects, nil
+}
+
+// listLocalObjects lists objects previously pulled from S3 or stored manually.
+// This doesn't recursively retrieve directories, only the files from the passed in directory.
+// Subdirectories are ignored.
+func (s *Storage) listLocalObjects(prefix string) ([]types.Object, error) {
+	fullPath, err := LocalPath(s.BaseDir, prefix)
+	if err != nil {
+		return nil, fmt.Errorf("getting local path: %w", err)
+	}
+
+	entries, err := os.ReadDir(fullPath)
+	if err != nil {
+		return nil, fmt.Errorf("reading local storage directory: %w", err)
+	}
+
+	objects := make([]types.Object, 0, len(entries))
+	for _, entry := range entries {
+		// Use IsDir() to filter out directories
+		if entry.IsDir() {
+			continue
+		}
+
+		// File info for size and mod time
+		fileInfo, err := entry.Info()
+		if err != nil {
+			return nil, fmt.Errorf("getting file info: %w", err)
+		}
+
+		keyPath, err := LocalPath(prefix, entry.Name())
+		if err != nil {
+			return nil, fmt.Errorf("getting local path: %w", err)
+		}
+
+		objects = append(objects, types.Object{
+			Key:          aws.String(keyPath),
+			LastModified: aws.Time(fileInfo.ModTime()),
+			Size:         aws.Int64(fileInfo.Size()),
+		})
+	}
+
+	// Sort by date desc
+	sort.Slice(objects, func(i, j int) bool {
+		return objects[i].LastModified.After(*objects[j].LastModified)
+	})
+
+	return objects, nil
+}
+
+// DownloadS3File downloads a file from S3 to local storage.
+func (s *Storage) DownloadS3File(ctx context.Context, objectKey string) error {
+	if !s.UseS3 {
+		// In local mode, no action needed as files are already local
+		return nil
+	}
+
+	result, err := s.S3Client.GetObject(ctx, &s3.GetObjectInput{
+		Bucket: aws.String(s.BucketName),
+		Key:    aws.String(objectKey),
+	})
+	if err != nil {
+		var noKey *types.NoSuchKey
+		if errors.As(err, &noKey) {
+			log.Printf("Can't get object %s from bucket %s. No such key exists.\n", objectKey, s.BucketName)
+
+			err = noKey
+		} else {
+			log.Printf("Couldn't get object %v:%v. Here's why: %v\n", s.BucketName, objectKey, err)
+		}
+
+		return err
+	}
+
+	defer func() {
+		err := result.Body.Close()
+		if err != nil {
+			log.Printf("Failed to close S3 object body: %v", err)
+		}
+	}()
+
+	fileName, err := LocalPath(s.BaseDir, objectKey)
+	if err != nil {
+		return fmt.Errorf("getting local path: %w", err)
+	}
+
+	err = os.MkdirAll(filepath.Dir(fileName), 0750)
+	if err != nil {
+		return fmt.Errorf("failed to create directory: %w", err)
+	}
+
+	// #nosec G304 -- fileName is validated by LocalPath to prevent path traversal
+	file, err := os.Create(fileName)
+	if err != nil {
+		return fmt.Errorf("failed to create file: %w", err)
+	}
+	defer file.Close()
+
+	_, err = io.Copy(file, result.Body)
+	if err != nil {
+		return fmt.Errorf("failed to write to file: %w", err)
+	}
+
+	return nil
+}
+
+func (s *Storage) UploadFileToS3(ctx context.Context, objectKey string) error {
+	if !s.UseS3 {
+		return errors.New("storage is configured to be local, not configured to use S3")
+	}
+
+	fileName, err := LocalPath(s.BaseDir, objectKey)
+	if err != nil {
+		return fmt.Errorf("getting local path: %w", err)
+	}
+
+	// #nosec G304 -- fileName is validated by LocalPath to prevent path traversal
+	file, err := os.Open(fileName)
+	if err != nil {
+		return fmt.Errorf("failed to open file: %w", err)
+	}
+	defer file.Close()
+
+	_, err = s.S3Client.PutObject(ctx, &s3.PutObjectInput{
+		Bucket: aws.String(s.BucketName),
+		Key:    aws.String(objectKey),
+		Body:   file,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to upload to S3: %w", err)
+	}
+
+	return nil
+}
+
+// GetPreparedFile retrieves a file, decodes it, and converts markdown to HTML.
+func (s *Storage) GetPreparedFile(ctx context.Context, key string, document any) error {
+	// Retrieve file content (downloads to localFilePath if S3, or effectively checks existence if Local)
+	file, err := s.GetFile(ctx, key)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	err = DecodeFile(file, document)
+	if err != nil {
+		return fmt.Errorf("failed to decode %s: %w", key, err)
+	}
+
+	err = BodyToHTML(document)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// GetFile ensures the file is available locally at localPath.
+func (s *Storage) GetFile(ctx context.Context, key string) (*os.File, error) {
+	localPath, err := LocalPath(s.BaseDir, key)
+	if err != nil {
+		return nil, fmt.Errorf("getting local path: %w", err)
+	}
+
+	err = os.MkdirAll(filepath.Dir(localPath), 0750)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create directory: %w", err)
+	}
+
+	if s.UseS3 {
+		err := s.DownloadS3File(ctx, key)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// #nosec G304 -- localPath is validated by LocalPath to prevent path traversal
+	file, err := os.Open(localPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open file: %w", err)
+	}
+
+	return file, nil
+}
+
+// GetImage downloads an image and returns its local path (or URL path).
+func (s *Storage) GetImage(ctx context.Context, imageName string) (string, error) {
+	// imageName is expected to include the subdirectory
+	localImagePath, err := LocalPath(s.BaseDir, imageName)
+	if err != nil {
+		return "", err
+	}
+
+	if s.UseS3 {
+		err := s.DownloadS3File(ctx, imageName)
+		if err != nil {
+			log.Printf("Failed to download image: %v", err)
+
+			return localImagePath, err
+		}
+	}
+
+	// Return the URL path for accessing the image
+	webPath := "/storage/" + imageName
+
+	return webPath, nil
+}
+
+// Health checks the storage connection status.
+func (s *Storage) Health() map[string]string {
+	health := make(map[string]string)
+
+	if s.UseS3 {
+		_, err := s.S3Client.ListBuckets(context.Background(), &s3.ListBucketsInput{})
+		if err != nil {
+			health["status"] = "down"
+			health["message"] = fmt.Sprintf("Failed to list buckets: %v", err)
+			log.Printf("S3 connection down: %v", err) // Changed from Fatalf to allow app to survive
+
+			return health
+		}
+
+		health["status"] = "up"
+		health["message"] = "S3 storage is up and running."
+	} else {
+		_, err := os.Stat(s.BaseDir)
+		if os.IsNotExist(err) {
+			health["status"] = "down"
+			health["message"] = "Local storage directory missing"
+		} else {
+			health["status"] = "up"
+			health["message"] = "Local storage is ready."
+		}
+	}
+
+	return health
+}
+
+// LocalPath checks validity and security of filename, returning the full local path.
+func LocalPath(path, filename string) (string, error) {
+	fp := filepath.Join(path, filename)
+	cleaned := filepath.Clean(fp)
+
+	// IsLocal ensures filename is within the subtree, not absolute, and not empty.
+	if !filepath.IsLocal(filename) {
+		return "", fmt.Errorf("invalid filepath: %s", filename)
+	}
+
+	return cleaned, nil
+}
+
+// --- Helpers ---
+
+// DecodeFile decodes a YAML file into the provided output structure.
+func DecodeFile(file io.Reader, out any) error {
+	decoder := yaml.NewDecoder(file)
+
+	err := decoder.Decode(out)
+	if err != nil {
+		log.Printf("Failed to decode file: %v", err)
+
+		return fmt.Errorf("decode error: %w", err)
+	}
+
+	return nil
+}
+
+// WriteYAMLDocument writes a YAML document to a file.
+func WriteYAMLDocument(filePath string, formData map[string]any) error {
+	err := os.MkdirAll(filepath.Dir(filePath), 0750)
+	if err != nil {
+		return fmt.Errorf("failed to create directories for %s: %w", filePath, err)
+	}
+
+	// #nosec G304 -- filePath comes from internal code paths, validated by callers using LocalPath
+	file, err := os.Create(filePath)
+	if err != nil {
+		return fmt.Errorf("failed to create file: %w", err)
+	}
+	defer file.Close()
+
+	enc := yaml.NewEncoder(file)
+
+	defer func() {
+		err := enc.Close()
+		if err != nil {
+			log.Printf("Failed to close YAML encoder: %v", err)
+		}
+	}()
+
+	err = enc.Encode(formData)
+	if err != nil {
+		return fmt.Errorf("failed to encode YAML: %w", err)
+	}
+
+	return nil
+}

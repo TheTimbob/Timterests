@@ -35,7 +35,8 @@ func TestLoadAPIKey(t *testing.T) {
 }
 
 func TestPromptOperations(t *testing.T) {
-	t.Parallel()
+	// This test changes working directory in subtests and therefore
+	// must not run in parallel with other tests.
 
 	//nolint:paralleltest // changing working directory
 	t.Run("get instruction from file", func(t *testing.T) {

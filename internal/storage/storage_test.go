@@ -9,19 +9,28 @@ import (
 	"timterests/internal/storage"
 )
 
-func getYAMLDocument() *fstest.MapFile {
-	return &fstest.MapFile{
-		Data: []byte(`title: Test Document
-subtitle: Test Subtitle
-body: Test Body
-tags:
-  - test
-  - document
-`),
-	}
-}
-func TestYAMLDocument(t *testing.T) {
+func TestStorage(t *testing.T) {
 	t.Parallel()
+
+	t.Run("create new storage instance", func(t *testing.T) {
+		s, err := storage.NewStorage(t.Context())
+		if err != nil {
+			t.Fatalf("Expected no error, got %v", err)
+		}
+
+		if s.UseS3 != false {
+			t.Errorf("Expected UseS3 to be false, got %v", s.UseS3)
+		}
+
+		if s.BucketName != "" {
+			t.Errorf("Expected empty BucketName for local storage, got %v", s.BucketName)
+		}
+		// For local storage, BaseDir should be set
+		if s.BaseDir == "" {
+			t.Errorf("Expected BaseDir to be set, got empty string")
+		}
+	})
+
 	t.Run("decode YAML document", func(t *testing.T) {
 		t.Parallel()
 
@@ -73,4 +82,16 @@ func TestYAMLDocument(t *testing.T) {
 			t.Fatalf("File was not created: %v", err)
 		}
 	})
+}
+
+func getYAMLDocument() *fstest.MapFile {
+	return &fstest.MapFile{
+		Data: []byte(`title: Test Document
+subtitle: Test Subtitle
+body: Test Body
+tags:
+  - test
+  - document
+`),
+	}
 }

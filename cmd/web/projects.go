@@ -99,7 +99,7 @@ func ListProjects(ctx context.Context, s storage.Storage, tag string) ([]Project
 	// Get all projects from the storage
 	prefix := "projects/"
 
-	projectFiles, err := s.ListS3Objects(ctx, prefix)
+	projectFiles, err := s.ListObjects(ctx, prefix)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list S3 objects: %w", err)
 	}
@@ -138,7 +138,7 @@ func GetProject(ctx context.Context, key string, id int, s storage.Storage) (*Pr
 		return nil, fmt.Errorf("failed to get prepared file: %w", err)
 	}
 
-	localImagePath, err := s.GetImageFromS3(ctx, project.Image)
+	localImagePath, err := s.GetImage(ctx, project.Image)
 	if err != nil {
 		log.Printf("Failed to download image: %v", err)
 

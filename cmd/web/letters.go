@@ -110,7 +110,7 @@ func ListLetters(ctx context.Context, s storage.Storage, tag string) ([]Letter, 
 	// Get all letters from the storage
 	prefix := "letters/"
 
-	letterFiles, err := s.ListS3Objects(ctx, prefix)
+	letterFiles, err := s.ListObjects(ctx, prefix)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list S3 objects: %w", err)
 	}

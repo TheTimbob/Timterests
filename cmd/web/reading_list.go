@@ -99,7 +99,7 @@ func ListBooks(ctx context.Context, s storage.Storage, tag string) ([]ReadingLis
 	// Get all readingList from the storage
 	prefix := "reading-list/"
 
-	files, err := s.ListS3Objects(ctx, prefix)
+	files, err := s.ListObjects(ctx, prefix)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list S3 objects: %w", err)
 	}
@@ -136,7 +136,7 @@ func GetBook(ctx context.Context, key string, id int, s storage.Storage) (*Readi
 		return nil, fmt.Errorf("failed to get prepared file: %w", err)
 	}
 
-	localImagePath, err := s.GetImageFromS3(ctx, book.Image)
+	localImagePath, err := s.GetImage(ctx, book.Image)
 	if err != nil {
 		log.Printf("Failed to download image: %v", err)
 

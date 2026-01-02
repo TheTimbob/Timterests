@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"path"
 	"path/filepath"
 	"timterests/internal/auth"
 	"timterests/internal/storage"
@@ -20,7 +19,7 @@ func DownloadDocumentHandler(w http.ResponseWriter, r *http.Request, title strin
 	}
 
 	fileName := storage.SanitizeFilename(title) + ".yaml"
-	filePath := filepath.Join("s3", fileName)
+	filePath := filepath.Join("storage", fileName)
 
 	// Set headers to force download
 	w.Header().Set("Content-Disposition", "attachment; filename=\""+fileName+"\"")
@@ -61,7 +60,7 @@ func DownloadNewDocumentHandler(w http.ResponseWriter, r *http.Request) {
 
 	delete(formData, "document-type")
 
-	localFilePath := path.Join("s3", filename)
+	localFilePath := filepath.Join("storage", filename)
 
 	err = storage.WriteYAMLDocument(localFilePath, formData)
 	if err != nil {
