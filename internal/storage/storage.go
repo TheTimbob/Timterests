@@ -32,14 +32,25 @@ func NewStorage(ctx context.Context) (*Storage, error) {
 	bucketName := os.Getenv("AWS_BUCKET_NAME")
 	region := os.Getenv("AWS_REGION")
 
-	cwd, err := os.Getwd()
-	if err != nil {
-		log.Printf("Failed to get current working directory, defaulting to '.': %v", err)
+	var baseDir string
 
-		cwd = "."
+	// Find project root by looking for go.mod
+	projectRoot, err := findProjectRoot()
+	if err != nil {
+		return nil, fmt.Errorf("failed to find project root: %w", err)
 	}
 
-	baseDir := filepath.Join(cwd, "storage")
+	baseDir = filepath.Join(projectRoot, "storage")
+
+	// Verify storage directory exists
+	_, err = os.Stat(baseDir)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, fmt.Errorf("storage directory not found at %s", baseDir)
+		}
+
+		return nil, fmt.Errorf("failed to check storage directory: %w", err)
+	}
 
 	if useS3 {
 		if bucketName == "" || region == "" {
@@ -348,6 +359,34 @@ func (s *Storage) Health() map[string]string {
 	}
 
 	return health
+}
+
+// findProjectRoot walks up the directory tree to find the project root based on go.mod.
+func findProjectRoot() (string, error) {
+	cwd, err := os.Getwd()
+	if err != nil {
+		return "", fmt.Errorf("failed to get current working directory: %w", err)
+	}
+
+	dir := cwd
+	for {
+		// Check if go.mod exists in current directory
+		goModPath := filepath.Join(dir, "go.mod")
+
+		_, err := os.Stat(goModPath)
+		if err == nil {
+			return dir, nil
+		}
+
+		// Move up one directory
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			// Reached root without finding go.mod
+			return "", errors.New("could not find project root (go.mod)")
+		}
+
+		dir = parent
+	}
 }
 
 // LocalPath checks validity and security of filename, returning the full local path.
