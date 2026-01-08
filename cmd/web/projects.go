@@ -151,7 +151,7 @@ func GetProject(ctx context.Context, key string, id int, s storage.Storage) (*Pr
 }
 
 // GetFeaturedProject retrieves the Timterests Project.
-func GetFeaturedProject(ctx context.Context, s storage.Storage) (*Project, error) {
+func GetFeaturedProject(ctx context.Context, s storage.Storage, featuredProjectTitle string) (*Project, error) {
 	projects, err := ListProjects(ctx, s, "all")
 	if err != nil {
 		return nil, err
@@ -161,14 +161,16 @@ func GetFeaturedProject(ctx context.Context, s storage.Storage) (*Project, error
 		return nil, errors.New("no projects found")
 	}
 
-	featuredProjectTitle := "Timterests"
-
 	var featuredProject Project
 
 	for _, project := range projects {
 		if project.Title == featuredProjectTitle {
 			featuredProject = project
 		}
+	}
+
+	if featuredProject.Title == "" {
+		return nil, errors.New("no projects matched the featured project title")
 	}
 
 	featuredProject.Body = storage.RemoveHTMLTags(featuredProject.Body)

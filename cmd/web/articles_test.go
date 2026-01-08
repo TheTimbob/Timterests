@@ -4,28 +4,12 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
-	"path/filepath"
 	"slices"
 	"testing"
 	"timterests/cmd/web"
-	"timterests/internal/storage"
 
 	"github.com/PuerkitoBio/goquery"
 )
-
-func testSetup(t *testing.T, ctx context.Context) *storage.Storage {
-	t.Helper()
-	t.Setenv("USE_S3", "false")
-
-	s, err := storage.NewStorage(ctx)
-	if err != nil {
-		t.Fatalf("failed to initialize storage: %v", err)
-	}
-
-	s.BaseDir = filepath.Join(s.BaseDir, "testdata")
-
-	return s
-}
 
 func TestArticleListRendering(t *testing.T) {
 	s := testSetup(t, context.Background())
@@ -210,13 +194,13 @@ func TestArticleRendering(t *testing.T) {
 }
 
 func TestArticle(t *testing.T) {
-	context := context.Background()
-	s := testSetup(t, context)
+	ctx := context.Background()
+	s := testSetup(t, ctx)
 
 	t.Run("get article object", func(t *testing.T) {
-		testArticle := "articles/test-article.yaml"
+		testArticlePath := "articles/test-article.yaml"
 
-		article, err := web.GetArticle(context, testArticle, 1, *s)
+		article, err := web.GetArticle(ctx, testArticlePath, 1, *s)
 		if err != nil {
 			t.Fatalf("failed to get article: %v", err)
 		}
@@ -231,7 +215,7 @@ func TestArticle(t *testing.T) {
 	})
 
 	t.Run("list articles", func(t *testing.T) {
-		articles, err := web.ListArticles(context, *s, "")
+		articles, err := web.ListArticles(ctx, *s, "")
 		if err != nil {
 			t.Fatalf("failed to list articles: %v", err)
 		}
@@ -242,7 +226,7 @@ func TestArticle(t *testing.T) {
 	})
 
 	t.Run("list articles with tag filter", func(t *testing.T) {
-		articles, err := web.ListArticles(context, *s, "tag1")
+		articles, err := web.ListArticles(ctx, *s, "tag1")
 		if err != nil {
 			t.Fatalf("failed to list articles: %v", err)
 		}
@@ -262,7 +246,7 @@ func TestArticle(t *testing.T) {
 	})
 
 	t.Run("get latest article", func(t *testing.T) {
-		article, err := web.GetLatestArticle(context, *s)
+		article, err := web.GetLatestArticle(ctx, *s)
 		if err != nil {
 			t.Fatalf("failed to get latest article: %v", err)
 		}
@@ -274,9 +258,9 @@ func TestArticle(t *testing.T) {
 	})
 
 	t.Run("article to card conversion", func(t *testing.T) {
-		testArticle := "articles/test-article.yaml"
+		testArticlePath := "articles/test-article.yaml"
 
-		article, err := web.GetArticle(context, testArticle, 1, *s)
+		article, err := web.GetArticle(ctx, testArticlePath, 1, *s)
 		if err != nil {
 			t.Fatalf("failed to get article: %v", err)
 		}
