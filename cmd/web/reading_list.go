@@ -64,7 +64,7 @@ func ReadingListPageHandler(w http.ResponseWriter, r *http.Request, s storage.St
 }
 
 // GetReadingListBook retrieves and renders a specific book by ID.
-func GetReadingListBook(w http.ResponseWriter, r *http.Request, s storage.Storage, bookID string) {
+func GetReadingListBook(w http.ResponseWriter, r *http.Request, s storage.Storage, bookID string, a *auth.Auth) {
 	var component templ.Component
 
 	readingList, err := ListBooks(r.Context(), s, "all")
@@ -76,7 +76,7 @@ func GetReadingListBook(w http.ResponseWriter, r *http.Request, s storage.Storag
 
 	for _, book := range readingList {
 		if book.ID == bookID {
-			authenticated := auth.IsAuthenticated(r)
+			authenticated := a.IsAuthenticated(r)
 			if r.Header.Get("Hx-Request") == "true" {
 				component = BookDisplay(book, authenticated)
 			} else {

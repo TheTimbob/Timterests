@@ -9,13 +9,20 @@ import (
 	"github.com/gorilla/sessions"
 )
 
-// session store needs to be global and initialized once at package level
-//
-//nolint:gochecknoglobals
-var store = sessions.NewCookieStore([]byte(os.Getenv("SESSION_NAME")))
+// SessionStore wraps sessions.CookieStore to allow custom methods.
+type SessionStore struct {
+	*sessions.CookieStore
 
-// Initialize the session store with options.
-func init() {
+	sessionName string
+}
+
+// InitializeSession initializes the session store with options.
+func InitializeSession(key string) *SessionStore {
+	if key == "" {
+		key = os.Getenv("SESSION_NAME")
+	}
+
+	store := sessions.NewCookieStore([]byte(key))
 	store.Options = &sessions.Options{
 		Path:     "/",
 		MaxAge:   86400,
@@ -23,11 +30,17 @@ func init() {
 		Secure:   true,
 		SameSite: http.SameSiteStrictMode,
 	}
+	sess := &SessionStore{
+		store,
+		key,
+	}
+
+	return sess
 }
 
 // SetSessionValue sets a map of key-value pairs to a global session.
-func SetSessionValue(w http.ResponseWriter, r *http.Request, values map[any]any) error {
-	session, err := store.Get(r, os.Getenv("SESSION_NAME"))
+func (store *SessionStore) SetSessionValue(w http.ResponseWriter, r *http.Request, values map[any]any) error {
+	session, err := store.Get(r, store.sessionName)
 	if err != nil {
 		return fmt.Errorf("failed to get session: %w", err)
 	}
@@ -43,8 +56,8 @@ func SetSessionValue(w http.ResponseWriter, r *http.Request, values map[any]any)
 }
 
 // GetSessionValue retrieves a value from the session using the provided key.
-func GetSessionValue(r *http.Request, key any) string {
-	session, err := store.Get(r, os.Getenv("SESSION_NAME"))
+func (store *SessionStore) GetSessionValue(r *http.Request, key any) string {
+	session, err := store.Get(r, store.sessionName)
 	if err != nil {
 		return ""
 	}

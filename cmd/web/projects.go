@@ -62,7 +62,7 @@ func ProjectsPageHandler(w http.ResponseWriter, r *http.Request, s storage.Stora
 }
 
 // GetProjectHandler handles requests to get a specific project by its ID.
-func GetProjectHandler(w http.ResponseWriter, r *http.Request, s storage.Storage, projectID string) {
+func GetProjectHandler(w http.ResponseWriter, r *http.Request, s storage.Storage, projectID string, a *auth.Auth) {
 	projects, err := ListProjects(r.Context(), s, "all")
 	if err != nil {
 		http.Error(w, "Failed to fetch projects", http.StatusInternalServerError)
@@ -74,7 +74,7 @@ func GetProjectHandler(w http.ResponseWriter, r *http.Request, s storage.Storage
 		if project.ID == projectID {
 			var component templ.Component
 
-			authenticated := auth.IsAuthenticated(r)
+			authenticated := a.IsAuthenticated(r)
 
 			if r.Header.Get("Hx-Request") == "true" {
 				component = ProjectDisplay(project, authenticated)

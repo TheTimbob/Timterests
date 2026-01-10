@@ -11,6 +11,7 @@ import (
 	// Import godotenv for automatic .env file loading.
 	_ "github.com/joho/godotenv/autoload"
 
+	"timterests/internal/auth"
 	"timterests/internal/storage"
 )
 
@@ -18,6 +19,7 @@ import (
 type Server struct {
 	port    int
 	storage *storage.Storage
+	auth    *auth.Auth
 }
 
 // NewServer creates and configures a new HTTP server instance.
@@ -33,9 +35,13 @@ func NewServer() *http.Server {
 		panic(fmt.Sprintf("failed to initialize storage: %v", err))
 	}
 
+	// Initialize Auth with session name from environment
+	authInstance := auth.NewAuth(os.Getenv("SESSION_NAME"))
+
 	NewServer := &Server{
 		port:    port,
 		storage: store,
+		auth:    authInstance,
 	}
 
 	// Declare Server config

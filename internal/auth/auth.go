@@ -12,8 +12,20 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// Auth provides authentication and session management functionality.
+type Auth struct {
+	store *SessionStore
+}
+
+// NewAuth creates a new Auth instance with the provided session name.
+func NewAuth(sessionName string) *Auth {
+	return &Auth{
+		store: InitializeSession(sessionName),
+	}
+}
+
 // CreateUser creates a new user in the database with the provided details.
-func CreateUser(ctx context.Context, firstName, lastName, email, password string) error {
+func (a *Auth) CreateUser(ctx context.Context, firstName, lastName, email, password string) error {
 	db, err := storage.GetDB(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to get database: %w", err)
@@ -46,7 +58,12 @@ func CreateUser(ctx context.Context, firstName, lastName, email, password string
 }
 
 // Authenticate verifies user credentials and sets session values upon successful authentication.
-func Authenticate(ctx context.Context, w http.ResponseWriter, r *http.Request, email, password string) (bool, error) {
+func (a *Auth) Authenticate(
+	ctx context.Context,
+	w http.ResponseWriter,
+	r *http.Request,
+	email,
+	password string) (bool, error) {
 	db, err := storage.GetDB(ctx)
 	if err != nil {
 		return false, fmt.Errorf("failed to get database: %w", err)
@@ -74,7 +91,7 @@ func Authenticate(ctx context.Context, w http.ResponseWriter, r *http.Request, e
 
 	sessionValues := map[any]any{"email": email}
 
-	err = SetSessionValue(w, r, sessionValues)
+	err = a.store.SetSessionValue(w, r, sessionValues)
 	if err != nil {
 		return false, fmt.Errorf("failed to set session value: %w", err)
 	}
@@ -83,11 +100,16 @@ func Authenticate(ctx context.Context, w http.ResponseWriter, r *http.Request, e
 }
 
 // IsAuthenticated checks if the user is authenticated based on session values.
-func IsAuthenticated(r *http.Request) bool {
+func (a *Auth) IsAuthenticated(r *http.Request) bool {
 	// Check if the user is authenticated
-	session := GetSessionValue(r, "email")
+	session := a.store.GetSessionValue(r, "email")
 
 	return session != ""
+}
+
+// SetSessionValue sets session values. This is primarily used for testing.
+func (a *Auth) SetSessionValue(w http.ResponseWriter, r *http.Request, values map[any]any) error {
+	return a.store.SetSessionValue(w, r, values)
 }
 
 // ValidatePassword compares a plaintext password with its hashed version.

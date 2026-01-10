@@ -17,14 +17,20 @@ import (
 )
 
 // WriterPageHandler handles requests to the writer page, ensuring authentication and rendering the appropriate content.
-func WriterPageHandler(w http.ResponseWriter, r *http.Request, s storage.Storage, docType, key string, typeID int) {
+func WriterPageHandler(
+	w http.ResponseWriter,
+	r *http.Request,
+	s storage.Storage,
+	docType, key string,
+	typeID int,
+	a *auth.Auth) {
 	var (
 		content   any
 		err       error
 		component templ.Component
 	)
 
-	if !auth.IsAuthenticated(r) {
+	if !a.IsAuthenticated(r) {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 
 		return
@@ -68,8 +74,8 @@ func WriterPageHandler(w http.ResponseWriter, r *http.Request, s storage.Storage
 }
 
 // WriteDocumentHandler handles the submission of the writer form to create or update documents.
-func WriteDocumentHandler(w http.ResponseWriter, r *http.Request, s storage.Storage) {
-	if !auth.IsAuthenticated(r) {
+func WriteDocumentHandler(w http.ResponseWriter, r *http.Request, s storage.Storage, a *auth.Auth) {
+	if !a.IsAuthenticated(r) {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 
 		return
@@ -130,8 +136,8 @@ func WriteDocumentHandler(w http.ResponseWriter, r *http.Request, s storage.Stor
 }
 
 // WriterSuggestionHandler handles AI-powered content suggestions for the writer.
-func WriterSuggestionHandler(w http.ResponseWriter, r *http.Request) {
-	if !auth.IsAuthenticated(r) {
+func WriterSuggestionHandler(w http.ResponseWriter, r *http.Request, a *auth.Auth) {
+	if !a.IsAuthenticated(r) {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 
 		return

@@ -7,6 +7,7 @@ import (
 	"slices"
 	"testing"
 	"timterests/cmd/web"
+	"timterests/internal/auth"
 
 	"github.com/PuerkitoBio/goquery"
 )
@@ -123,13 +124,14 @@ func TestArticleListRendering(t *testing.T) {
 func TestArticleRendering(t *testing.T) {
 	s := testSetup(t, context.Background())
 
-	t.Run("render article page", func(t *testing.T) {
-		t.Parallel()
+	// Create auth instance for tests (won't be authenticated but prevents nil pointer)
+	a := auth.NewAuth("test-session-key-minimum-32-bytes")
 
+	t.Run("render article page", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/article?id=0", nil)
 		rec := httptest.NewRecorder()
 
-		web.GetArticleHandler(rec, req, *s, "0")
+		web.GetArticleHandler(rec, req, *s, "0", a)
 
 		doc, err := goquery.NewDocumentFromReader(rec.Body)
 		if err != nil {
@@ -157,15 +159,13 @@ func TestArticleRendering(t *testing.T) {
 	})
 
 	t.Run("render article display only", func(t *testing.T) {
-		t.Parallel()
-
 		req := httptest.NewRequest(http.MethodGet, "/article?id=0", nil)
 		rec := httptest.NewRecorder()
 
 		// Set HTMX header for partial rendering
 		req.Header.Set("Hx-Request", "true")
 
-		web.GetArticleHandler(rec, req, *s, "0")
+		web.GetArticleHandler(rec, req, *s, "0", a)
 
 		doc, err := goquery.NewDocumentFromReader(rec.Body)
 		if err != nil {

@@ -10,9 +10,9 @@ import (
 )
 
 // DownloadDocumentHandler handles document download requests for authenticated users.
-func DownloadDocumentHandler(w http.ResponseWriter, r *http.Request, title string) {
+func DownloadDocumentHandler(w http.ResponseWriter, r *http.Request, title string, a *auth.Auth) {
 	// Only admins can download documents
-	if !auth.IsAuthenticated(r) {
+	if !a.IsAuthenticated(r) {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 
 		return
@@ -29,9 +29,9 @@ func DownloadDocumentHandler(w http.ResponseWriter, r *http.Request, title strin
 }
 
 // DownloadNewDocumentHandler handles requests to download a new document based on form data.
-func DownloadNewDocumentHandler(w http.ResponseWriter, r *http.Request) {
+func DownloadNewDocumentHandler(w http.ResponseWriter, r *http.Request, a *auth.Auth) {
 	// Only admins can download documents
-	if !auth.IsAuthenticated(r) {
+	if !a.IsAuthenticated(r) {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 
 		return

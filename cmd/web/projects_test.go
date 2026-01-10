@@ -7,6 +7,7 @@ import (
 	"slices"
 	"testing"
 	"timterests/cmd/web"
+	"timterests/internal/auth"
 	"timterests/internal/storage"
 
 	"github.com/PuerkitoBio/goquery"
@@ -132,13 +133,14 @@ func TestProjectListRendering(t *testing.T) {
 func TestProjectRendering(t *testing.T) {
 	s := testSetup(t, context.Background())
 
-	t.Run("render project page", func(t *testing.T) {
-		t.Parallel()
+	// Create auth instance for tests (won't be authenticated but prevents nil pointer)
+	a := auth.NewAuth("test-session-key-minimum-32-bytes")
 
+	t.Run("render project page", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/project?id=0", nil)
 		rec := httptest.NewRecorder()
 
-		web.GetProjectHandler(rec, req, *s, "0")
+		web.GetProjectHandler(rec, req, *s, "0", a)
 
 		doc, err := goquery.NewDocumentFromReader(rec.Body)
 		if err != nil {
@@ -166,15 +168,13 @@ func TestProjectRendering(t *testing.T) {
 	})
 
 	t.Run("render project display only", func(t *testing.T) {
-		t.Parallel()
-
 		req := httptest.NewRequest(http.MethodGet, "/project?id=0", nil)
 		rec := httptest.NewRecorder()
 
 		// Set HTMX header for partial rendering
 		req.Header.Set("Hx-Request", "true")
 
-		web.GetProjectHandler(rec, req, *s, "0")
+		web.GetProjectHandler(rec, req, *s, "0", a)
 
 		doc, err := goquery.NewDocumentFromReader(rec.Body)
 		if err != nil {

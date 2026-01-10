@@ -7,6 +7,7 @@ import (
 	"slices"
 	"testing"
 	"timterests/cmd/web"
+	"timterests/internal/auth"
 
 	"github.com/PuerkitoBio/goquery"
 )
@@ -133,13 +134,14 @@ func TestReadingListRendering(t *testing.T) {
 func TestBookRendering(t *testing.T) {
 	s := testSetup(t, context.Background())
 
-	t.Run("render book page", func(t *testing.T) {
-		t.Parallel()
+	// Create auth instance for tests (won't be authenticated but prevents nil pointer)
+	a := auth.NewAuth("test-session-key-minimum-32-bytes")
 
+	t.Run("render book page", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodGet, "/book?id=0", nil)
 		rec := httptest.NewRecorder()
 
-		web.GetReadingListBook(rec, req, *s, "0")
+		web.GetReadingListBook(rec, req, *s, "0", a)
 
 		doc, err := goquery.NewDocumentFromReader(rec.Body)
 		if err != nil {
@@ -167,15 +169,13 @@ func TestBookRendering(t *testing.T) {
 	})
 
 	t.Run("render book display only", func(t *testing.T) {
-		t.Parallel()
-
 		req := httptest.NewRequest(http.MethodGet, "/book?id=0", nil)
 		rec := httptest.NewRecorder()
 
 		// Set HTMX header for partial rendering
 		req.Header.Set("Hx-Request", "true")
 
-		web.GetReadingListBook(rec, req, *s, "0")
+		web.GetReadingListBook(rec, req, *s, "0", a)
 
 		doc, err := goquery.NewDocumentFromReader(rec.Body)
 		if err != nil {
@@ -231,8 +231,8 @@ func TestReadingList(t *testing.T) {
 			t.Errorf("expected book published year '2024', got '%s'", book.Published)
 		}
 
-		if book.ISBN != "978-0-123456-78-9" {
-			t.Errorf("expected book ISBN '978-0-123456-78-9', got '%s'", book.ISBN)
+		if book.ISBN != "978-0-134685991" {
+			t.Errorf("expected book ISBN '978-0-134685991', got '%s'", book.ISBN)
 		}
 
 		if book.Website != "https://example.com/test-book" {

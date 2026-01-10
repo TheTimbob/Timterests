@@ -4,6 +4,7 @@ package scripts
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"timterests/internal/auth"
 	"timterests/internal/storage"
@@ -18,7 +19,10 @@ func CreateUser(firstName, lastName, email, password string) error {
 		return fmt.Errorf("failed to initialize database: %w", err)
 	}
 
-	err = auth.CreateUser(ctx, firstName, lastName, email, password)
+	// Create auth instance with session name from environment
+	a := auth.NewAuth(os.Getenv("SESSION_NAME"))
+
+	err = a.CreateUser(ctx, firstName, lastName, email, password)
 	if err != nil {
 		return fmt.Errorf("failed to create user: %w", err)
 	}
