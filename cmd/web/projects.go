@@ -170,7 +170,7 @@ func GetFeaturedProject(ctx context.Context, s storage.Storage, featuredProjectT
 	}
 
 	if featuredProject.Title == "" {
-		return nil, errors.New("no projects matched the featured project title")
+		return nil, fmt.Errorf("no projects matched the featured project title %q", featuredProjectTitle)
 	}
 
 	featuredProject.Body = storage.RemoveHTMLTags(featuredProject.Body)
