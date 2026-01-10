@@ -96,7 +96,7 @@ func TestArticleListRendering(t *testing.T) {
 		}
 	})
 
-	t.Run("exclude articles that have the selected tag", func(t *testing.T) {
+	t.Run("exclude articles that do not have the selected tag", func(t *testing.T) {
 		t.Parallel()
 
 		req := httptest.NewRequest(http.MethodGet, "/articles", nil)

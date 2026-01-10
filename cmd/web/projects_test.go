@@ -105,7 +105,7 @@ func TestProjectListRendering(t *testing.T) {
 		}
 	})
 
-	t.Run("exclude projects that have the selected tag", func(t *testing.T) {
+	t.Run("exclude projects that do not have the selected tag", func(t *testing.T) {
 		t.Parallel()
 
 		req := httptest.NewRequest(http.MethodGet, "/projects", nil)
