@@ -31,7 +31,6 @@ repos:
       types: [go]
       language: system
       pass_filenames: true
-      always_run: true
     - id: clean-prettier-cache
       name: final project clean.
       entry: bash -c 'rm -rf node_modules/.cache'
