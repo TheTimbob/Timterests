@@ -20,7 +20,7 @@ func AboutHandler(w http.ResponseWriter, r *http.Request, s storage.Storage) {
 	// Get all articles from the storage
 	prefix := "about/"
 
-	aboutFile, err := s.ListS3Objects(r.Context(), prefix)
+	aboutFile, err := s.ListObjects(r.Context(), prefix)
 	if err != nil {
 		http.Error(w, "Failed to fetch about info", http.StatusInternalServerError)
 

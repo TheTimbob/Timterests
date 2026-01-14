@@ -62,7 +62,7 @@ func ProjectsPageHandler(w http.ResponseWriter, r *http.Request, s storage.Stora
 }
 
 // GetProjectHandler handles requests to get a specific project by its ID.
-func GetProjectHandler(w http.ResponseWriter, r *http.Request, s storage.Storage, projectID string) {
+func GetProjectHandler(w http.ResponseWriter, r *http.Request, s storage.Storage, projectID string, a *auth.Auth) {
 	projects, err := ListProjects(r.Context(), s, "all")
 	if err != nil {
 		http.Error(w, "Failed to fetch projects", http.StatusInternalServerError)
@@ -74,7 +74,7 @@ func GetProjectHandler(w http.ResponseWriter, r *http.Request, s storage.Storage
 		if project.ID == projectID {
 			var component templ.Component
 
-			authenticated := auth.IsAuthenticated(r)
+			authenticated := a.IsAuthenticated(r)
 
 			if r.Header.Get("Hx-Request") == "true" {
 				component = ProjectDisplay(project, authenticated)
@@ -99,7 +99,7 @@ func ListProjects(ctx context.Context, s storage.Storage, tag string) ([]Project
 	// Get all projects from the storage
 	prefix := "projects/"
 
-	projectFiles, err := s.ListS3Objects(ctx, prefix)
+	projectFiles, err := s.ListObjects(ctx, prefix)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list S3 objects: %w", err)
 	}
@@ -138,7 +138,7 @@ func GetProject(ctx context.Context, key string, id int, s storage.Storage) (*Pr
 		return nil, fmt.Errorf("failed to get prepared file: %w", err)
 	}
 
-	localImagePath, err := s.GetImageFromS3(ctx, project.Image)
+	localImagePath, err := s.GetImage(ctx, project.Image)
 	if err != nil {
 		log.Printf("Failed to download image: %v", err)
 
@@ -151,7 +151,7 @@ func GetProject(ctx context.Context, key string, id int, s storage.Storage) (*Pr
 }
 
 // GetFeaturedProject retrieves the Timterests Project.
-func GetFeaturedProject(ctx context.Context, s storage.Storage) (*Project, error) {
+func GetFeaturedProject(ctx context.Context, s storage.Storage, featuredProjectTitle string) (*Project, error) {
 	projects, err := ListProjects(ctx, s, "all")
 	if err != nil {
 		return nil, err
@@ -161,14 +161,16 @@ func GetFeaturedProject(ctx context.Context, s storage.Storage) (*Project, error
 		return nil, errors.New("no projects found")
 	}
 
-	featuredProjectTitle := "Timterests"
-
 	var featuredProject Project
 
 	for _, project := range projects {
 		if project.Title == featuredProjectTitle {
 			featuredProject = project
 		}
+	}
+
+	if featuredProject.Title == "" {
+		return nil, fmt.Errorf("no projects matched the featured project title %q", featuredProjectTitle)
 	}
 
 	featuredProject.Body = storage.RemoveHTMLTags(featuredProject.Body)

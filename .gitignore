@@ -35,7 +35,8 @@ node_modules
 
 # Directories that should be ignored
 prompts/*
-s3/*
+storage/*
+!storage/testdata
 utils/*
 
 # Keep empty directories

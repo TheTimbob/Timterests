@@ -9,10 +9,10 @@ import (
 )
 
 // AdminPageHandler handles requests to the admin page for authenticated users.
-func AdminPageHandler(w http.ResponseWriter, r *http.Request) {
+func AdminPageHandler(w http.ResponseWriter, r *http.Request, a *auth.Auth) {
 	var component templ.Component
 
-	if !auth.IsAuthenticated(r) {
+	if !a.IsAuthenticated(r) {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 
 		return

@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"path"
 	"path/filepath"
 	"strings"
 
@@ -18,14 +17,20 @@ import (
 )
 
 // WriterPageHandler handles requests to the writer page, ensuring authentication and rendering the appropriate content.
-func WriterPageHandler(w http.ResponseWriter, r *http.Request, s storage.Storage, docType, key string, typeID int) {
+func WriterPageHandler(
+	w http.ResponseWriter,
+	r *http.Request,
+	s storage.Storage,
+	docType, key string,
+	typeID int,
+	a *auth.Auth) {
 	var (
 		content   any
 		err       error
 		component templ.Component
 	)
 
-	if !auth.IsAuthenticated(r) {
+	if !a.IsAuthenticated(r) {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 
 		return
@@ -69,8 +74,8 @@ func WriterPageHandler(w http.ResponseWriter, r *http.Request, s storage.Storage
 }
 
 // WriteDocumentHandler handles the submission of the writer form to create or update documents.
-func WriteDocumentHandler(w http.ResponseWriter, r *http.Request, s storage.Storage) {
-	if !auth.IsAuthenticated(r) {
+func WriteDocumentHandler(w http.ResponseWriter, r *http.Request, s storage.Storage, a *auth.Auth) {
+	if !a.IsAuthenticated(r) {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 
 		return
@@ -106,7 +111,13 @@ func WriteDocumentHandler(w http.ResponseWriter, r *http.Request, s storage.Stor
 		return
 	}
 
-	localFilePath := path.Join("s3", filename)
+	localFilePath, err := storage.LocalPath(s.BaseDir, filename)
+	if err != nil {
+		http.Error(w, "Invalid file path", http.StatusBadRequest)
+		log.Printf("Invalid local file path: %v", err)
+
+		return
+	}
 
 	err = storage.WriteYAMLDocument(localFilePath, formData)
 	if err != nil {
@@ -119,7 +130,7 @@ func WriteDocumentHandler(w http.ResponseWriter, r *http.Request, s storage.Stor
 	if s3Upload {
 		s3Path := docType + "/" + filename
 
-		err = s.UploadFileToS3(r.Context(), s3Path, localFilePath)
+		err = s.UploadFileToS3(r.Context(), s3Path)
 		if err != nil {
 			http.Error(w, "Failed to upload document to storage", http.StatusInternalServerError)
 
@@ -131,8 +142,8 @@ func WriteDocumentHandler(w http.ResponseWriter, r *http.Request, s storage.Stor
 }
 
 // WriterSuggestionHandler handles AI-powered content suggestions for the writer.
-func WriterSuggestionHandler(w http.ResponseWriter, r *http.Request) {
-	if !auth.IsAuthenticated(r) {
+func WriterSuggestionHandler(w http.ResponseWriter, r *http.Request, a *auth.Auth) {
+	if !a.IsAuthenticated(r) {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 
 		return

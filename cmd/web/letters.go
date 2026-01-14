@@ -28,7 +28,12 @@ type Letter struct {
 
 // LettersPageHandler handles requests to the letters page,
 // ensuring authentication and rendering the appropriate content.
-func LettersPageHandler(w http.ResponseWriter, r *http.Request, s storage.Storage, currentTag, design string) {
+func LettersPageHandler(
+	w http.ResponseWriter,
+	r *http.Request,
+	s storage.Storage,
+	currentTag, design string,
+	a *auth.Auth) {
 	var (
 		component templ.Component
 		tags      []string
@@ -36,7 +41,7 @@ func LettersPageHandler(w http.ResponseWriter, r *http.Request, s storage.Storag
 
 	// Check if user is authenticated
 
-	if !auth.IsAuthenticated(r) {
+	if !a.IsAuthenticated(r) {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 
 		return
@@ -70,9 +75,9 @@ func LettersPageHandler(w http.ResponseWriter, r *http.Request, s storage.Storag
 }
 
 // GetLetterHandler retrieves a specific letter by its ID and renders it.
-func GetLetterHandler(w http.ResponseWriter, r *http.Request, s storage.Storage, letterID string) {
+func GetLetterHandler(w http.ResponseWriter, r *http.Request, s storage.Storage, letterID string, a *auth.Auth) {
 	// Check if user is authenticated
-	authenticated := auth.IsAuthenticated(r)
+	authenticated := a.IsAuthenticated(r)
 	if !authenticated {
 		log.Printf("User not authenticated, redirecting to login")
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
@@ -110,7 +115,7 @@ func ListLetters(ctx context.Context, s storage.Storage, tag string) ([]Letter, 
 	// Get all letters from the storage
 	prefix := "letters/"
 
-	letterFiles, err := s.ListS3Objects(ctx, prefix)
+	letterFiles, err := s.ListObjects(ctx, prefix)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list S3 objects: %w", err)
 	}

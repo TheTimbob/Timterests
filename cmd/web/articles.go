@@ -63,7 +63,7 @@ func ArticlesPageHandler(w http.ResponseWriter, r *http.Request, s storage.Stora
 }
 
 // GetArticleHandler retrieves and renders a specific article by its ID.
-func GetArticleHandler(w http.ResponseWriter, r *http.Request, s storage.Storage, articleID string) {
+func GetArticleHandler(w http.ResponseWriter, r *http.Request, s storage.Storage, articleID string, a *auth.Auth) {
 	articles, err := ListArticles(r.Context(), s, "all")
 	if err != nil {
 		http.Error(w, "Failed to fetch articles", http.StatusInternalServerError)
@@ -75,7 +75,7 @@ func GetArticleHandler(w http.ResponseWriter, r *http.Request, s storage.Storage
 		if article.ID == articleID {
 			var component templ.Component
 
-			authenticated := auth.IsAuthenticated(r)
+			authenticated := a.IsAuthenticated(r)
 
 			if r.Header.Get("Hx-Request") == "true" {
 				component = ArticleDisplay(article, authenticated)
@@ -99,7 +99,7 @@ func ListArticles(ctx context.Context, s storage.Storage, tag string) ([]Article
 	// Get all articles from the storage
 	prefix := "articles/"
 
-	articleFiles, err := s.ListS3Objects(ctx, prefix)
+	articleFiles, err := s.ListObjects(ctx, prefix)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list S3 objects: %w", err)
 	}

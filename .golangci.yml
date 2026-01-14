@@ -10,14 +10,18 @@ linters:
   disable:
     - contextcheck # too many false positives with templ generated files
     - cyclop # conflicts with gocyclo
+    - gocognit # conflicts with gocyclo
     - dupl # false positives
     - err113 # conflicts with errcheck
     - exhaustruct # too verbose for large structs
     - forbidigo # too restrictive for error messages
     - funlen # handleRoutes function is long, and complexity is better measured with gocyclo
+    - funcorder # doesn't align with project structure
     - gochecknoinits # init is only used in util files, no settings to limit its scope
     - mnd # some magic numbers are obvious in context
     - revive # too many false positives with templ generated files
+    - paralleltest # conflicts with tests that need to use file system
+    - tparallel # conflicts with tests that need to use file system
     - varnamelen # naming is based on type and context
     - wsl # replaced by wsl_v5
   settings:
@@ -41,6 +45,13 @@ linters:
       allow-first-in-block: true
       allow-whole-block: false
       branch-max-lines: 2
+  exclusions:
+    rules:
+    - path: _test\.go
+      linters:
+        - gocyclo
+        - errcheck
+        - gosec
 issues:
   max-issues-per-linter: 0
   max-same-issues: 0

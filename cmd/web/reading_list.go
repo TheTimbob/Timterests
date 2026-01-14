@@ -64,7 +64,7 @@ func ReadingListPageHandler(w http.ResponseWriter, r *http.Request, s storage.St
 }
 
 // GetReadingListBook retrieves and renders a specific book by ID.
-func GetReadingListBook(w http.ResponseWriter, r *http.Request, s storage.Storage, bookID string) {
+func GetReadingListBook(w http.ResponseWriter, r *http.Request, s storage.Storage, bookID string, a *auth.Auth) {
 	var component templ.Component
 
 	readingList, err := ListBooks(r.Context(), s, "all")
@@ -76,7 +76,7 @@ func GetReadingListBook(w http.ResponseWriter, r *http.Request, s storage.Storag
 
 	for _, book := range readingList {
 		if book.ID == bookID {
-			authenticated := auth.IsAuthenticated(r)
+			authenticated := a.IsAuthenticated(r)
 			if r.Header.Get("Hx-Request") == "true" {
 				component = BookDisplay(book, authenticated)
 			} else {
@@ -99,7 +99,7 @@ func ListBooks(ctx context.Context, s storage.Storage, tag string) ([]ReadingLis
 	// Get all readingList from the storage
 	prefix := "reading-list/"
 
-	files, err := s.ListS3Objects(ctx, prefix)
+	files, err := s.ListObjects(ctx, prefix)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list S3 objects: %w", err)
 	}
@@ -136,7 +136,7 @@ func GetBook(ctx context.Context, key string, id int, s storage.Storage) (*Readi
 		return nil, fmt.Errorf("failed to get prepared file: %w", err)
 	}
 
-	localImagePath, err := s.GetImageFromS3(ctx, book.Image)
+	localImagePath, err := s.GetImage(ctx, book.Image)
 	if err != nil {
 		log.Printf("Failed to download image: %v", err)
 

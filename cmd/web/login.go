@@ -6,14 +6,14 @@ import (
 )
 
 // LoginHandler handles user authentication and login requests.
-func LoginHandler(w http.ResponseWriter, r *http.Request) {
+func LoginHandler(w http.ResponseWriter, r *http.Request, a *auth.Auth) {
 	// Check if the request method is POST
 	if r.Method == http.MethodPost {
 		email := r.FormValue("email")
 		password := r.FormValue("password")
 
 		// Perform authentication
-		authenticated, err := auth.Authenticate(r.Context(), w, r, email, password)
+		authenticated, err := a.Authenticate(r.Context(), w, r, email, password)
 		if authenticated && err == nil {
 			http.Redirect(w, r, "/admin", http.StatusSeeOther)
 

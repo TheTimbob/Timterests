@@ -16,7 +16,7 @@ func HomeHandler(w http.ResponseWriter, r *http.Request, s storage.Storage) {
 		return
 	}
 
-	featuredProject, err := GetFeaturedProject(r.Context(), s)
+	featuredProject, err := GetFeaturedProject(r.Context(), s, "Timterests")
 	if err != nil {
 		http.Error(w, "Failed to fetch featured project", http.StatusInternalServerError)
 		log.Printf("Error fetching featured project: %v", err)
