@@ -19,7 +19,8 @@ FROM alpine:3.22.2 AS prod
 WORKDIR /app
 
 COPY --from=build /app/main /app/main
-COPY --from=build /app/s3 /app/s3
+COPY --from=build /app/go.mod /app/go.mod
+COPY --from=build /app/storage /app/storage
 COPY --from=build /app/database /app/database
 COPY --from=build /app/favicon.ico /app/favicon.ico
 
