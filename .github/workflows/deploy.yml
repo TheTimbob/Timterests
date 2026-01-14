@@ -68,7 +68,8 @@ jobs:
                   "AWS_SECRET_ACCESS_KEY": "${{ secrets.LIGHTSAIL_SECRET_ACCESS_KEY }}",
                   "SESSION_NAME": "${{ secrets.SESSION_NAME }}",
                   "SESSION_KEY": "${{ secrets.SESSION_KEY }}",
-                  "PORT": "${{ vars.PORT }}"
+                  "PORT": "${{ vars.PORT }}",
+                  "USE_S3": "${{ vars.USE_S3 }}"
                 }
               }
             }' \
