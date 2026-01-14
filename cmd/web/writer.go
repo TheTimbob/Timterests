@@ -111,7 +111,13 @@ func WriteDocumentHandler(w http.ResponseWriter, r *http.Request, s storage.Stor
 		return
 	}
 
-	localFilePath := filepath.Join(s.BaseDir, filename)
+	localFilePath, err := storage.LocalPath(s.BaseDir, filename)
+	if err != nil {
+		http.Error(w, "Invalid file path", http.StatusBadRequest)
+		log.Printf("Invalid local file path: %v", err)
+
+		return
+	}
 
 	err = storage.WriteYAMLDocument(localFilePath, formData)
 	if err != nil {

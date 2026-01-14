@@ -6,7 +6,7 @@ threshold:
   total: 2 #95
 exclude:
   paths:
-    - ".*_templ\.go$"    # exclude all templ template files
+    - '.*_templ\.go$'    # exclude all templ template files
 
 # (optional; default false)
 # When true, requires all coverage-ignore annotations to include explanatory comments
