@@ -11,16 +11,16 @@ import (
 type Experience struct {
 	Company     string `yaml:"company"`
 	Role        string `yaml:"role"`
-	StartDate   string `yaml:"start_date"`
-	EndDate     string `yaml:"end_date"`
+	StartDate   string `yaml:"startDate"`
+	EndDate     string `yaml:"endDate"`
 	Description string `yaml:"description"`
 }
 
 type Education struct {
 	Institution string `yaml:"institution"`
 	Degree      string `yaml:"degree"`
-	StartDate   string `yaml:"start_date"`
-	EndDate     string `yaml:"end_date"`
+	StartDate   string `yaml:"startDate"`
+	EndDate     string `yaml:"endDate"`
 	Description string `yaml:"description"`
 	Location    string `yaml:"location"`
 }
@@ -69,6 +69,7 @@ func AboutHandler(w http.ResponseWriter, r *http.Request, s storage.Storage) {
 
 	// Check if this is a tab request
 	tab := r.URL.Query().Get("tab")
+
 	var component templ.Component
 
 	switch tab {

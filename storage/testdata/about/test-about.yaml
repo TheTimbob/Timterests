@@ -1,0 +1,33 @@
+title: About
+name: Example User
+location: New York, USA
+focus: Software Engineering
+github: https://github.com/test
+email: user@example.com
+education:
+  - institution: College
+    degree: Bachelors degree
+    start_date: 2016
+    end_date: 2020
+experience:
+  - company: Company One
+    role: Software Engineer
+    start_date: 2026
+    end_date: Present
+    description: Test
+  - company: Company Two
+    role: Backend Engineer
+    start_date: 2025
+    end_date: 2026
+    description: Test
+skills:
+  - name: Skill Type One
+    items:
+      - Sub-skill one
+      - Sub-skill two
+  - name: Skill Type Two
+    items:
+      - Sub-skill one
+      - Sub-skill two
+body: |
+  Test body text.

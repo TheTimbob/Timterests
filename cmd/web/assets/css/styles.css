@@ -950,6 +950,10 @@ a:hover {
   transition: max-height 0.3s;
 }
 
+.skill-header:hover ~ .skill-content {
+  max-height: 500px;
+}
+
 .skill-list {
   padding: 0 1rem 1rem;
   display: flex;
