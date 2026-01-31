@@ -266,6 +266,18 @@ a:hover {
   margin: 0;
 }
 
+/* Ensure consistent truncation across all card types */
+.card-subtitle,
+.mini-card-container .card-subtitle,
+.nav-card .card-subtitle,
+.card-title-container .card-subtitle {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 95%;
+  width: 95%;
+}
+
 .dark .card-subtitle {
   color: var(--text-dark);
 }
@@ -274,8 +286,7 @@ a:hover {
   display: block;
 }
 
-.card-title-container .card-title,
-.card-title-container .card-subtitle {
+.card-title-container .card-title {
   display: inline-block;
   vertical-align: bottom;
 }
@@ -365,6 +376,48 @@ a:hover {
   overflow: hidden;
 }
 
+/* Improve mobile card spacing and padding */
+@media (max-width: 767px) {
+  .card-container,
+  .card-container-static,
+  .mini-card-container,
+  .nav-card {
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .section-grid-2 {
+    gap: 1rem;
+  }
+
+  .section-grid-3 {
+    gap: 0.75rem;
+  }
+
+  /* Mobile text sizing */
+  .home-title {
+    font-size: 1.875rem;
+  }
+
+  .card-title {
+    font-size: 1.125rem;
+  }
+
+  .card-subtitle {
+    font-size: 0.9rem;
+  }
+
+  .card-body {
+    font-size: 0.8rem;
+  }
+
+  /* Better spacing for intro text on mobile */
+  .intro-text {
+    font-size: 0.95rem;
+    padding: 0 0.5rem;
+  }
+}
+
 .card-container,
 .mini-card-container,
 .nav-card {
@@ -437,12 +490,14 @@ a:hover {
 }
 
 .card-body {
-  margin: 0.5rem 1rem 0.5rem 0;
+  display: -webkit-box;
   font-size: 0.875rem;
   color: var(--text-muted);
-  white-space: nowrap;
+  margin: 0.5rem 1rem 0.5rem 0;
   overflow: hidden;
   text-overflow: ellipsis;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .dark .card-body {
@@ -503,7 +558,7 @@ a:hover {
 }
 
 .section-grid-3 {
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: 1fr;
 }
 
 @media (min-width: 768px) {
