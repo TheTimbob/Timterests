@@ -264,17 +264,8 @@ a:hover {
   overflow: hidden;
   text-overflow: ellipsis;
   margin: 0;
-}
 
-/* Ensure consistent truncation across all card types */
-.card-subtitle,
-.mini-card-container .card-subtitle,
-.nav-card .card-subtitle,
-.card-title-container .card-subtitle {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 95%;
+
   width: 95%;
 }
 
