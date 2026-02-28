@@ -61,9 +61,9 @@ func main() {
 
 	tlsStarted := false
 
-	_, err = os.Stat(certFile)
+	_, err = os.Stat(certFile) // #nosec G703 -- certFile comes from environment variable
 	if err == nil {
-		_, err := os.Stat(keyFile)
+		_, err := os.Stat(keyFile) // #nosec G703 -- keyFile comes from environment variable
 		if err == nil {
 			err := server.ListenAndServeTLS(certFile, keyFile)
 			if err != nil {

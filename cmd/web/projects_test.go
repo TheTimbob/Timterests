@@ -200,6 +200,43 @@ func TestProjectRendering(t *testing.T) {
 			t.Error("expected h2 element to be rendered, but it wasn't")
 		}
 	})
+
+	t.Run("render project page as admin", func(t *testing.T) {
+		// Use the testAuthentication helper
+		authInstance, addCookie := testAuthentication(t)
+
+		req := httptest.NewRequest(http.MethodGet, "/project?id=0", nil)
+		addCookie(req)
+
+		rec := httptest.NewRecorder()
+
+		web.GetProjectHandler(rec, req, *s, "0", authInstance)
+
+		doc, err := goquery.NewDocumentFromReader(rec.Body)
+		if err != nil {
+			t.Fatalf("failed to read template: %v", err)
+		}
+
+		// Expect the "Edit" button to be present
+		if doc.Find("button:contains('Edit')").Length() == 0 {
+			t.Error("expected Edit button to be rendered for admin, but it wasn't")
+		}
+	})
+
+	t.Run("render non-existent project", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/project?id=99999", nil)
+		rec := httptest.NewRecorder()
+
+		web.GetProjectHandler(rec, req, *s, "99999", a)
+
+		// Expect empty body or simply no project container
+		if rec.Body.Len() > 0 {
+			doc, err := goquery.NewDocumentFromReader(rec.Body)
+			if err == nil && doc.Find("#project-container").Length() > 0 {
+				t.Error("expected no project container for non-existent project, but it was found")
+			}
+		}
+	})
 }
 
 func TestProject(t *testing.T) {

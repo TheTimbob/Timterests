@@ -16,6 +16,10 @@ import (
 	"golang.org/x/text/language"
 )
 
+// Note: GetInstruction and GetInstructionOptionList remain available for
+// direct filesystem access. The preferred path for handlers is
+// storage.Storage.GetPromptContent which also supports S3.
+
 // LoadAPIKey loads the OpenAI API key from environment variables.
 func LoadAPIKey() (string, error) {
 	err := godotenv.Load()
@@ -32,15 +36,11 @@ func LoadAPIKey() (string, error) {
 }
 
 // GenerateSuggestion generates content suggestions using OpenAI's API.
-func GenerateSuggestion(ctx context.Context, prompt, instructionFile string) (string, error) {
+// systemInstruction is the system prompt content (not a filename).
+func GenerateSuggestion(ctx context.Context, userPrompt, systemInstruction string) (string, error) {
 	apiKey, envLoadErr := LoadAPIKey()
 	if envLoadErr != nil {
 		return "", envLoadErr
-	}
-
-	systemInstruction, err := GetInstruction(instructionFile)
-	if err != nil {
-		return "", err
 	}
 
 	client := openai.NewClient(
@@ -50,7 +50,7 @@ func GenerateSuggestion(ctx context.Context, prompt, instructionFile string) (st
 	chatCompletion, err := client.Chat.Completions.New(ctx, openai.ChatCompletionNewParams{
 		Messages: []openai.ChatCompletionMessageParamUnion{
 			openai.SystemMessage(systemInstruction),
-			openai.UserMessage(prompt),
+			openai.UserMessage(userPrompt),
 		},
 		Model: openai.ChatModelGPT4o,
 	})
@@ -71,6 +71,7 @@ func GetInstruction(file string) (string, error) {
 	file = filepath.Base(filepath.Clean(file))
 	file = filepath.Join("prompts", file)
 
+	// #nosec G304 -- file is sanitized above with filepath.Base + filepath.Clean
 	content, err := os.ReadFile(file)
 	if err != nil {
 		return "", fmt.Errorf("failed to read instruction file: %w", err)

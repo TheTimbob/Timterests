@@ -1,7 +1,9 @@
 package storage_test
 
 import (
+	"context"
 	"os"
+	"path/filepath"
 	"testing"
 	"testing/fstest"
 
@@ -80,6 +82,62 @@ func TestStorage(t *testing.T) {
 		_, err = os.Stat(localFilePath)
 		if os.IsNotExist(err) {
 			t.Fatalf("File was not created: %v", err)
+		}
+	})
+}
+
+func TestGetPromptContent(t *testing.T) {
+	t.Parallel()
+
+	promptsDir := t.TempDir()
+
+	// Write a prompt file for "articles"
+	promptContent := "You are a helpful writing assistant for articles."
+
+	err := os.WriteFile(filepath.Join(promptsDir, "articles.txt"), []byte(promptContent), 0600)
+	if err != nil {
+		t.Fatalf("failed to write prompt file: %v", err)
+	}
+
+	s := &storage.Storage{
+		UseS3:      false,
+		PromptsDir: promptsDir,
+	}
+
+	t.Run("returns prompt content for valid doc type", func(t *testing.T) {
+		t.Parallel()
+
+		got, err := s.GetPromptContent(context.Background(), "articles")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+
+		if got != promptContent {
+			t.Errorf("got %q, want %q", got, promptContent)
+		}
+	})
+
+	t.Run("returns error for unsupported doc type", func(t *testing.T) {
+		t.Parallel()
+
+		_, err := s.GetPromptContent(context.Background(), "unknown-type")
+		if err == nil {
+			t.Fatal("expected error for unsupported doc type, got nil")
+		}
+	})
+
+	t.Run("returns error when prompt file is missing", func(t *testing.T) {
+		t.Parallel()
+
+		emptyDir := t.TempDir()
+		sNoFile := &storage.Storage{
+			UseS3:      false,
+			PromptsDir: emptyDir,
+		}
+
+		_, err := sNoFile.GetPromptContent(context.Background(), "projects")
+		if err == nil {
+			t.Fatal("expected error when prompt file is missing, got nil")
 		}
 	})
 }
