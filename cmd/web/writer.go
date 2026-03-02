@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"timterests/internal/ai"
@@ -36,9 +37,9 @@ func WriterPageHandler(
 		return
 	}
 
-	// If key is provided, get the content to load the existing document
+	// If key is provided, load the existing document with raw markdown (no HTML conversion)
 	if key != "" {
-		content, err = GetTypeContentFromID(r.Context(), docType, key, typeID, s)
+		content, err = getTypeContentRaw(r.Context(), docType, key, typeID, s)
 		if err != nil {
 			http.Error(w, "Failed to load document: "+err.Error(), http.StatusInternalServerError)
 
@@ -213,6 +214,48 @@ func GetTypeContentFromID(ctx context.Context, docType, key string, id int, s st
 		return GetBook(ctx, key, id, s)
 	case "letters":
 		return GetLetter(ctx, key, id, s)
+	default:
+		return nil, fmt.Errorf("unsupported document type: %s", docType)
+	}
+}
+
+// getTypeContentRaw retrieves content for editing, keeping the body as raw markdown.
+func getTypeContentRaw(ctx context.Context, docType, key string, id int, s storage.Storage) (any, error) {
+	idStr := strconv.Itoa(id)
+
+	switch docType {
+	case "articles":
+		var doc Article
+		doc.ID = idStr
+		doc.S3Key = key
+		if err := s.GetRawFile(ctx, key, &doc); err != nil {
+			return nil, fmt.Errorf("failed to get raw file: %w", err)
+		}
+		return &doc, nil
+	case "projects":
+		var doc Project
+		doc.ID = idStr
+		doc.S3Key = key
+		if err := s.GetRawFile(ctx, key, &doc); err != nil {
+			return nil, fmt.Errorf("failed to get raw file: %w", err)
+		}
+		return &doc, nil
+	case "reading-list":
+		var doc ReadingList
+		doc.ID = idStr
+		doc.S3Key = key
+		if err := s.GetRawFile(ctx, key, &doc); err != nil {
+			return nil, fmt.Errorf("failed to get raw file: %w", err)
+		}
+		return &doc, nil
+	case "letters":
+		var doc Letter
+		doc.ID = idStr
+		doc.S3Key = key
+		if err := s.GetRawFile(ctx, key, &doc); err != nil {
+			return nil, fmt.Errorf("failed to get raw file: %w", err)
+		}
+		return &doc, nil
 	default:
 		return nil, fmt.Errorf("unsupported document type: %s", docType)
 	}
