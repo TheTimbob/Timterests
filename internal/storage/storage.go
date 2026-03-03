@@ -22,6 +22,7 @@ type Storage struct {
 	UseS3      bool
 	BucketName string
 	BaseDir    string // Directory for local storage, defaults to "storage"
+	PromptsDir string // Directory for prompt files, defaults to "prompts"
 	S3Client   *s3.Client
 }
 
@@ -41,6 +42,7 @@ func NewStorage(ctx context.Context) (*Storage, error) {
 	}
 
 	baseDir = filepath.Join(projectRoot, "storage")
+	promptsDir := filepath.Join(projectRoot, "prompts")
 
 	// Verify storage directory exists
 	_, err = os.Stat(baseDir)
@@ -68,6 +70,7 @@ func NewStorage(ctx context.Context) (*Storage, error) {
 			UseS3:      true,
 			BucketName: bucketName,
 			BaseDir:    baseDir,
+			PromptsDir: promptsDir,
 			S3Client:   client,
 		}, nil
 	}
@@ -76,6 +79,7 @@ func NewStorage(ctx context.Context) (*Storage, error) {
 		UseS3:      false,
 		BucketName: "",
 		BaseDir:    baseDir,
+		PromptsDir: promptsDir,
 		S3Client:   nil,
 	}, nil
 }
@@ -400,6 +404,98 @@ func LocalPath(path, filename string) (string, error) {
 	}
 
 	return cleaned, nil
+}
+
+// GetPromptContent returns the system prompt content for the given document type.
+// In S3 mode the prompt file is downloaded from S3 before being read locally.
+func (s *Storage) GetPromptContent(ctx context.Context, docType string) (string, error) {
+	filename, err := docTypeToPromptFilename(docType)
+	if err != nil {
+		return "", err
+	}
+
+	localPath := filepath.Join(s.PromptsDir, filename)
+
+	if s.UseS3 {
+		s3Key := "prompts/" + filename
+
+		err := s.downloadFileToPath(ctx, s3Key, localPath)
+		if err != nil {
+			return "", fmt.Errorf("downloading prompt from S3: %w", err)
+		}
+	}
+
+	// #nosec G304 -- localPath is derived from PromptsDir + a known safe filename
+	content, err := os.ReadFile(localPath)
+	if err != nil {
+		return "", fmt.Errorf("reading prompt file %s: %w", filename, err)
+	}
+
+	return string(content), nil
+}
+
+// downloadFileToPath downloads an object from S3 and writes it to localPath.
+func (s *Storage) downloadFileToPath(ctx context.Context, s3Key, localPath string) error {
+	result, err := s.S3Client.GetObject(ctx, &s3.GetObjectInput{
+		Bucket: aws.String(s.BucketName),
+		Key:    aws.String(s3Key),
+	})
+	if err != nil {
+		var noKey *types.NoSuchKey
+		if errors.As(err, &noKey) {
+			log.Printf("Can't get object %s from bucket %s. No such key exists.\n", s3Key, s.BucketName)
+
+			return noKey
+		}
+
+		return fmt.Errorf("getting object from S3: %w", err)
+	}
+
+	defer func() {
+		closeErr := result.Body.Close()
+		if closeErr != nil {
+			log.Printf("Failed to close S3 object body: %v", closeErr)
+		}
+	}()
+
+	err = os.MkdirAll(filepath.Dir(localPath), 0750)
+	if err != nil {
+		return fmt.Errorf("failed to create directory: %w", err)
+	}
+
+	file, err := os.Create(localPath) // #nosec G304 -- localPath is from an internal base directory, not user input
+	if err != nil {
+		return fmt.Errorf("failed to create file: %w", err)
+	}
+	defer file.Close()
+
+	_, err = io.Copy(file, result.Body)
+	if err != nil {
+		return fmt.Errorf("failed to write file: %w", err)
+	}
+
+	return nil
+}
+
+// validDocTypes is the set of document types that support AI prompt files.
+// Prompt files are named <docType>.txt (e.g. "articles.txt") and live in PromptsDir.
+// Add a new entry here to support a new document type without any other code changes.
+var validDocTypes = map[string]struct{}{ //nolint:gochecknoglobals // effectively a constant; used as a fixed allow-list
+	"articles":     {},
+	"projects":     {},
+	"reading-list": {},
+	"letters":      {},
+}
+
+// docTypeToPromptFilename validates docType and returns its prompt filename.
+// The filename is derived directly from the document type (docType + ".txt"),
+// so new types only require adding an entry to validDocTypes.
+func docTypeToPromptFilename(docType string) (string, error) {
+	if _, ok := validDocTypes[docType]; !ok {
+		return "", fmt.Errorf("unsupported document type for AI suggestions: %s", docType)
+	}
+
+	return docType + ".txt", nil
 }
 
 // --- Helpers ---
