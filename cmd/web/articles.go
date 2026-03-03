@@ -181,7 +181,6 @@ func FormatDateForFilename(dateStr string) string {
 	t, err := time.Parse("2006-01-02", dateStr)
 	if err != nil {
 		log.Printf("FormatDateForFilename: failed to parse date %q: %v", dateStr, err)
-
 		return dateStr
 	}
 	// Format as MM-DD-YYYY

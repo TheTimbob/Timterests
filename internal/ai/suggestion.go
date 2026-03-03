@@ -69,8 +69,6 @@ func GenerateSuggestion(ctx context.Context, prompt, instructionFile string) (st
 // GetInstruction reads and returns the content of a prompt instruction file.
 func GetInstruction(file string) (string, error) {
 	// Ensure only filename, no path components
-	file = filepath.Base(filepath.Clean(file))
-
 	promptsFS := os.DirFS("prompts")
 
 	content, err := fs.ReadFile(promptsFS, file)
