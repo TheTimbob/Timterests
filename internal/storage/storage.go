@@ -280,6 +280,23 @@ func (s *Storage) GetPreparedFile(ctx context.Context, key string, document any)
 	return nil
 }
 
+// GetRawFile retrieves a file and decodes it without converting markdown to HTML.
+// Use this when the raw markdown content is needed (e.g. for editing).
+func (s *Storage) GetRawFile(ctx context.Context, key string, document any) error {
+	file, err := s.GetFile(ctx, key)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	err = DecodeFile(file, document)
+	if err != nil {
+		return fmt.Errorf("failed to decode %s: %w", key, err)
+	}
+
+	return nil
+}
+
 // GetFile ensures the file is available locally at localPath.
 func (s *Storage) GetFile(ctx context.Context, key string) (*os.File, error) {
 	localPath, err := LocalPath(s.BaseDir, key)
