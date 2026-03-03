@@ -71,7 +71,7 @@ func GetInstruction(file string) (string, error) {
 	file = filepath.Base(filepath.Clean(file))
 	file = filepath.Join("prompts", file)
 
-	content, err := os.ReadFile(file)
+	content, err := os.ReadFile(file) //nolint:gosec
 	if err != nil {
 		return "", fmt.Errorf("failed to read instruction file: %w", err)
 	}

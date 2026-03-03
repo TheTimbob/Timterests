@@ -61,9 +61,9 @@ func main() {
 
 	tlsStarted := false
 
-	_, err = os.Stat(certFile)
+	_, err = os.Stat(certFile) //nolint:gosec
 	if err == nil {
-		_, err := os.Stat(keyFile)
+		_, err := os.Stat(keyFile) //nolint:gosec
 		if err == nil {
 			err := server.ListenAndServeTLS(certFile, keyFile)
 			if err != nil {
