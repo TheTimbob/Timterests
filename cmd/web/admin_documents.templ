@@ -1,0 +1,98 @@
+package web
+
+import "strconv"
+
+templ AdminDocumentsPage(params AdminDocumentsParams) {
+	@Base("admin") {
+		@AdminDocumentsDisplay(params)
+	}
+}
+
+templ AdminDocumentsDisplay(params AdminDocumentsParams) {
+	<div id="admin-documents-container">
+		<div class="header-controls">
+			<h1 class="category-title">Documents</h1>
+			<a href="/admin" class="card-subtitle">← Admin</a>
+		</div>
+		@AdminDocumentsTable(params)
+	</div>
+}
+
+templ AdminDocumentsTable(params AdminDocumentsParams) {
+	<div id="documents-table-wrapper">
+		<form method="GET" action="/admin/documents" class="admin-search-form">
+			<input type="hidden" name="sort" value={ params.SortBy }/>
+			<input type="hidden" name="dir" value={ params.SortDir }/>
+			<input
+				type="text"
+				name="q"
+				value={ params.Query }
+				placeholder="Search by filename..."
+				class="form-input admin-search-input"
+			/>
+			<button type="submit" class="button">Search</button>
+		</form>
+		<p class="admin-doc-count">{ strconv.Itoa(params.Total) } document(s)</p>
+		<div class="admin-table-wrapper">
+			<table class="admin-table">
+				<thead>
+					<tr>
+						<th>@adminSortLink("filename", "Filename", params)</th>
+						<th>Type</th>
+						<th>Source</th>
+						<th>Size</th>
+						<th>@adminSortLink("modified", "Last Modified", params)</th>
+						<th>Actions</th>
+					</tr>
+				</thead>
+				<tbody>
+					for _, doc := range params.Docs {
+						<tr>
+							<td>{ doc.Filename }</td>
+							<td>{ doc.DocType }</td>
+							<td>{ doc.Source }</td>
+							<td>{ formatFileSize(doc.Size) }</td>
+							<td>{ doc.LastModified.Format("2006-01-02 15:04") }</td>
+							<td>
+								<form method="POST" action="/writer" class="action-form">
+									<input type="hidden" name="document-type" value={ doc.DocType }/>
+									<input type="hidden" name="document-key" value={ doc.Key }/>
+									<input type="hidden" name="type-id" value="0"/>
+									<button type="submit" class="button button-sm">Edit / Suggestions</button>
+								</form>
+							</td>
+						</tr>
+					}
+					if len(params.Docs) == 0 {
+						<tr>
+							<td colspan="6" class="admin-table-empty">No documents found.</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		</div>
+		if params.TotalPages > 1 {
+			<div class="admin-pagination">
+				if params.Page > 1 {
+					<a href={ templ.SafeURL(buildDocumentsURL(params.Query, params.SortBy, params.SortDir, params.Page-1)) } class="button button-sm">← Previous</a>
+				}
+				<span class="admin-page-info">Page { strconv.Itoa(params.Page) } of { strconv.Itoa(params.TotalPages) }</span>
+				if params.Page < params.TotalPages {
+					<a href={ templ.SafeURL(buildDocumentsURL(params.Query, params.SortBy, params.SortDir, params.Page+1)) } class="button button-sm">Next →</a>
+				}
+			</div>
+		}
+	</div>
+}
+
+templ adminSortLink(field, label string, params AdminDocumentsParams) {
+	if params.SortBy == field {
+		if params.SortDir == "asc" {
+			<a href={ templ.SafeURL(buildDocumentsURL(params.Query, field, "desc", 1)) }>{ label } ▲</a>
+		} else {
+			<a href={ templ.SafeURL(buildDocumentsURL(params.Query, field, "asc", 1)) }>{ label } ▼</a>
+		}
+	} else {
+		<a href={ templ.SafeURL(buildDocumentsURL(params.Query, field, "asc", 1)) }>{ label }</a>
+	}
+}

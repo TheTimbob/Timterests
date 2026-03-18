@@ -800,6 +800,84 @@ a:hover {
   color: var(--green-light);
 }
 
+/* Admin Documents Dashboard */
+.admin-search-form {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.admin-search-input {
+  max-width: 24rem;
+  margin-bottom: 0;
+}
+
+.admin-doc-count {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  margin: 0 0 0.5rem;
+}
+
+.admin-table-wrapper {
+  overflow-x: auto;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.admin-table th,
+.admin-table td {
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.dark .admin-table th,
+.dark .admin-table td {
+  border-bottom-color: var(--bg-dark-accent);
+}
+
+.admin-table th {
+  font-weight: 700;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.admin-table tbody tr:hover {
+  background-color: var(--green-light);
+}
+
+.dark .admin-table tbody tr:hover {
+  background-color: var(--bg-dark-accent);
+}
+
+.admin-table-empty {
+  color: var(--text-muted);
+  text-align: center;
+  padding: 2rem 0;
+}
+
+.admin-pagination {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.admin-page-info {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.button-sm {
+  font-size: 0.875rem;
+  padding: 0.375rem 0.75rem;
+}
+
 /* Font Awesome Icon Colors */
 .fa-newspaper {
   color: var(--blue);
