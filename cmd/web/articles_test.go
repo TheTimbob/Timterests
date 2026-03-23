@@ -18,7 +18,7 @@ func TestArticleListRendering(t *testing.T) {
 	t.Run("render article list page", func(t *testing.T) {
 		t.Parallel()
 
-		req := httptest.NewRequest(http.MethodGet, "/articles", nil)
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/articles", nil)
 		rec := httptest.NewRecorder()
 
 		web.ArticlesPageHandler(rec, req, *s, "all", "list")
@@ -44,7 +44,7 @@ func TestArticleListRendering(t *testing.T) {
 	t.Run("render article list only", func(t *testing.T) {
 		t.Parallel()
 
-		req := httptest.NewRequest(http.MethodGet, "/articles", nil)
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/articles", nil)
 		rec := httptest.NewRecorder()
 
 		// Set the HX-Request header to trigger partial rendering
@@ -72,7 +72,7 @@ func TestArticleListRendering(t *testing.T) {
 	t.Run("render articles with a selected tag", func(t *testing.T) {
 		t.Parallel()
 
-		req := httptest.NewRequest(http.MethodGet, "/articles", nil)
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/articles", nil)
 		rec := httptest.NewRecorder()
 
 		tag := "tag1"
@@ -99,7 +99,7 @@ func TestArticleListRendering(t *testing.T) {
 	t.Run("exclude articles that do not have the selected tag", func(t *testing.T) {
 		t.Parallel()
 
-		req := httptest.NewRequest(http.MethodGet, "/articles", nil)
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/articles", nil)
 		rec := httptest.NewRecorder()
 
 		// Enter a non-existent tag to get zero results back (filter all articles).
@@ -128,7 +128,7 @@ func TestArticleRendering(t *testing.T) {
 	a := auth.NewAuth("test-session-key-minimum-32-bytes")
 
 	t.Run("render article page", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/article?id=0", nil)
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/article?id=0", nil)
 		rec := httptest.NewRecorder()
 
 		web.GetArticleHandler(rec, req, *s, "0", a)
@@ -159,7 +159,7 @@ func TestArticleRendering(t *testing.T) {
 	})
 
 	t.Run("render article display only", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/article?id=0", nil)
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/article?id=0", nil)
 		rec := httptest.NewRecorder()
 
 		// Set HTMX header for partial rendering

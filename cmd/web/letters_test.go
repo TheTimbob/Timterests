@@ -18,7 +18,7 @@ func TestLetterListRendering(t *testing.T) {
 	s := testSetup(t, context.Background())
 
 	t.Run("render letter list page", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/letters", nil)
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/letters", nil)
 		rec := httptest.NewRecorder()
 
 		// Add authentication cookie to this request
@@ -45,7 +45,7 @@ func TestLetterListRendering(t *testing.T) {
 		}
 	})
 	t.Run("render letter list only", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/letters", nil)
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/letters", nil)
 		rec := httptest.NewRecorder()
 
 		// Add authentication cookie
@@ -74,7 +74,7 @@ func TestLetterListRendering(t *testing.T) {
 		}
 	})
 	t.Run("render letters with a selected tag", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/letters", nil)
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/letters", nil)
 		rec := httptest.NewRecorder()
 
 		// Add authentication cookie
@@ -110,7 +110,7 @@ func TestLetterListRendering(t *testing.T) {
 	})
 
 	t.Run("exclude letters that don't have the selected tag", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/letters", nil)
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/letters", nil)
 		rec := httptest.NewRecorder()
 
 		// Add authentication cookie
@@ -142,7 +142,7 @@ func TestLetterRendering(t *testing.T) {
 	a, addAuthCookie := testAuthentication(t)
 
 	t.Run("render letter page", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/letter?id=0", nil)
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/letter?id=0", nil)
 		rec := httptest.NewRecorder()
 
 		// Add authentication cookie
@@ -176,7 +176,7 @@ func TestLetterRendering(t *testing.T) {
 	})
 
 	t.Run("render letter display only", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/letter?id=0", nil)
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/letter?id=0", nil)
 		rec := httptest.NewRecorder()
 
 		// Add authentication cookie

@@ -188,8 +188,17 @@ func (s *Server) RegisterRoutes() http.Handler {
 		}
 	}))
 
-	// Wrap the mux with CORS middleware
-	return s.corsMiddleware(mux)
+	// Wrap the mux with middleware
+	return s.maxBytesMiddleware(s.corsMiddleware(mux))
+}
+
+// maxBytesMiddleware limits the request body to 10MB on all routes to prevent
+// memory exhaustion from oversized form submissions or request bodies.
+func (s *Server) maxBytesMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		r.Body = http.MaxBytesReader(w, r.Body, 10<<20)
+		next.ServeHTTP(w, r)
+	})
 }
 
 func (s *Server) corsMiddleware(next http.Handler) http.Handler {

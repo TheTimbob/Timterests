@@ -37,7 +37,6 @@ func DownloadNewDocumentHandler(w http.ResponseWriter, r *http.Request, a *auth.
 		return
 	}
 
-	// Parse form
 	err := r.ParseForm()
 	if err != nil {
 		http.Error(w, "Failed to parse form", http.StatusBadRequest)

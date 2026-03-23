@@ -18,7 +18,7 @@ func TestReadingListRendering(t *testing.T) {
 	t.Run("render reading list page", func(t *testing.T) {
 		t.Parallel()
 
-		req := httptest.NewRequest(http.MethodGet, "/reading-list", nil)
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/reading-list", nil)
 		rec := httptest.NewRecorder()
 
 		web.ReadingListPageHandler(rec, req, *s, "all", "list")
@@ -45,7 +45,7 @@ func TestReadingListRendering(t *testing.T) {
 	t.Run("render reading list only", func(t *testing.T) {
 		t.Parallel()
 
-		req := httptest.NewRequest(http.MethodGet, "/reading-list", nil)
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/reading-list", nil)
 		rec := httptest.NewRecorder()
 
 		// Set the HX-Request header to trigger partial rendering
@@ -74,7 +74,7 @@ func TestReadingListRendering(t *testing.T) {
 	t.Run("render books with a selected tag", func(t *testing.T) {
 		t.Parallel()
 
-		req := httptest.NewRequest(http.MethodGet, "/reading-list", nil)
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/reading-list", nil)
 		rec := httptest.NewRecorder()
 
 		tag := "Data Structures"
@@ -109,7 +109,7 @@ func TestReadingListRendering(t *testing.T) {
 	t.Run("exclude books that don't have the selected tag", func(t *testing.T) {
 		t.Parallel()
 
-		req := httptest.NewRequest(http.MethodGet, "/reading-list", nil)
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/reading-list", nil)
 		rec := httptest.NewRecorder()
 
 		// Enter a non-existent tag to get zero results back (filter all books).
@@ -138,7 +138,7 @@ func TestBookRendering(t *testing.T) {
 	a := auth.NewAuth("test-session-key-minimum-32-bytes")
 
 	t.Run("render book page", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/book?id=0", nil)
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/book?id=0", nil)
 		rec := httptest.NewRecorder()
 
 		web.GetReadingListBook(rec, req, *s, "0", a)
@@ -169,7 +169,7 @@ func TestBookRendering(t *testing.T) {
 	})
 
 	t.Run("render book display only", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/book?id=0", nil)
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/book?id=0", nil)
 		rec := httptest.NewRecorder()
 
 		// Set HTMX header for partial rendering

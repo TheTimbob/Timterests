@@ -10,17 +10,19 @@ templ AdminDocumentsPage(params AdminDocumentsParams) {
 
 templ AdminDocumentsDisplay(params AdminDocumentsParams) {
 	<div id="admin-documents-container">
-		<div class="header-controls">
-			<h1 class="category-title">Documents</h1>
-			<a href="/admin" class="card-subtitle">← Admin</a>
-		</div>
+		<h1 class="category-title">Documents</h1>
 		@AdminDocumentsTable(params)
 	</div>
 }
 
 templ AdminDocumentsTable(params AdminDocumentsParams) {
-	<div id="documents-table-wrapper">
-		<form method="GET" action="/admin/documents" class="admin-search-form">
+	<div id="documents-table-wrapper" class="card-container-static">
+		<form
+			hx-get="/admin/documents"
+			hx-target="#documents-table-wrapper"
+			hx-swap="outerHTML"
+			class="admin-search-form"
+		>
 			<input type="hidden" name="sort" value={ params.SortBy }/>
 			<input type="hidden" name="dir" value={ params.SortDir }/>
 			<input
@@ -32,8 +34,7 @@ templ AdminDocumentsTable(params AdminDocumentsParams) {
 			/>
 			<button type="submit" class="button">Search</button>
 		</form>
-		<p class="admin-doc-count">{ strconv.Itoa(params.Total) } document(s)</p>
-		<div class="admin-table-wrapper">
+<div class="admin-table-wrapper">
 			<table class="admin-table">
 				<thead>
 					<tr>
@@ -74,11 +75,11 @@ templ AdminDocumentsTable(params AdminDocumentsParams) {
 		if params.TotalPages > 1 {
 			<div class="admin-pagination">
 				if params.Page > 1 {
-					<a href={ templ.SafeURL(buildDocumentsURL(params.Query, params.SortBy, params.SortDir, params.Page-1)) } class="button button-sm">← Previous</a>
-				}
+					<a href={ templ.SafeURL(buildDocumentsURL(params.Query, params.SortBy, params.SortDir, params.Page-1)) } class="button button-sm" hx-get={ buildDocumentsURL(params.Query, params.SortBy, params.SortDir, params.Page-1) } hx-target="#documents-table-wrapper" hx-swap="outerHTML">← Previous</a>
+	}
 				<span class="admin-page-info">Page { strconv.Itoa(params.Page) } of { strconv.Itoa(params.TotalPages) }</span>
 				if params.Page < params.TotalPages {
-					<a href={ templ.SafeURL(buildDocumentsURL(params.Query, params.SortBy, params.SortDir, params.Page+1)) } class="button button-sm">Next →</a>
+					<a href={ templ.SafeURL(buildDocumentsURL(params.Query, params.SortBy, params.SortDir, params.Page+1)) } class="button button-sm" hx-get={ buildDocumentsURL(params.Query, params.SortBy, params.SortDir, params.Page+1) } hx-target="#documents-table-wrapper" hx-swap="outerHTML">Next →</a>
 				}
 			</div>
 		}
@@ -88,11 +89,11 @@ templ AdminDocumentsTable(params AdminDocumentsParams) {
 templ adminSortLink(field, label string, params AdminDocumentsParams) {
 	if params.SortBy == field {
 		if params.SortDir == "asc" {
-			<a href={ templ.SafeURL(buildDocumentsURL(params.Query, field, "desc", 1)) }>{ label } ▲</a>
+			<a href={ templ.SafeURL(buildDocumentsURL(params.Query, field, "desc", 1)) } hx-get={ buildDocumentsURL(params.Query, field, "desc", 1) } hx-target="#documents-table-wrapper" hx-swap="outerHTML">{ label } ▲</a>
 		} else {
-			<a href={ templ.SafeURL(buildDocumentsURL(params.Query, field, "asc", 1)) }>{ label } ▼</a>
+			<a href={ templ.SafeURL(buildDocumentsURL(params.Query, field, "asc", 1)) } hx-get={ buildDocumentsURL(params.Query, field, "asc", 1) } hx-target="#documents-table-wrapper" hx-swap="outerHTML">{ label } ▼</a>
 		}
 	} else {
-		<a href={ templ.SafeURL(buildDocumentsURL(params.Query, field, "asc", 1)) }>{ label }</a>
+		<a href={ templ.SafeURL(buildDocumentsURL(params.Query, field, "asc", 1)) } hx-get={ buildDocumentsURL(params.Query, field, "asc", 1) } hx-target="#documents-table-wrapper" hx-swap="outerHTML">{ label }</a>
 	}
 }

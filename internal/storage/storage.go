@@ -135,6 +135,14 @@ func (s *Storage) listLocalObjects(prefix string) ([]types.Object, error) {
 		return nil, fmt.Errorf("getting local path: %w", err)
 	}
 
+	_, err = os.Stat(fullPath)
+	if os.IsNotExist(err) {
+		err = os.MkdirAll(fullPath, 0750)
+		if err != nil {
+			return nil, fmt.Errorf("creating local storage directory: %w", err)
+		}
+	}
+
 	entries, err := os.ReadDir(fullPath)
 	if err != nil {
 		return nil, fmt.Errorf("reading local storage directory: %w", err)

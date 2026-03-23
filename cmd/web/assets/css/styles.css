@@ -801,6 +801,11 @@ a:hover {
 }
 
 /* Admin Documents Dashboard */
+#documents-table-wrapper {
+  flex-direction: column;
+  align-items: stretch;
+}
+
 .admin-search-form {
   display: flex;
   gap: 0.5rem;
@@ -845,6 +850,14 @@ a:hover {
   font-weight: 700;
   color: var(--text-muted);
   white-space: nowrap;
+}
+
+.admin-table td {
+  color: var(--text-light);
+}
+
+.dark .admin-table td {
+  color: var(--text-dark);
 }
 
 .admin-table tbody tr:hover {

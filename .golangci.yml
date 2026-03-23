@@ -52,6 +52,15 @@ linters:
         - gocyclo
         - errcheck
         - gosec
+    - text: "G120:" # Request body size is limited globally by maxBytesMiddleware in internal/server/routes.go
+      linters:
+        - gosec
+    - text: "G703:" # TLS cert/key paths come from SSL_CERT_FILE and SSL_KEY_FILE env vars, which are operator-controlled
+      linters:
+        - gosec
+    - text: "G706:" # %q format verb escapes control characters, preventing log injection
+      linters:
+        - gosec
 issues:
   max-issues-per-linter: 0
   max-same-issues: 0

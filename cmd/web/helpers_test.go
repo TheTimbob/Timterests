@@ -39,7 +39,7 @@ func testAuthentication(t *testing.T) (*auth.Auth, func(*http.Request)) {
 	a := auth.NewAuth(sessionName)
 
 	// Create a test request and recorder to capture the session cookie
-	setupReq := httptest.NewRequest(http.MethodGet, "/", nil)
+	setupReq := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/", nil)
 	setupRec := httptest.NewRecorder()
 
 	// Set session value to simulate authenticated user

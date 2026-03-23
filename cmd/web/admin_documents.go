@@ -12,8 +12,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/a-h/templ"
+	"github.com/aws/aws-sdk-go-v2/aws"
 
 	"timterests/internal/auth"
 	"timterests/internal/storage"
@@ -76,56 +76,19 @@ func AdminDocumentsPageHandler(w http.ResponseWriter, r *http.Request, s storage
 		return
 	}
 
-	// Search by filename (case-insensitive)
-	if query != "" {
-		lower := strings.ToLower(query)
-		filtered := docs[:0]
-
-		for _, d := range docs {
-			if strings.Contains(strings.ToLower(d.Filename), lower) {
-				filtered = append(filtered, d)
-			}
-		}
-
-		docs = filtered
-	}
-
-	// Sort
-	sort.Slice(docs, func(i, j int) bool {
-		switch sortBy {
-		case "modified":
-			if sortDir == "desc" {
-				return docs[i].LastModified.After(docs[j].LastModified)
-			}
-
-			return docs[i].LastModified.Before(docs[j].LastModified)
-		default: // filename
-			if sortDir == "desc" {
-				return docs[i].Filename > docs[j].Filename
-			}
-
-			return docs[i].Filename < docs[j].Filename
-		}
-	})
+	docs = filterDocs(docs, query)
+	sortDocs(docs, sortBy, sortDir)
 
 	// Paginate
 	total := len(docs)
-	totalPages := (total + docsPerPage - 1) / docsPerPage
-
-	if totalPages == 0 {
-		totalPages = 1
-	}
+	totalPages := max((total+docsPerPage-1)/docsPerPage, 1)
 
 	if page > totalPages {
 		page = totalPages
 	}
 
 	start := (page - 1) * docsPerPage
-	end := start + docsPerPage
-
-	if end > total {
-		end = total
-	}
+	end := min(start+docsPerPage, total)
 
 	params := AdminDocumentsParams{
 		Docs:       docs[start:end],
@@ -150,6 +113,44 @@ func AdminDocumentsPageHandler(w http.ResponseWriter, r *http.Request, s storage
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		log.Printf("Error rendering AdminDocumentsPage: %v", err)
 	}
+}
+
+// filterDocs returns documents whose filenames contain the query string (case-insensitive).
+func filterDocs(docs []DocumentInfo, query string) []DocumentInfo {
+	if query == "" {
+		return docs
+	}
+
+	lower := strings.ToLower(query)
+	filtered := docs[:0]
+
+	for _, d := range docs {
+		if strings.Contains(strings.ToLower(d.Filename), lower) {
+			filtered = append(filtered, d)
+		}
+	}
+
+	return filtered
+}
+
+// sortDocs sorts documents in-place by the given field and direction.
+func sortDocs(docs []DocumentInfo, sortBy, sortDir string) {
+	sort.Slice(docs, func(i, j int) bool {
+		switch sortBy {
+		case "modified":
+			if sortDir == "desc" {
+				return docs[i].LastModified.After(docs[j].LastModified)
+			}
+
+			return docs[i].LastModified.Before(docs[j].LastModified)
+		default: // filename
+			if sortDir == "desc" {
+				return docs[i].Filename > docs[j].Filename
+			}
+
+			return docs[i].Filename < docs[j].Filename
+		}
+	})
 }
 
 // ListAllDocuments collects DocumentInfo from all content type directories.

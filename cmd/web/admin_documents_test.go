@@ -15,7 +15,7 @@ func TestAdminDocumentsPageHandler(t *testing.T) {
 	s := testSetup(t, context.Background())
 
 	t.Run("redirects to login when unauthenticated", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/admin/documents", nil)
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/admin/documents", nil)
 		rec := httptest.NewRecorder()
 
 		web.AdminDocumentsPageHandler(rec, req, *s, a)
@@ -30,8 +30,9 @@ func TestAdminDocumentsPageHandler(t *testing.T) {
 	})
 
 	t.Run("renders full page when authenticated", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/admin/documents", nil)
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/admin/documents", nil)
 		rec := httptest.NewRecorder()
+
 		addAuthCookie(req)
 
 		web.AdminDocumentsPageHandler(rec, req, *s, a)
@@ -63,8 +64,9 @@ func TestAdminDocumentsPageHandler(t *testing.T) {
 	})
 
 	t.Run("renders partial table on HTMX request", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/admin/documents", nil)
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/admin/documents", nil)
 		rec := httptest.NewRecorder()
+
 		addAuthCookie(req)
 		req.Header.Set("Hx-Request", "true")
 
@@ -89,8 +91,9 @@ func TestAdminDocumentsPageHandler(t *testing.T) {
 	})
 
 	t.Run("lists documents from all content types", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/admin/documents", nil)
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/admin/documents", nil)
 		rec := httptest.NewRecorder()
+
 		addAuthCookie(req)
 
 		web.AdminDocumentsPageHandler(rec, req, *s, a)
@@ -107,8 +110,9 @@ func TestAdminDocumentsPageHandler(t *testing.T) {
 	})
 
 	t.Run("search filters by filename", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/admin/documents?q=test-article", nil)
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/admin/documents?q=test-article", nil)
 		rec := httptest.NewRecorder()
+
 		addAuthCookie(req)
 
 		web.AdminDocumentsPageHandler(rec, req, *s, a)
@@ -131,8 +135,11 @@ func TestAdminDocumentsPageHandler(t *testing.T) {
 	})
 
 	t.Run("sort parameter is respected", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/admin/documents?sort=filename&dir=asc", nil)
+		req := httptest.NewRequestWithContext(
+			context.Background(), http.MethodGet, "/admin/documents?sort=filename&dir=asc", nil,
+		)
 		rec := httptest.NewRecorder()
+
 		addAuthCookie(req)
 
 		web.AdminDocumentsPageHandler(rec, req, *s, a)

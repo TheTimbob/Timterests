@@ -174,7 +174,7 @@ func WriterSuggestionHandler(w http.ResponseWriter, r *http.Request, a *auth.Aut
 	instructionFile = filepath.Base(filepath.Clean(instructionFile))
 	if strings.TrimSpace(instructionFile) == "" || strings.Contains(instructionFile, string(filepath.Separator)) {
 		http.Error(w, "Invalid prompt file", http.StatusBadRequest)
-		log.Printf("Invalid prompt file: %s", instructionFile)
+		log.Printf("Invalid prompt file: %q", instructionFile)
 
 		return
 	}
