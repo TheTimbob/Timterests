@@ -19,7 +19,7 @@ func TestProjectListRendering(t *testing.T) {
 	t.Run("render project list page", func(t *testing.T) {
 		t.Parallel()
 
-		req := httptest.NewRequest(http.MethodGet, "/projects", nil)
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/projects", nil)
 		rec := httptest.NewRecorder()
 
 		web.ProjectsPageHandler(rec, req, *s, "all", "list")
@@ -45,7 +45,7 @@ func TestProjectListRendering(t *testing.T) {
 	t.Run("render project list only", func(t *testing.T) {
 		t.Parallel()
 
-		req := httptest.NewRequest(http.MethodGet, "/projects", nil)
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/projects", nil)
 		rec := httptest.NewRecorder()
 
 		// Set the HX-Request header to trigger partial rendering
@@ -73,7 +73,7 @@ func TestProjectListRendering(t *testing.T) {
 	t.Run("render projects with a selected tag", func(t *testing.T) {
 		t.Parallel()
 
-		req := httptest.NewRequest(http.MethodGet, "/projects", nil)
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/projects", nil)
 		rec := httptest.NewRecorder()
 
 		tag := "Golang"
@@ -108,7 +108,7 @@ func TestProjectListRendering(t *testing.T) {
 	t.Run("exclude projects that do not have the selected tag", func(t *testing.T) {
 		t.Parallel()
 
-		req := httptest.NewRequest(http.MethodGet, "/projects", nil)
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/projects", nil)
 		rec := httptest.NewRecorder()
 
 		// Enter a non-existent tag to get zero results back (filter all projects).
@@ -137,7 +137,7 @@ func TestProjectRendering(t *testing.T) {
 	a := auth.NewAuth("test-session-key-minimum-32-bytes")
 
 	t.Run("render project page", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/project?id=0", nil)
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/project?id=0", nil)
 		rec := httptest.NewRecorder()
 
 		web.GetProjectHandler(rec, req, *s, "0", a)
@@ -168,7 +168,7 @@ func TestProjectRendering(t *testing.T) {
 	})
 
 	t.Run("render project display only", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/project?id=0", nil)
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/project?id=0", nil)
 		rec := httptest.NewRecorder()
 
 		// Set HTMX header for partial rendering

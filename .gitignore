@@ -38,6 +38,7 @@ prompts/*
 storage/*
 !storage/testdata
 utils/*
+memory/*
 
 # Keep empty directories
 !.gitkeep
