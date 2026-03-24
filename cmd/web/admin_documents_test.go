@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"timterests/cmd/web"
 
@@ -110,11 +111,33 @@ func TestAdminDocumentsPageHandler(t *testing.T) {
 	})
 
 	t.Run("search filters by filename", func(t *testing.T) {
-		req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/admin/documents?q=test-article", nil)
+		// Get unfiltered row count to compare against
+		unfilteredReq := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/admin/documents", nil)
+		unfilteredRec := httptest.NewRecorder()
+
+		addAuthCookie(unfilteredReq)
+		web.AdminDocumentsPageHandler(unfilteredRec, unfilteredReq, *s, a)
+
+		unfilteredDoc, err := goquery.NewDocumentFromReader(unfilteredRec.Body)
+		if err != nil {
+			t.Fatalf("failed to parse unfiltered response: %v", err)
+		}
+
+		totalRows := 0
+
+		unfilteredDoc.Find("table.admin-table tbody tr").Each(func(_ int, row *goquery.Selection) {
+			if row.Find("td").Length() > 1 {
+				totalRows++
+			}
+		})
+
+		// Search for a query that matches a subset of documents
+		const query = "test-article"
+
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/admin/documents?q="+query, nil)
 		rec := httptest.NewRecorder()
 
 		addAuthCookie(req)
-
 		web.AdminDocumentsPageHandler(rec, req, *s, a)
 
 		doc, err := goquery.NewDocumentFromReader(rec.Body)
@@ -122,16 +145,26 @@ func TestAdminDocumentsPageHandler(t *testing.T) {
 			t.Fatalf("failed to parse response: %v", err)
 		}
 
-		rows := doc.Find("table.admin-table tbody tr")
-		rows.Each(func(_ int, row *goquery.Selection) {
-			// Each row that renders (not the empty row) should contain "test-article"
+		matchingRows := 0
+
+		doc.Find("table.admin-table tbody tr").Each(func(_ int, row *goquery.Selection) {
 			if row.Find("td").Length() > 1 {
 				filename := row.Find("td").First().Text()
-				if filename == "" {
-					t.Error("expected non-empty filename in search result")
+				if !strings.Contains(strings.ToLower(filename), query) {
+					t.Errorf("filename %q does not contain query %q", filename, query)
 				}
+
+				matchingRows++
 			}
 		})
+
+		if matchingRows == 0 {
+			t.Error("expected at least one matching row, got none")
+		}
+
+		if matchingRows >= totalRows {
+			t.Errorf("expected filtered rows (%d) to be fewer than total rows (%d)", matchingRows, totalRows)
+		}
 	})
 
 	t.Run("sort parameter is respected", func(t *testing.T) {

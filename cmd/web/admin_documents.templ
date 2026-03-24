@@ -1,6 +1,9 @@
 package web
 
-import "strconv"
+import (
+	"strconv"
+	"timterests/internal/storage"
+)
 
 templ AdminDocumentsPage(params AdminDocumentsParams) {
 	@Base("admin") {
@@ -34,7 +37,7 @@ templ AdminDocumentsTable(params AdminDocumentsParams) {
 			/>
 			<button type="submit" class="button">Search</button>
 		</form>
-<div class="admin-table-wrapper">
+            <div class="admin-table-wrapper">
 			<table class="admin-table">
 				<thead>
 					<tr>
@@ -52,13 +55,13 @@ templ AdminDocumentsTable(params AdminDocumentsParams) {
 							<td>{ doc.Filename }</td>
 							<td>{ doc.DocType }</td>
 							<td>{ doc.Source }</td>
-							<td>{ formatFileSize(doc.Size) }</td>
+							<td>{ storage.FormatFileSize(doc.Size) }</td>
 							<td>{ doc.LastModified.Format("2006-01-02 15:04") }</td>
 							<td>
 								<form method="POST" action="/writer" class="action-form">
 									<input type="hidden" name="document-type" value={ doc.DocType }/>
 									<input type="hidden" name="document-key" value={ doc.Key }/>
-									<input type="hidden" name="type-id" value="0"/>
+									<input type="hidden" name="type-id" value={ strconv.Itoa(doc.Index) }/>
 									<button type="submit" class="button button-sm">Edit / Suggestions</button>
 								</form>
 							</td>

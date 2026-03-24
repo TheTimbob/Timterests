@@ -818,12 +818,6 @@ a:hover {
   margin-bottom: 0;
 }
 
-.admin-doc-count {
-  color: var(--text-muted);
-  font-size: 0.875rem;
-  margin: 0 0 0.5rem;
-}
-
 .admin-table-wrapper {
   overflow-x: auto;
 }

@@ -141,6 +141,8 @@ func (s *Storage) listLocalObjects(prefix string) ([]types.Object, error) {
 		if err != nil {
 			return nil, fmt.Errorf("creating local storage directory: %w", err)
 		}
+	} else if err != nil {
+		return nil, fmt.Errorf("checking local storage directory: %w", err)
 	}
 
 	entries, err := os.ReadDir(fullPath)
@@ -424,6 +426,15 @@ func DecodeFile(file io.Reader, out any) error {
 	}
 
 	return nil
+}
+
+// FormatFileSize formats a byte count as a human-readable string.
+func FormatFileSize(size int64) string {
+	if size < 1024 {
+		return fmt.Sprintf("%d B", size)
+	}
+
+	return fmt.Sprintf("%.1f KB", float64(size)/1024)
 }
 
 // WriteYAMLDocument writes a YAML document to a file.

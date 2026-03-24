@@ -29,6 +29,7 @@ type DocumentInfo struct {
 	Source       string
 	Size         int64
 	LastModified time.Time
+	Index        int
 }
 
 // AdminDocumentsParams holds the data passed to the admin documents template.
@@ -170,8 +171,12 @@ func ListAllDocuments(ctx context.Context, s storage.Storage) ([]DocumentInfo, e
 			return nil, fmt.Errorf("listing %s: %w", docType, err)
 		}
 
-		for _, obj := range objects {
+		for i, obj := range objects {
 			key := aws.ToString(obj.Key)
+
+			if key == "" || strings.HasSuffix(key, "/") {
+				continue
+			}
 
 			docs = append(docs, DocumentInfo{
 				Filename:     filepath.Base(key),
@@ -180,20 +185,12 @@ func ListAllDocuments(ctx context.Context, s storage.Storage) ([]DocumentInfo, e
 				Source:       source,
 				Size:         aws.ToInt64(obj.Size),
 				LastModified: aws.ToTime(obj.LastModified),
+				Index:        i,
 			})
 		}
 	}
 
 	return docs, nil
-}
-
-// formatFileSize formats a byte count as a human-readable string.
-func formatFileSize(size int64) string {
-	if size < 1024 {
-		return fmt.Sprintf("%d B", size)
-	}
-
-	return fmt.Sprintf("%.1f KB", float64(size)/1024)
 }
 
 // buildDocumentsURL constructs a properly encoded URL for the admin documents page.
