@@ -176,6 +176,7 @@ func WriterSuggestionHandler(w http.ResponseWriter, r *http.Request, a *auth.Aut
 	if strings.TrimSpace(instructionFile) == "" || strings.Contains(instructionFile, string(filepath.Separator)) {
 		http.Error(w, "Invalid prompt file", http.StatusBadRequest)
 		log.Printf("Invalid prompt file: %q", instructionFile)
+
 		return
 	}
 
@@ -202,20 +203,26 @@ func WriterSuggestionHandler(w http.ResponseWriter, r *http.Request, a *auth.Aut
 	}
 }
 
-// GetTypeContentFromID retrieves content based on document type, S3 key, and ID.
-func GetTypeContentFromID(ctx context.Context, docType, key string, id int, s storage.Storage) (any, error) {
-	switch docType {
-	case "articles":
-		return GetArticle(ctx, key, id, s)
-	case "projects":
-		return GetProject(ctx, key, id, s)
-	case "reading-list":
-		return GetBook(ctx, key, id, s)
-	case "letters":
-		return GetLetter(ctx, key, id, s)
-	default:
-		return nil, fmt.Errorf("unsupported document type: %s", docType)
+// metaSetter is satisfied by any type whose pointer embeds *model.Document.
+type metaSetter interface {
+	SetMeta(id, key string)
+}
+
+// loadRawDoc initialises a zero-value T, sets its metadata, fetches the raw
+// (non-HTML-converted) file from storage, and returns a pointer to the result.
+func loadRawDoc[T any, PT interface {
+	*T
+	metaSetter
+}](ctx context.Context, key, idStr string, s storage.Storage) (*T, error) {
+	var doc T
+	PT(&doc).SetMeta(idStr, key)
+
+	err := s.GetRawFile(ctx, key, PT(&doc))
+	if err != nil {
+		return nil, fmt.Errorf("failed to get raw file: %w", err)
 	}
+
+	return &doc, nil
 }
 
 // getTypeContentRaw retrieves content for editing, keeping the body as raw markdown.
@@ -224,57 +231,13 @@ func getTypeContentRaw(ctx context.Context, docType, key string, id int, s stora
 
 	switch docType {
 	case "articles":
-		var doc Article
-
-		doc.ID = idStr
-
-		doc.S3Key = key
-
-		err := s.GetRawFile(ctx, key, &doc)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get raw file: %w", err)
-		}
-
-		return &doc, nil
+		return loadRawDoc[Article, *Article](ctx, key, idStr, s)
 	case "projects":
-		var doc Project
-
-		doc.ID = idStr
-
-		doc.S3Key = key
-
-		err := s.GetRawFile(ctx, key, &doc)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get raw file: %w", err)
-		}
-
-		return &doc, nil
+		return loadRawDoc[Project, *Project](ctx, key, idStr, s)
 	case "reading-list":
-		var doc ReadingList
-
-		doc.ID = idStr
-
-		doc.S3Key = key
-
-		err := s.GetRawFile(ctx, key, &doc)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get raw file: %w", err)
-		}
-
-		return &doc, nil
+		return loadRawDoc[ReadingList, *ReadingList](ctx, key, idStr, s)
 	case "letters":
-		var doc Letter
-
-		doc.ID = idStr
-
-		doc.S3Key = key
-
-		err := s.GetRawFile(ctx, key, &doc)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get raw file: %w", err)
-		}
-
-		return &doc, nil
+		return loadRawDoc[Letter, *Letter](ctx, key, idStr, s)
 	default:
 		return nil, fmt.Errorf("unsupported document type: %s", docType)
 	}

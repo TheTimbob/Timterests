@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -10,7 +9,6 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -294,8 +292,6 @@ func (s *Storage) GetPreparedFile(ctx context.Context, key string, document any)
 
 // GetRawFile retrieves a file and decodes it without converting markdown to HTML.
 // Use this when the raw markdown content is needed (e.g. for editing).
-// Basic structural validation is performed before decoding to ensure the content
-// looks like a YAML document rather than arbitrary or injected content.
 func (s *Storage) GetRawFile(ctx context.Context, key string, document any) error {
 	file, err := s.GetFile(ctx, key)
 	if err != nil {
@@ -303,19 +299,7 @@ func (s *Storage) GetRawFile(ctx context.Context, key string, document any) erro
 	}
 	defer file.Close()
 
-	var buf bytes.Buffer
-
-	_, err = io.Copy(&buf, file)
-	if err != nil {
-		return fmt.Errorf("failed to read %s: %w", key, err)
-	}
-
-	content := buf.String()
-	if !strings.Contains(content, ":") {
-		return fmt.Errorf("file %s does not appear to contain valid YAML content", key)
-	}
-
-	err = DecodeFile(bytes.NewReader(buf.Bytes()), document)
+	err = DecodeFile(file, document)
 	if err != nil {
 		return fmt.Errorf("failed to decode %s: %w", key, err)
 	}

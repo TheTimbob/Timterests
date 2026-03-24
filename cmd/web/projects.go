@@ -130,8 +130,7 @@ func ListProjects(ctx context.Context, s storage.Storage, tag string) ([]Project
 func GetProject(ctx context.Context, key string, id int, s storage.Storage) (*Project, error) {
 	var project Project
 
-	project.ID = strconv.Itoa(id)
-	project.S3Key = key
+	project.SetMeta(strconv.Itoa(id), key)
 
 	err := s.GetPreparedFile(ctx, key, &project)
 	if err != nil {

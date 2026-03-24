@@ -9,7 +9,7 @@ import (
 	"timterests/internal/ai"
 )
 
-//nolint:paralleltest // changing working directory
+// Not parallel: changes working directory.
 func TestLoadAPIKey(t *testing.T) {
 	t.Run("load API key from .env file", func(t *testing.T) {
 		tmpDir := t.TempDir()
@@ -35,10 +35,7 @@ func TestLoadAPIKey(t *testing.T) {
 }
 
 func TestPromptOperations(t *testing.T) {
-	// This test changes working directory in subtests and therefore
-	// must not run in parallel with other tests.
-
-	//nolint:paralleltest // changing working directory
+	// Not parallel: changes working directory.
 	t.Run("get instruction from file", func(t *testing.T) {
 		tmpDir := t.TempDir()
 

@@ -150,8 +150,7 @@ func ListLetters(ctx context.Context, s storage.Storage, tag string) ([]Letter, 
 func GetLetter(ctx context.Context, key string, id int, s storage.Storage) (*Letter, error) {
 	var letter Letter
 
-	letter.ID = strconv.Itoa(id)
-	letter.S3Key = key
+	letter.SetMeta(strconv.Itoa(id), key)
 
 	err := s.GetPreparedFile(ctx, key, &letter)
 	if err != nil {

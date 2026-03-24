@@ -128,8 +128,7 @@ func ListBooks(ctx context.Context, s storage.Storage, tag string) ([]ReadingLis
 func GetBook(ctx context.Context, key string, id int, s storage.Storage) (*ReadingList, error) {
 	var book ReadingList
 
-	book.ID = strconv.Itoa(id)
-	book.S3Key = key
+	book.SetMeta(strconv.Itoa(id), key)
 
 	err := s.GetPreparedFile(ctx, key, &book)
 	if err != nil {

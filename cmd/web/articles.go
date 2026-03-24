@@ -132,8 +132,7 @@ func ListArticles(ctx context.Context, s storage.Storage, tag string) ([]Article
 func GetArticle(ctx context.Context, key string, id int, s storage.Storage) (*Article, error) {
 	var article Article
 
-	article.ID = strconv.Itoa(id)
-	article.S3Key = key
+	article.SetMeta(strconv.Itoa(id), key)
 
 	err := s.GetPreparedFile(ctx, key, &article)
 	if err != nil {

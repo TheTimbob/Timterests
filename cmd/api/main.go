@@ -61,11 +61,9 @@ func main() {
 
 	tlsStarted := false
 
-	// gosec G304: certFile/keyFile come from SSL_CERT_FILE/SSL_KEY_FILE env vars (operator-configured),
-	// not from user-supplied input. Path traversal risk is not applicable here.
-	_, err = os.Stat(certFile) //nolint:gosec
+	_, err = os.Stat(certFile)
 	if err == nil {
-		_, err := os.Stat(keyFile) //nolint:gosec
+		_, err := os.Stat(keyFile)
 		if err == nil {
 			err := server.ListenAndServeTLS(certFile, keyFile)
 			if err != nil {
