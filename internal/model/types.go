@@ -10,3 +10,9 @@ type Document struct {
 	Body     string   `yaml:"body"`
 	Tags     []string `yaml:"tags"`
 }
+
+// SetMeta sets the ID and S3Key fields on the document.
+func (d *Document) SetMeta(id, key string) {
+	d.ID = id
+	d.S3Key = key
+}

@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"timterests/internal/ai"
@@ -36,9 +37,9 @@ func WriterPageHandler(
 		return
 	}
 
-	// If key is provided, get the content to load the existing document
+	// If key is provided, load the existing document with raw markdown (no HTML conversion)
 	if key != "" {
-		content, err = GetTypeContentFromID(r.Context(), docType, key, typeID, s)
+		content, err = getTypeContentRaw(r.Context(), docType, key, typeID, s)
 		if err != nil {
 			http.Error(w, "Failed to load document: "+err.Error(), http.StatusInternalServerError)
 
@@ -202,17 +203,41 @@ func WriterSuggestionHandler(w http.ResponseWriter, r *http.Request, a *auth.Aut
 	}
 }
 
-// GetTypeContentFromID retrieves content based on document type, S3 key, and ID.
-func GetTypeContentFromID(ctx context.Context, docType, key string, id int, s storage.Storage) (any, error) {
+// metaSetter is satisfied by any type whose pointer embeds *model.Document.
+type metaSetter interface {
+	SetMeta(id, key string)
+}
+
+// loadRawDoc initialises a zero-value T, sets its metadata, fetches the raw
+// (non-HTML-converted) file from storage, and returns a pointer to the result.
+func loadRawDoc[T any, PT interface {
+	*T
+	metaSetter
+}](ctx context.Context, key, idStr string, s storage.Storage) (*T, error) {
+	var doc T
+	PT(&doc).SetMeta(idStr, key)
+
+	err := s.GetRawFile(ctx, key, PT(&doc))
+	if err != nil {
+		return nil, fmt.Errorf("failed to get raw file: %w", err)
+	}
+
+	return &doc, nil
+}
+
+// getTypeContentRaw retrieves content for editing, keeping the body as raw markdown.
+func getTypeContentRaw(ctx context.Context, docType, key string, id int, s storage.Storage) (any, error) {
+	idStr := strconv.Itoa(id)
+
 	switch docType {
 	case "articles":
-		return GetArticle(ctx, key, id, s)
+		return loadRawDoc[Article, *Article](ctx, key, idStr, s)
 	case "projects":
-		return GetProject(ctx, key, id, s)
+		return loadRawDoc[Project, *Project](ctx, key, idStr, s)
 	case "reading-list":
-		return GetBook(ctx, key, id, s)
+		return loadRawDoc[ReadingList, *ReadingList](ctx, key, idStr, s)
 	case "letters":
-		return GetLetter(ctx, key, id, s)
+		return loadRawDoc[Letter, *Letter](ctx, key, idStr, s)
 	default:
 		return nil, fmt.Errorf("unsupported document type: %s", docType)
 	}
