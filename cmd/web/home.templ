@@ -1,12 +1,14 @@
 package web
 
-templ HomeForm(latestArticle *Article, featuredProject *Project) {
+import "timterests/internal/model"
+
+templ HomeForm(latestArticle *model.Article, featuredProject *model.Project) {
     @Base("home") {
         @HomeContent(latestArticle, featuredProject)
     }
 }
 
-templ HomeContent(latestArticle *Article, featuredProject *Project) {
+templ HomeContent(latestArticle *model.Article, featuredProject *model.Project) {
 	<div id="home-container">
         @Introduction()
         <div class="animate-slide-up animate-delay-1">
@@ -83,7 +85,7 @@ templ CurrentFocus() {
     </div>
 }
 
-templ LatestArticle(latestArticle *Article) {
+templ LatestArticle(latestArticle *model.Article) {
     <div class="card-container" hx-get={ "/article?id=" + latestArticle.ID } hx-target="#main-content" hx-swap="innerHTML" hx-push-url="true">
         <div class="card-content">
             <h2 class="card-header-center">
@@ -108,7 +110,7 @@ templ LatestArticle(latestArticle *Article) {
     </div>
 }
 
-templ FeaturedProject(featuredProject *Project) {
+templ FeaturedProject(featuredProject *model.Project) {
     <div class="card-container" hx-get={ "/project?id=" + featuredProject.ID } hx-target="#main-content" hx-swap="innerHTML" hx-push-url="true">
         <div class="card-content">
             <h2 class="card-header-center">

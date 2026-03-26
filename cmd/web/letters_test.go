@@ -7,6 +7,7 @@ import (
 	"slices"
 	"testing"
 	"timterests/cmd/web"
+	"timterests/internal/service"
 
 	"github.com/PuerkitoBio/goquery"
 )
@@ -220,7 +221,7 @@ func TestLetter(t *testing.T) {
 	t.Run("get letter object", func(t *testing.T) {
 		testLetterPath := "letters/test-letter.yaml"
 
-		letter, err := web.GetLetter(ctx, testLetterPath, 1, *s)
+		letter, err := service.GetLetter(ctx, *s, testLetterPath, 1)
 		if err != nil {
 			t.Fatalf("failed to get letter: %v", err)
 		}
@@ -239,7 +240,7 @@ func TestLetter(t *testing.T) {
 	})
 
 	t.Run("list letters", func(t *testing.T) {
-		letters, err := web.ListLetters(ctx, *s, "")
+		letters, err := service.ListLetters(ctx, *s, "")
 		if err != nil {
 			t.Fatalf("failed to list letters: %v", err)
 		}
@@ -250,7 +251,7 @@ func TestLetter(t *testing.T) {
 	})
 
 	t.Run("list letters with tag filter", func(t *testing.T) {
-		letters, err := web.ListLetters(ctx, *s, "Tag1")
+		letters, err := service.ListLetters(ctx, *s, "Tag1")
 		if err != nil {
 			t.Fatalf("failed to list letters: %v", err)
 		}
@@ -270,7 +271,7 @@ func TestLetter(t *testing.T) {
 	})
 
 	t.Run("letters are sorted by date descending", func(t *testing.T) {
-		letters, err := web.ListLetters(ctx, *s, "")
+		letters, err := service.ListLetters(ctx, *s, "")
 		if err != nil {
 			t.Fatalf("failed to list letters: %v", err)
 		}
@@ -291,12 +292,12 @@ func TestLetter(t *testing.T) {
 	t.Run("letter to card conversion", func(t *testing.T) {
 		testLetterPath := "letters/test-letter.yaml"
 
-		letter, err := web.GetLetter(ctx, testLetterPath, 1, *s)
+		letter, err := service.GetLetter(ctx, *s, testLetterPath, 1)
 		if err != nil {
 			t.Fatalf("failed to get letter: %v", err)
 		}
 
-		card := letter.ToCard(0)
+		card := web.LetterCard(*letter, 0)
 
 		if card.Title != letter.Title {
 			t.Errorf("expected card title %q, got %q", letter.Title, card.Title)

@@ -11,6 +11,8 @@ import (
 
 	"timterests/internal/ai"
 	"timterests/internal/auth"
+	"timterests/internal/model"
+	"timterests/internal/service"
 	"timterests/internal/storage"
 
 	"github.com/a-h/templ"
@@ -48,15 +50,15 @@ func WriterPageHandler(
 		// Create empty content based on docType
 		switch docType {
 		case "articles":
-			content = &Article{}
+			content = &model.Article{}
 		case "projects":
-			content = &Project{}
+			content = &model.Project{}
 		case "reading-list":
-			content = &ReadingList{}
+			content = &model.ReadingList{}
 		case "letters":
-			content = &Letter{}
+			content = &model.Letter{}
 		default:
-			content = &Article{} // default to Article
+			content = &model.Article{} // default to Article
 		}
 	}
 
@@ -203,16 +205,17 @@ func WriterSuggestionHandler(w http.ResponseWriter, r *http.Request, a *auth.Aut
 }
 
 // GetTypeContentFromID retrieves content based on document type, S3 key, and ID.
+// Returns model types suitable for template rendering.
 func GetTypeContentFromID(ctx context.Context, docType, key string, id int, s storage.Storage) (any, error) {
 	switch docType {
 	case "articles":
-		return GetArticle(ctx, key, id, s)
+		return service.GetArticle(ctx, s, key, id)
 	case "projects":
-		return GetProject(ctx, key, id, s)
+		return service.GetProject(ctx, s, key, id)
 	case "reading-list":
-		return GetBook(ctx, key, id, s)
+		return service.GetBook(ctx, s, key, id)
 	case "letters":
-		return GetLetter(ctx, key, id, s)
+		return service.GetLetter(ctx, s, key, id)
 	default:
 		return nil, fmt.Errorf("unsupported document type: %s", docType)
 	}
@@ -278,7 +281,7 @@ func generateFilename(formData map[string]any, docType string) (string, error) {
 			return "", errors.New("invalid date in form data")
 		}
 
-		articleDate = FormatDateForFilename(articleDate)
+		articleDate = service.FormatArticleDateForFilename(articleDate)
 
 		return fmt.Sprintf("%s-%s.yaml", sanitizedTitle, articleDate), nil
 	}

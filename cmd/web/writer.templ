@@ -73,7 +73,7 @@ templ DocumentTypeComponent(doctype string) {
     </div>
 }
 
-templ ArticleFormContent(article *Article) {
+templ ArticleFormContent(article *model.Article) {
     <div class="form-field">
         <label class="form-label" for="date">Date:</label>
         <input class="form-input" type="date" id="date" name="date" value={article.Date} required>
@@ -84,7 +84,7 @@ templ ArticleFormContent(article *Article) {
     </div>
 }
 
-templ BookFormContent(book *ReadingList) {
+templ BookFormContent(book *model.ReadingList) {
     <div class="form-field">
         <label class="form-label" for="author">Author:</label>
         <input class="form-input" type="text" id="author" name="author" value={book.Author} required>
@@ -117,7 +117,7 @@ templ BookFormContent(book *ReadingList) {
     </div>
 }
 
-templ LetterFormContent(letter *Letter) {
+templ LetterFormContent(letter *model.Letter) {
     <div class="form-field">
         <label class="form-label" for="date">Date:</label>
         <input class="form-input" type="date" id="date" name="date" value={letter.Date} required>
@@ -132,7 +132,7 @@ templ LetterFormContent(letter *Letter) {
     </div>
 }
 
-templ ProjectFormContent(project *Project) {
+templ ProjectFormContent(project *model.Project) {
     <div class="form-field">
         <label class="form-label" for="image-path">Image Path:</label>
         <input class="form-input" type="text" id="image-path" name="image-path" placeholder="Path to image" value={project.Image} required>
@@ -208,13 +208,13 @@ templ AISuggestionError(errorMsg string) {
 // HTMX template for dynamic form content switching
 templ FormContentByType(content any) {
     switch c := content.(type) {
-        case *Article:
+        case *model.Article:
             @WriterFormContent(c.Document, ArticleFormContent(c), "articles")
-        case *Letter:
+        case *model.Letter:
             @WriterFormContent(c.Document, LetterFormContent(c), "letters")
-        case *Project:
+        case *model.Project:
             @WriterFormContent(c.Document, ProjectFormContent(c), "projects")
-        case *ReadingList:
+        case *model.ReadingList:
             @WriterFormContent(c.Document, BookFormContent(c), "reading-list")
     }
 }

@@ -8,6 +8,7 @@ import (
 	"strconv"
 
 	"timterests/cmd/web"
+	"timterests/internal/service"
 )
 
 // RegisterRoutes configures all HTTP routes and returns the handler.
@@ -123,7 +124,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 		web.GetArticleHandler(w, r, *s.storage, articleID, s.auth)
 	}))
 	mux.Handle("/articles/list", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, err := web.ListArticles(r.Context(), *s.storage, "all")
+		_, err := service.ListArticles(r.Context(), *s.storage, "all")
 		if err != nil {
 			http.Error(w, "Failed to list articles", http.StatusInternalServerError)
 
@@ -142,9 +143,9 @@ func (s *Server) RegisterRoutes() http.Handler {
 		web.GetProjectHandler(w, r, *s.storage, projectID, s.auth)
 	}))
 	mux.Handle("/projects/list", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, err := web.ListProjects(r.Context(), *s.storage, "all")
+		_, err := service.ListProjects(r.Context(), *s.storage, "all")
 		if err != nil {
-			http.Error(w, "Failed to list articles", http.StatusInternalServerError)
+			http.Error(w, "Failed to list projects", http.StatusInternalServerError)
 
 			return
 		}
@@ -161,9 +162,9 @@ func (s *Server) RegisterRoutes() http.Handler {
 		web.GetReadingListBook(w, r, *s.storage, articleID, s.auth)
 	}))
 	mux.Handle("/reading-list/list", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, err := web.ListBooks(r.Context(), *s.storage, "all")
+		_, err := service.ListBooks(r.Context(), *s.storage, "all")
 		if err != nil {
-			http.Error(w, "Failed to list articles", http.StatusInternalServerError)
+			http.Error(w, "Failed to list books", http.StatusInternalServerError)
 
 			return
 		}
@@ -180,9 +181,9 @@ func (s *Server) RegisterRoutes() http.Handler {
 		web.GetLetterHandler(w, r, *s.storage, letterID, s.auth)
 	}))
 	mux.Handle("/letters/list", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, err := web.ListLetters(r.Context(), *s.storage, "all")
+		_, err := service.ListLetters(r.Context(), *s.storage, "all")
 		if err != nil {
-			http.Error(w, "Failed to list letters.", http.StatusInternalServerError)
+			http.Error(w, "Failed to list letters", http.StatusInternalServerError)
 
 			return
 		}
