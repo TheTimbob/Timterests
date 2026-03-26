@@ -8,6 +8,7 @@ import (
 	"testing"
 	"timterests/cmd/web"
 	"timterests/internal/auth"
+	"timterests/internal/service"
 
 	"github.com/PuerkitoBio/goquery"
 )
@@ -210,7 +211,7 @@ func TestReadingList(t *testing.T) {
 	t.Run("get book object", func(t *testing.T) {
 		testBookPath := "reading-list/test-book.yaml"
 
-		book, err := web.GetBook(ctx, testBookPath, 1, *s)
+		book, err := service.GetBook(ctx, *s, testBookPath, 1)
 		if err != nil {
 			t.Fatalf("failed to get book: %v", err)
 		}
@@ -249,7 +250,7 @@ func TestReadingList(t *testing.T) {
 	})
 
 	t.Run("list books", func(t *testing.T) {
-		books, err := web.ListBooks(ctx, *s, "")
+		books, err := service.ListBooks(ctx, *s, "")
 		if err != nil {
 			t.Fatalf("failed to list books: %v", err)
 		}
@@ -260,7 +261,7 @@ func TestReadingList(t *testing.T) {
 	})
 
 	t.Run("list books with tag filter", func(t *testing.T) {
-		books, err := web.ListBooks(ctx, *s, "Data Structures")
+		books, err := service.ListBooks(ctx, *s, "Data Structures")
 		if err != nil {
 			t.Fatalf("failed to list books: %v", err)
 		}
@@ -282,12 +283,12 @@ func TestReadingList(t *testing.T) {
 	t.Run("book to card conversion", func(t *testing.T) {
 		testBookPath := "reading-list/test-book.yaml"
 
-		book, err := web.GetBook(ctx, testBookPath, 1, *s)
+		book, err := service.GetBook(ctx, *s, testBookPath, 1)
 		if err != nil {
 			t.Fatalf("failed to get book: %v", err)
 		}
 
-		card := book.ToCard(0)
+		card := web.BookCard(*book, 0)
 
 		if card.Title != book.Title {
 			t.Errorf("expected card title %q, got %q", book.Title, card.Title)

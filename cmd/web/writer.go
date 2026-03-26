@@ -12,6 +12,8 @@ import (
 
 	"timterests/internal/ai"
 	"timterests/internal/auth"
+	"timterests/internal/model"
+	"timterests/internal/service"
 	"timterests/internal/storage"
 
 	"github.com/a-h/templ"
@@ -49,15 +51,15 @@ func WriterPageHandler(
 		// Create empty content based on docType
 		switch docType {
 		case "articles":
-			content = &Article{}
+			content = &model.Article{}
 		case "projects":
-			content = &Project{}
+			content = &model.Project{}
 		case "reading-list":
-			content = &ReadingList{}
+			content = &model.ReadingList{}
 		case "letters":
-			content = &Letter{}
+			content = &model.Letter{}
 		default:
-			content = &Article{} // default to Article
+			content = &model.Article{} // default to Article
 		}
 	}
 
@@ -231,13 +233,13 @@ func getTypeContentRaw(ctx context.Context, docType, key string, id int, s stora
 
 	switch docType {
 	case "articles":
-		return loadRawDoc[Article, *Article](ctx, key, idStr, s)
+		return loadRawDoc[model.Article, *model.Article](ctx, key, idStr, s)
 	case "projects":
-		return loadRawDoc[Project, *Project](ctx, key, idStr, s)
+		return loadRawDoc[model.Project, *model.Project](ctx, key, idStr, s)
 	case "reading-list":
-		return loadRawDoc[ReadingList, *ReadingList](ctx, key, idStr, s)
+		return loadRawDoc[model.ReadingList, *model.ReadingList](ctx, key, idStr, s)
 	case "letters":
-		return loadRawDoc[Letter, *Letter](ctx, key, idStr, s)
+		return loadRawDoc[model.Letter, *model.Letter](ctx, key, idStr, s)
 	default:
 		return nil, fmt.Errorf("unsupported document type: %s", docType)
 	}
@@ -303,7 +305,7 @@ func generateFilename(formData map[string]any, docType string) (string, error) {
 			return "", errors.New("invalid date in form data")
 		}
 
-		articleDate = FormatDateForFilename(articleDate)
+		articleDate = service.FormatArticleDateForFilename(articleDate)
 
 		return fmt.Sprintf("%s-%s.yaml", sanitizedTitle, articleDate), nil
 	}

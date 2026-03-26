@@ -8,6 +8,7 @@ import (
 	"testing"
 	"timterests/cmd/web"
 	"timterests/internal/auth"
+	"timterests/internal/service"
 	"timterests/internal/storage"
 
 	"github.com/PuerkitoBio/goquery"
@@ -209,7 +210,7 @@ func TestProject(t *testing.T) {
 	t.Run("get project object", func(t *testing.T) {
 		testProjectPath := "projects/test-project.yaml"
 
-		project, err := web.GetProject(ctx, testProjectPath, 1, *s)
+		project, err := service.GetProject(ctx, *s, testProjectPath, 1)
 		if err != nil {
 			t.Fatalf("failed to get project: %v", err)
 		}
@@ -232,7 +233,7 @@ func TestProject(t *testing.T) {
 	})
 
 	t.Run("list projects", func(t *testing.T) {
-		projects, err := web.ListProjects(ctx, *s, "")
+		projects, err := service.ListProjects(ctx, *s, "")
 		if err != nil {
 			t.Fatalf("failed to list projects: %v", err)
 		}
@@ -243,7 +244,7 @@ func TestProject(t *testing.T) {
 	})
 
 	t.Run("list projects with tag filter", func(t *testing.T) {
-		projects, err := web.ListProjects(ctx, *s, "Golang")
+		projects, err := service.ListProjects(ctx, *s, "Golang")
 		if err != nil {
 			t.Fatalf("failed to list projects: %v", err)
 		}
@@ -263,7 +264,7 @@ func TestProject(t *testing.T) {
 	})
 
 	t.Run("get featured project", func(t *testing.T) {
-		project, err := web.GetFeaturedProject(ctx, *s, "Test Project")
+		project, err := service.GetFeaturedProject(ctx, *s, "Test Project")
 		if err != nil {
 			t.Fatalf("failed to get featured project: %v", err)
 		}
@@ -282,12 +283,12 @@ func TestProject(t *testing.T) {
 	t.Run("project to card conversion", func(t *testing.T) {
 		testProjectPath := "projects/test-project.yaml"
 
-		project, err := web.GetProject(ctx, testProjectPath, 1, *s)
+		project, err := service.GetProject(ctx, *s, testProjectPath, 1)
 		if err != nil {
 			t.Fatalf("failed to get project: %v", err)
 		}
 
-		card := project.ToCard(0)
+		card := web.ProjectCard(*project, 0)
 
 		if card.Title != project.Title {
 			t.Errorf("expected card title %q, got %q", project.Title, card.Title)

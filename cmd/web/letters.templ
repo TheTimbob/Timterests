@@ -2,9 +2,10 @@ package web
 
 import (
     "timterests/cmd/web/components"
+    "timterests/internal/model"
 )
 
-templ LettersListPage(letters []Letter, tags []string, design string) {
+templ LettersListPage(letters []model.Letter, tags []string, design string) {
 	@Base("letters") {
 		<div id="letters-container">
 		    <div class="header-controls">
@@ -19,39 +20,39 @@ templ LettersListPage(letters []Letter, tags []string, design string) {
 	}
 }
 
-templ LettersList(letters []Letter, design string) {
+templ LettersList(letters []model.Letter, design string) {
     <ul id="page-list" class="page-list">
 		if design == "grid" {
 			for i := 0; i < len(letters); i += 4 {
 				<li class="grid-list-element">
 					for j := i; j < i+4 && j < len(letters); j++ {
-						@letters[j].ToCard(j).MiniCard()
+						@LetterCard(letters[j], j).MiniCard()
 					}
 				</li>
 			}
         } else if design == "links" {
             for i, letter := range letters {
                 <li>
-                    @letter.ToCard(i).LinkCard()
+                    @LetterCard(letter, i).LinkCard()
                 </li>
             }
 		} else {
         	for i, letter := range letters {
 				<li>
-    		        @letter.ToCard(i).LargeCard()
+    		        @LetterCard(letter, i).LargeCard()
 				</li>
 			}
 		}
 	</ul>
 }
 
-templ LetterPage(letter Letter, userIsAdmin bool){
+templ LetterPage(letter model.Letter, userIsAdmin bool){
     @Base("letters") {
         @LetterDisplay(letter, userIsAdmin)
     }
 }
 
-templ LetterDisplay(letter Letter, userIsAdmin bool) {
+templ LetterDisplay(letter model.Letter, userIsAdmin bool) {
     @EditLetterButton(letter, userIsAdmin)
     @components.DownloadDocumentButton(letter.Title, userIsAdmin)
     <div id="letter-container">
@@ -61,7 +62,7 @@ templ LetterDisplay(letter Letter, userIsAdmin bool) {
     </div>
 }
 
-templ EditLetterButton(letter Letter, userIsAdmin bool) {
+templ EditLetterButton(letter model.Letter, userIsAdmin bool) {
     if userIsAdmin {
         <form hx-post="/writer" hx-target="body" class="action-form">
             <input type="hidden" name="document-type" value="letters"/>

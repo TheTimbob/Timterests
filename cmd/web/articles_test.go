@@ -8,6 +8,7 @@ import (
 	"testing"
 	"timterests/cmd/web"
 	"timterests/internal/auth"
+	"timterests/internal/service"
 
 	"github.com/PuerkitoBio/goquery"
 )
@@ -200,7 +201,7 @@ func TestArticle(t *testing.T) {
 	t.Run("get article object", func(t *testing.T) {
 		testArticlePath := "articles/test-article.yaml"
 
-		article, err := web.GetArticle(ctx, testArticlePath, 1, *s)
+		article, err := service.GetArticle(ctx, *s, testArticlePath, 1)
 		if err != nil {
 			t.Fatalf("failed to get article: %v", err)
 		}
@@ -215,7 +216,7 @@ func TestArticle(t *testing.T) {
 	})
 
 	t.Run("list articles", func(t *testing.T) {
-		articles, err := web.ListArticles(ctx, *s, "")
+		articles, err := service.ListArticles(ctx, *s, "")
 		if err != nil {
 			t.Fatalf("failed to list articles: %v", err)
 		}
@@ -226,7 +227,7 @@ func TestArticle(t *testing.T) {
 	})
 
 	t.Run("list articles with tag filter", func(t *testing.T) {
-		articles, err := web.ListArticles(ctx, *s, "tag1")
+		articles, err := service.ListArticles(ctx, *s, "tag1")
 		if err != nil {
 			t.Fatalf("failed to list articles: %v", err)
 		}
@@ -246,7 +247,7 @@ func TestArticle(t *testing.T) {
 	})
 
 	t.Run("get latest article", func(t *testing.T) {
-		article, err := web.GetLatestArticle(ctx, *s)
+		article, err := service.GetLatestArticle(ctx, *s)
 		if err != nil {
 			t.Fatalf("failed to get latest article: %v", err)
 		}
@@ -260,12 +261,12 @@ func TestArticle(t *testing.T) {
 	t.Run("article to card conversion", func(t *testing.T) {
 		testArticlePath := "articles/test-article.yaml"
 
-		article, err := web.GetArticle(ctx, testArticlePath, 1, *s)
+		article, err := service.GetArticle(ctx, *s, testArticlePath, 1)
 		if err != nil {
 			t.Fatalf("failed to get article: %v", err)
 		}
 
-		card := article.ToCard(0)
+		card := web.ArticleCard(*article, 0)
 
 		if card.Title != article.Title {
 			t.Errorf("expected card title %q, got %q", article.Title, card.Title)
