@@ -1,7 +1,8 @@
 .dark-mode-switch {
   display: inline;
-  position: relative;
-  float: right;
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
 }
 
 .dark-mode-switch-input {
