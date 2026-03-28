@@ -233,13 +233,13 @@ func getTypeContentRaw(ctx context.Context, docType, key string, id int, s stora
 
 	switch docType {
 	case "articles":
-		return loadRawDoc[model.Article, *model.Article](ctx, key, idStr, s)
+		return loadRawDoc[model.Article](ctx, key, idStr, s)
 	case "projects":
-		return loadRawDoc[model.Project, *model.Project](ctx, key, idStr, s)
+		return loadRawDoc[model.Project](ctx, key, idStr, s)
 	case "reading-list":
-		return loadRawDoc[model.ReadingList, *model.ReadingList](ctx, key, idStr, s)
+		return loadRawDoc[model.ReadingList](ctx, key, idStr, s)
 	case "letters":
-		return loadRawDoc[model.Letter, *model.Letter](ctx, key, idStr, s)
+		return loadRawDoc[model.Letter](ctx, key, idStr, s)
 	default:
 		return nil, fmt.Errorf("unsupported document type: %s", docType)
 	}

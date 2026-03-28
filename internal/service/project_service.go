@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"slices"
-	"strconv"
 	"timterests/internal/model"
 	"timterests/internal/storage"
 
@@ -22,7 +21,7 @@ func ListProjects(ctx context.Context, s storage.Storage, tag string) ([]model.P
 
 	projectFiles, err := s.ListObjects(ctx, prefix)
 	if err != nil {
-		return nil, fmt.Errorf("failed to list S3 objects: %w", err)
+		return nil, fmt.Errorf("failed to list objects: %w", err)
 	}
 
 	for id, obj := range projectFiles {
@@ -39,7 +38,7 @@ func ListProjects(ctx context.Context, s storage.Storage, tag string) ([]model.P
 			return nil, err
 		}
 
-		if slices.Contains(project.Tags, tag) || tag == "all" || tag == "" {
+		if tag == "" || tag == "all" || slices.Contains(project.Tags, tag) {
 			projects = append(projects, *project)
 		}
 	}
@@ -50,26 +49,21 @@ func ListProjects(ctx context.Context, s storage.Storage, tag string) ([]model.P
 // GetProject retrieves a single project by its storage key and numeric ID,
 // including downloading and resolving its associated image.
 func GetProject(ctx context.Context, s storage.Storage, key string, id int) (*model.Project, error) {
-	var project model.Project
-
-	project.ID = strconv.Itoa(id)
-	project.S3Key = key
-
-	err := s.GetPreparedFile(ctx, key, &project)
+	project, err := getDoc[model.Project](ctx, s, key, id)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get prepared file: %w", err)
+		return nil, err
 	}
 
-	localImagePath, err := s.GetImage(ctx, project.Image)
+	imagePath, err := s.GetImage(ctx, project.Image)
 	if err != nil {
 		log.Printf("Failed to download image: %v", err)
 
-		return nil, fmt.Errorf("failed to get image from S3: %w", err)
+		return nil, fmt.Errorf("failed to resolve image %q: %w", project.Image, err)
 	}
 
-	project.Image = localImagePath
+	project.Image = imagePath
 
-	return &project, nil
+	return project, nil
 }
 
 // GetFeaturedProject retrieves the project whose title matches featuredProjectTitle.

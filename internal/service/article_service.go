@@ -9,7 +9,6 @@ import (
 	"log"
 	"slices"
 	"sort"
-	"strconv"
 	"time"
 	"timterests/internal/model"
 	"timterests/internal/storage"
@@ -26,7 +25,7 @@ func ListArticles(ctx context.Context, s storage.Storage, tag string) ([]model.A
 
 	articleFiles, err := s.ListObjects(ctx, prefix)
 	if err != nil {
-		return nil, fmt.Errorf("failed to list S3 objects: %w", err)
+		return nil, fmt.Errorf("failed to list objects with prefix %q: %w", prefix, err)
 	}
 
 	for id, obj := range articleFiles {
@@ -41,7 +40,7 @@ func ListArticles(ctx context.Context, s storage.Storage, tag string) ([]model.A
 			return nil, err
 		}
 
-		if slices.Contains(article.Tags, tag) || tag == "all" || tag == "" {
+		if tag == "all" || tag == "" || slices.Contains(article.Tags, tag) {
 			articles = append(articles, *article)
 		}
 	}
@@ -55,17 +54,7 @@ func ListArticles(ctx context.Context, s storage.Storage, tag string) ([]model.A
 
 // GetArticle retrieves a single article by its storage key and numeric ID.
 func GetArticle(ctx context.Context, s storage.Storage, key string, id int) (*model.Article, error) {
-	var article model.Article
-
-	article.ID = strconv.Itoa(id)
-	article.S3Key = key
-
-	err := s.GetPreparedFile(ctx, key, &article)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get prepared file: %w", err)
-	}
-
-	return &article, nil
+	return getDoc[model.Article](ctx, s, key, id)
 }
 
 // GetLatestArticle retrieves the most recently dated article from storage.

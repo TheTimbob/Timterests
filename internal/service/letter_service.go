@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"slices"
 	"sort"
-	"strconv"
 	"timterests/internal/model"
 	"timterests/internal/storage"
 
@@ -19,7 +18,7 @@ func ListLetters(ctx context.Context, s storage.Storage, tag string) ([]model.Le
 
 	letterFiles, err := s.ListObjects(ctx, prefix)
 	if err != nil {
-		return nil, fmt.Errorf("failed to list S3 objects: %w", err)
+		return nil, fmt.Errorf("failed to list objects: %w", err)
 	}
 
 	letters := make([]model.Letter, 0, len(letterFiles))
@@ -36,7 +35,7 @@ func ListLetters(ctx context.Context, s storage.Storage, tag string) ([]model.Le
 			return nil, err
 		}
 
-		if slices.Contains(letter.Tags, tag) || tag == "all" || tag == "" {
+		if tag == "all" || tag == "" || slices.Contains(letter.Tags, tag) {
 			letters = append(letters, *letter)
 		}
 	}
@@ -50,15 +49,5 @@ func ListLetters(ctx context.Context, s storage.Storage, tag string) ([]model.Le
 
 // GetLetter retrieves a single letter by its storage key and numeric ID.
 func GetLetter(ctx context.Context, s storage.Storage, key string, id int) (*model.Letter, error) {
-	var letter model.Letter
-
-	letter.ID = strconv.Itoa(id)
-	letter.S3Key = key
-
-	err := s.GetPreparedFile(ctx, key, &letter)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get prepared file: %w", err)
-	}
-
-	return &letter, nil
+	return getDoc[model.Letter](ctx, s, key, id)
 }

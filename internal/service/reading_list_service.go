@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"slices"
-	"strconv"
 	"timterests/internal/model"
 	"timterests/internal/storage"
 
@@ -21,7 +20,7 @@ func ListBooks(ctx context.Context, s storage.Storage, tag string) ([]model.Read
 
 	files, err := s.ListObjects(ctx, prefix)
 	if err != nil {
-		return nil, fmt.Errorf("failed to list S3 objects: %w", err)
+		return nil, fmt.Errorf("failed to list objects: %w", err)
 	}
 
 	for id, obj := range files {
@@ -36,7 +35,7 @@ func ListBooks(ctx context.Context, s storage.Storage, tag string) ([]model.Read
 			return nil, err
 		}
 
-		if slices.Contains(book.Tags, tag) || tag == "all" || tag == "" {
+		if tag == "all" || tag == "" || slices.Contains(book.Tags, tag) {
 			readingList = append(readingList, *book)
 		}
 	}
@@ -47,24 +46,19 @@ func ListBooks(ctx context.Context, s storage.Storage, tag string) ([]model.Read
 // GetBook retrieves a single book by its storage key and numeric ID,
 // including downloading and resolving its associated cover image.
 func GetBook(ctx context.Context, s storage.Storage, key string, id int) (*model.ReadingList, error) {
-	var book model.ReadingList
-
-	book.ID = strconv.Itoa(id)
-	book.S3Key = key
-
-	err := s.GetPreparedFile(ctx, key, &book)
+	book, err := getDoc[model.ReadingList](ctx, s, key, id)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get prepared file: %w", err)
+		return nil, err
 	}
 
-	localImagePath, err := s.GetImage(ctx, book.Image)
+	imagePath, err := s.GetImage(ctx, book.Image)
 	if err != nil {
 		log.Printf("Failed to download image: %v", err)
 
-		return nil, fmt.Errorf("failed to get image from S3: %w", err)
+		return nil, fmt.Errorf("failed to resolve image %q: %w", book.Image, err)
 	}
 
-	book.Image = localImagePath
+	book.Image = imagePath
 
-	return &book, nil
+	return book, nil
 }
