@@ -6,14 +6,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"path/filepath"
-	"strconv"
 	"strings"
 
 	"timterests/internal/ai"
 	"timterests/internal/auth"
-	"timterests/internal/model"
-	"timterests/internal/service"
 	"timterests/internal/storage"
 
 	"github.com/a-h/templ"
@@ -39,9 +35,9 @@ func WriterPageHandler(
 		return
 	}
 
-	// If key is provided, load the existing document with raw markdown (no HTML conversion)
+	// If key is provided, get the content to load the existing document
 	if key != "" {
-		content, err = getTypeContentRaw(r.Context(), docType, key, typeID, s)
+		content, err = GetTypeContentFromID(r.Context(), docType, key, typeID, s)
 		if err != nil {
 			http.Error(w, "Failed to load document: "+err.Error(), http.StatusInternalServerError)
 
@@ -51,15 +47,15 @@ func WriterPageHandler(
 		// Create empty content based on docType
 		switch docType {
 		case "articles":
-			content = &model.Article{}
+			content = &Article{}
 		case "projects":
-			content = &model.Project{}
+			content = &Project{}
 		case "reading-list":
-			content = &model.ReadingList{}
+			content = &ReadingList{}
 		case "letters":
-			content = &model.Letter{}
+			content = &Letter{}
 		default:
-			content = &model.Article{} // default to Article
+			content = &Article{} // default to Article
 		}
 	}
 
@@ -145,7 +141,7 @@ func WriteDocumentHandler(w http.ResponseWriter, r *http.Request, s storage.Stor
 }
 
 // WriterSuggestionHandler handles AI-powered content suggestions for the writer.
-func WriterSuggestionHandler(w http.ResponseWriter, r *http.Request, a *auth.Auth) {
+func WriterSuggestionHandler(w http.ResponseWriter, r *http.Request, s storage.Storage, a *auth.Auth) {
 	if !a.IsAuthenticated(r) {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 
@@ -165,30 +161,42 @@ func WriterSuggestionHandler(w http.ResponseWriter, r *http.Request, a *auth.Aut
 
 		err := component.Render(r.Context(), w)
 		if err != nil {
-			http.Error(w, "Service temporarily unavailable", http.StatusBadRequest)
+			http.Error(w, "Service temporarily unavailable", http.StatusInternalServerError)
 			log.Printf("Error rendering in WriterSuggestionHandler: %v", err)
 		}
 
 		return
 	}
 
-	instructionFile := r.FormValue("prompt-select")
+	docType := r.FormValue("document-type")
+	if strings.TrimSpace(docType) == "" {
+		docType = "articles"
+	}
 
-	instructionFile = filepath.Base(filepath.Clean(instructionFile))
-	if strings.TrimSpace(instructionFile) == "" || strings.Contains(instructionFile, string(filepath.Separator)) {
-		http.Error(w, "Invalid prompt file", http.StatusBadRequest)
-		log.Printf("Invalid prompt file: %q", instructionFile)
+	systemInstruction, err := s.GetPromptContent(r.Context(), docType)
+	if err != nil {
+		log.Printf("Failed to load system prompt for docType %q: %v", docType, err) // #nosec G706
+
+		component := AISuggestionError("AI suggestions are temporarily unavailable. Please try again later.")
+
+		err = component.Render(r.Context(), w)
+		if err != nil {
+			http.Error(w, "Service temporarily unavailable", http.StatusInternalServerError)
+			log.Printf("Error rendering in WriterSuggestionHandler: %v", err)
+		}
 
 		return
 	}
 
-	suggestion, err := ai.GenerateSuggestion(r.Context(), bodyContent, instructionFile)
+	suggestion, err := ai.GenerateSuggestion(r.Context(), bodyContent, systemInstruction)
 	if err != nil {
-		component := AISuggestionError(fmt.Sprintf("Failed to get AI suggestion: %v", err))
+		log.Printf("Failed to generate AI suggestion: %v", err)
+
+		component := AISuggestionError("Failed to get AI suggestion. Please try again later.")
 
 		err = component.Render(r.Context(), w)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			http.Error(w, "Service temporarily unavailable", http.StatusInternalServerError)
 			log.Printf("Error rendering in WriterSuggestionHandler: %v", err)
 		}
 
@@ -199,47 +207,24 @@ func WriterSuggestionHandler(w http.ResponseWriter, r *http.Request, a *auth.Aut
 
 	err = component.Render(r.Context(), w)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, "Service temporarily unavailable", http.StatusInternalServerError)
+		log.Printf("Error rendering AISuggestionResponse in WriterSuggestionHandler: %v", err)
 
 		return
 	}
 }
 
-// metaSetter is satisfied by any type whose pointer embeds *model.Document.
-type metaSetter interface {
-	SetMeta(id, key string)
-}
-
-// loadRawDoc initialises a zero-value T, sets its metadata, fetches the raw
-// (non-HTML-converted) file from storage, and returns a pointer to the result.
-func loadRawDoc[T any, PT interface {
-	*T
-	metaSetter
-}](ctx context.Context, key, idStr string, s storage.Storage) (*T, error) {
-	var doc T
-	PT(&doc).SetMeta(idStr, key)
-
-	err := s.GetRawFile(ctx, key, PT(&doc))
-	if err != nil {
-		return nil, fmt.Errorf("failed to get raw file: %w", err)
-	}
-
-	return &doc, nil
-}
-
-// getTypeContentRaw retrieves content for editing, keeping the body as raw markdown.
-func getTypeContentRaw(ctx context.Context, docType, key string, id int, s storage.Storage) (any, error) {
-	idStr := strconv.Itoa(id)
-
+// GetTypeContentFromID retrieves content based on document type, S3 key, and ID.
+func GetTypeContentFromID(ctx context.Context, docType, key string, id int, s storage.Storage) (any, error) {
 	switch docType {
 	case "articles":
-		return loadRawDoc[model.Article](ctx, key, idStr, s)
+		return GetArticle(ctx, key, id, s)
 	case "projects":
-		return loadRawDoc[model.Project](ctx, key, idStr, s)
+		return GetProject(ctx, key, id, s)
 	case "reading-list":
-		return loadRawDoc[model.ReadingList](ctx, key, idStr, s)
+		return GetBook(ctx, key, id, s)
 	case "letters":
-		return loadRawDoc[model.Letter](ctx, key, idStr, s)
+		return GetLetter(ctx, key, id, s)
 	default:
 		return nil, fmt.Errorf("unsupported document type: %s", docType)
 	}
@@ -305,7 +290,7 @@ func generateFilename(formData map[string]any, docType string) (string, error) {
 			return "", errors.New("invalid date in form data")
 		}
 
-		articleDate = service.FormatArticleDateForFilename(articleDate)
+		articleDate = FormatDateForFilename(articleDate)
 
 		return fmt.Sprintf("%s-%s.yaml", sanitizedTitle, articleDate), nil
 	}
