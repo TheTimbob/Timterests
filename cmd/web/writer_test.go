@@ -13,6 +13,9 @@ import (
 )
 
 func TestWriterSuggestionWithMultipleDocTypes(t *testing.T) {
+	// Prevent the test from hitting the real OpenAI API if a key is set in the environment or .env file.
+	t.Setenv("OPENAI_API_KEY", "")
+
 	ctx := context.Background()
 	s := testSetup(t, ctx)
 	a, addCookie := testAuthentication(t)
@@ -20,7 +23,7 @@ func TestWriterSuggestionWithMultipleDocTypes(t *testing.T) {
 	// Create a temp prompts directory with a distinct file for each doc type.
 	// This verifies the handler maps each docType to its correct <docType>.txt file.
 	promptsDir := t.TempDir()
-	for _, docType := range []string{"articles", "projects", "reading-list"} {
+	for _, docType := range []string{"articles", "projects", "reading-list", "letters"} {
 		promptFile := filepath.Join(promptsDir, docType+".txt")
 		if err := os.WriteFile(promptFile, []byte("test system prompt for "+docType), 0600); err != nil {
 			t.Fatalf("failed to write prompt file for %s: %v", docType, err)
@@ -35,6 +38,7 @@ func TestWriterSuggestionWithMultipleDocTypes(t *testing.T) {
 		{docType: "articles", expectedPromptFile: "articles.txt"},
 		{docType: "projects", expectedPromptFile: "projects.txt"},
 		{docType: "reading-list", expectedPromptFile: "reading-list.txt"},
+		{docType: "letters", expectedPromptFile: "letters.txt"},
 	}
 
 	for _, tc := range tests {

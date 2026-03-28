@@ -161,7 +161,7 @@ func WriterSuggestionHandler(w http.ResponseWriter, r *http.Request, s storage.S
 
 		err := component.Render(r.Context(), w)
 		if err != nil {
-			http.Error(w, "Service temporarily unavailable", http.StatusBadRequest)
+			http.Error(w, "Service temporarily unavailable", http.StatusInternalServerError)
 			log.Printf("Error rendering in WriterSuggestionHandler: %v", err)
 		}
 
@@ -175,13 +175,13 @@ func WriterSuggestionHandler(w http.ResponseWriter, r *http.Request, s storage.S
 
 	systemInstruction, err := s.GetPromptContent(r.Context(), docType)
 	if err != nil {
-		log.Printf("Failed to load system prompt for docType %s: %v", docType, err) // #nosec G706
+		log.Printf("Failed to load system prompt for docType %q: %v", docType, err) // #nosec G706
 
 		component := AISuggestionError("AI suggestions are temporarily unavailable. Please try again later.")
 
 		err = component.Render(r.Context(), w)
 		if err != nil {
-			http.Error(w, "Service temporarily unavailable", http.StatusBadRequest)
+			http.Error(w, "Service temporarily unavailable", http.StatusInternalServerError)
 			log.Printf("Error rendering in WriterSuggestionHandler: %v", err)
 		}
 
@@ -190,11 +190,13 @@ func WriterSuggestionHandler(w http.ResponseWriter, r *http.Request, s storage.S
 
 	suggestion, err := ai.GenerateSuggestion(r.Context(), bodyContent, systemInstruction)
 	if err != nil {
-		component := AISuggestionError(fmt.Sprintf("Failed to get AI suggestion: %v", err))
+		log.Printf("Failed to generate AI suggestion: %v", err)
+
+		component := AISuggestionError("Failed to get AI suggestion. Please try again later.")
 
 		err = component.Render(r.Context(), w)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			http.Error(w, "Service temporarily unavailable", http.StatusInternalServerError)
 			log.Printf("Error rendering in WriterSuggestionHandler: %v", err)
 		}
 
@@ -205,7 +207,8 @@ func WriterSuggestionHandler(w http.ResponseWriter, r *http.Request, s storage.S
 
 	err = component.Render(r.Context(), w)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, "Service temporarily unavailable", http.StatusInternalServerError)
+		log.Printf("Error rendering AISuggestionResponse in WriterSuggestionHandler: %v", err)
 
 		return
 	}
