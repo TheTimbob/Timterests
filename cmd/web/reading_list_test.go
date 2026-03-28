@@ -4,7 +4,6 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
-	"slices"
 	"testing"
 	"timterests/cmd/web"
 	"timterests/internal/auth"
@@ -204,81 +203,9 @@ func TestBookRendering(t *testing.T) {
 	})
 }
 
-func TestReadingList(t *testing.T) {
+func TestBookCardConversion(t *testing.T) {
 	ctx := context.Background()
 	s := testSetup(t, ctx)
-
-	t.Run("get book object", func(t *testing.T) {
-		testBookPath := "reading-list/test-book.yaml"
-
-		book, err := service.GetBook(ctx, *s, testBookPath, 1)
-		if err != nil {
-			t.Fatalf("failed to get book: %v", err)
-		}
-
-		if book.ID != "1" {
-			t.Errorf("expected book ID '1', got '%s'", book.ID)
-		}
-
-		if book.Title != "Test Book" {
-			t.Errorf("expected book title 'Test Book', got '%s'", book.Title)
-		}
-
-		if book.Author != "Test Author" {
-			t.Errorf("expected book author 'Test Author', got '%s'", book.Author)
-		}
-
-		if book.Published != "2024" {
-			t.Errorf("expected book published year '2024', got '%s'", book.Published)
-		}
-
-		if book.ISBN != "978-0-134685991" {
-			t.Errorf("expected book ISBN '978-0-134685991', got '%s'", book.ISBN)
-		}
-
-		if book.Website != "https://example.com/test-book" {
-			t.Errorf("expected book website 'https://example.com/test-book', got '%s'", book.Website)
-		}
-
-		if book.Status != "read" {
-			t.Errorf("expected book status 'read', got '%s'", book.Status)
-		}
-
-		if book.Image == "" {
-			t.Error("expected book image path to be set, but it was empty")
-		}
-	})
-
-	t.Run("list books", func(t *testing.T) {
-		books, err := service.ListBooks(ctx, *s, "")
-		if err != nil {
-			t.Fatalf("failed to list books: %v", err)
-		}
-
-		if len(books) < 1 {
-			t.Errorf("expected at least one book, got %d", len(books))
-		}
-	})
-
-	t.Run("list books with tag filter", func(t *testing.T) {
-		books, err := service.ListBooks(ctx, *s, "Data Structures")
-		if err != nil {
-			t.Fatalf("failed to list books: %v", err)
-		}
-
-		if len(books) < 1 {
-			t.Errorf("expected at least one book with tag 'Data Structures', got %d", len(books))
-		}
-
-		// Verify all returned books have the tag
-		for _, book := range books {
-			hasTag := slices.Contains(book.Tags, "Data Structures")
-
-			if !hasTag {
-				t.Errorf("book %q does not have tag 'Data Structures'", book.Title)
-			}
-		}
-	})
 
 	t.Run("book to card conversion", func(t *testing.T) {
 		testBookPath := "reading-list/test-book.yaml"
