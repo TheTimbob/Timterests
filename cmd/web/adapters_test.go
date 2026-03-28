@@ -40,7 +40,7 @@ func TestArticleAdapters(t *testing.T) {
 			t.Fatalf("service.ListArticles failed: %v", err)
 		}
 
-		cards := make([]interface{}, len(mas))
+		cards := make([]any, len(mas))
 		for i, a := range mas {
 			cards[i] = web.ArticleCard(a, i)
 		}
@@ -101,7 +101,7 @@ func TestProjectAdapters(t *testing.T) {
 			t.Fatalf("service.ListProjects failed: %v", err)
 		}
 
-		cards := make([]interface{}, len(mps))
+		cards := make([]any, len(mps))
 		for i, p := range mps {
 			cards[i] = web.ProjectCard(p, i)
 		}
@@ -162,7 +162,7 @@ func TestLetterAdapters(t *testing.T) {
 			t.Fatalf("service.ListLetters failed: %v", err)
 		}
 
-		cards := make([]interface{}, len(mls))
+		cards := make([]any, len(mls))
 		for i, l := range mls {
 			cards[i] = web.LetterCard(l, i)
 		}
@@ -219,7 +219,7 @@ func TestReadingListAdapters(t *testing.T) {
 			t.Fatalf("service.ListBooks failed: %v", err)
 		}
 
-		cards := make([]interface{}, len(mbs))
+		cards := make([]any, len(mbs))
 		for i, b := range mbs {
 			cards[i] = web.BookCard(b, i)
 		}
