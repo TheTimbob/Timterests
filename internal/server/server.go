@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -12,6 +13,7 @@ import (
 	_ "github.com/joho/godotenv/autoload"
 
 	"timterests/internal/auth"
+	apperrors "timterests/internal/errors"
 	"timterests/internal/storage"
 )
 
@@ -24,6 +26,16 @@ type Server struct {
 
 // NewServer creates and configures a new HTTP server instance.
 func NewServer() *http.Server {
+	// Initialize structured error logger (best-effort; console logging still works if this fails).
+	logPath := os.Getenv("ERROR_LOG_PATH")
+	if logPath == "" {
+		logPath = "logs/errors.log"
+	}
+
+	if err := apperrors.InitLogger(logPath); err != nil {
+		log.Printf("warning: could not initialize error log file (%v); falling back to console only", err)
+	}
+
 	port, err := strconv.Atoi(os.Getenv("PORT"))
 	if err != nil {
 		panic(fmt.Sprintf("failed to parse PORT: %v", err))

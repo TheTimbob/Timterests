@@ -12,8 +12,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/a-h/templ"
+	"github.com/aws/aws-sdk-go-v2/aws"
 
 	"timterests/internal/auth"
 	"timterests/internal/storage"
