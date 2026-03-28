@@ -46,7 +46,8 @@ func LettersPageHandler(
 		tags = storage.GetTags(v, tags)
 	}
 
-	if r.Header.Get("Hx-Request") == "true" {
+	if IsHTMXRequest(r) {
+		SetPartialResponseHeaders(w)
 		component = LettersList(letters, design)
 	} else {
 		component = LettersListPage(letters, tags, design)
@@ -80,7 +81,8 @@ func GetLetterHandler(w http.ResponseWriter, r *http.Request, s storage.Storage,
 	for _, letter := range letters {
 		if letter.ID == letterID {
 			var component templ.Component
-			if r.Header.Get("Hx-Request") == "true" {
+			if IsHTMXRequest(r) {
+				SetPartialResponseHeaders(w)
 				component = LetterDisplay(letter, authenticated)
 			} else {
 				component = LetterPage(letter, authenticated)

@@ -33,7 +33,8 @@ func ReadingListPageHandler(w http.ResponseWriter, r *http.Request, s storage.St
 		tags = storage.GetTags(v, tags)
 	}
 
-	if r.Header.Get("Hx-Request") == "true" {
+	if IsHTMXRequest(r) {
+		SetPartialResponseHeaders(w)
 		component = ReadingListList(books, design)
 	} else {
 		component = ReadingListPage(books, tags, design)
@@ -61,7 +62,8 @@ func GetReadingListBook(w http.ResponseWriter, r *http.Request, s storage.Storag
 		if book.ID == bookID {
 			authenticated := a.IsAuthenticated(r)
 
-			if r.Header.Get("Hx-Request") == "true" {
+			if IsHTMXRequest(r) {
+				SetPartialResponseHeaders(w)
 				component = BookDisplay(book, authenticated)
 			} else {
 				component = BookPage(book, authenticated)
