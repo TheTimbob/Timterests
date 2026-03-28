@@ -2,9 +2,10 @@ package web
 
 import (
     "timterests/cmd/web/components"
+    "timterests/internal/model"
 )
 
-templ ProjectsListPage(projects []Project, tags []string, design string) {
+templ ProjectsListPage(projects []model.Project, tags []string, design string) {
 	@Base("projects") {
 		<div id="projects-container">
 		    <div class="header-controls">
@@ -19,39 +20,39 @@ templ ProjectsListPage(projects []Project, tags []string, design string) {
 	}
 }
 
-templ ProjectsList(projects []Project, design string) {
+templ ProjectsList(projects []model.Project, design string) {
 	<ul id="page-list" class="page-list">
 		if design == "grid" {
 			for i := 0; i < len(projects); i += 4 {
 				<li class="grid-list-element">
 					for j := i; j < i+4 && j < len(projects); j++ {
-						@projects[j].ToCard(j).MiniCard()
+						@ProjectCard(projects[j], j).MiniCard()
 					}
 				</li>
 			}
         } else if design == "links" {
             for i, project := range projects {
                 <li>
-                    @project.ToCard(i).LinkCard()
+                    @ProjectCard(project, i).LinkCard()
                 </li>
             }
 		} else {
 			for i, project := range projects {
 			<li>
-				@project.ToCard(i).LargeCard()
+				@ProjectCard(project, i).LargeCard()
 			</li>
 			}
 		}
 	</ul>
 }
 
-templ ProjectPage(project Project, userIsAdmin bool) {
+templ ProjectPage(project model.Project, userIsAdmin bool) {
     @Base("projects") {
         @ProjectDisplay(project, userIsAdmin)
     }
 }
 
-templ ProjectDisplay(project Project, userIsAdmin bool) {
+templ ProjectDisplay(project model.Project, userIsAdmin bool) {
     @EditProjectButton(project, userIsAdmin)
     @components.DownloadDocumentButton(project.Title, userIsAdmin)
     <div id="project-container">
@@ -64,7 +65,7 @@ templ ProjectDisplay(project Project, userIsAdmin bool) {
     </div>
 }
 
-templ EditProjectButton(project Project, userIsAdmin bool) {
+templ EditProjectButton(project model.Project, userIsAdmin bool) {
     if userIsAdmin {
         <form hx-post="/writer" hx-target="body" class="action-form">
             <input type="hidden" name="document-type" value="projects"/>

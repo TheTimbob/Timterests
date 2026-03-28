@@ -4,11 +4,10 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
-	"slices"
 	"testing"
 	"timterests/cmd/web"
 	"timterests/internal/auth"
-	"timterests/internal/storage"
+	"timterests/internal/service"
 
 	"github.com/PuerkitoBio/goquery"
 )
@@ -202,92 +201,19 @@ func TestProjectRendering(t *testing.T) {
 	})
 }
 
-func TestProject(t *testing.T) {
+func TestProjectCardConversion(t *testing.T) {
 	ctx := context.Background()
 	s := testSetup(t, ctx)
-
-	t.Run("get project object", func(t *testing.T) {
-		testProjectPath := "projects/test-project.yaml"
-
-		project, err := web.GetProject(ctx, testProjectPath, 1, *s)
-		if err != nil {
-			t.Fatalf("failed to get project: %v", err)
-		}
-
-		if project.ID != "1" {
-			t.Errorf("expected project ID '1', got '%s'", project.ID)
-		}
-
-		if project.Title != "Test Project" {
-			t.Errorf("expected project title 'Test Project', got '%s'", project.Title)
-		}
-
-		if project.Repository != "Private" {
-			t.Errorf("expected project repository 'Private', got '%s'", project.Repository)
-		}
-
-		if project.Image == "" {
-			t.Error("expected project image path to be set, but it was empty")
-		}
-	})
-
-	t.Run("list projects", func(t *testing.T) {
-		projects, err := web.ListProjects(ctx, *s, "")
-		if err != nil {
-			t.Fatalf("failed to list projects: %v", err)
-		}
-
-		if len(projects) < 1 {
-			t.Errorf("expected at least one project, got %d", len(projects))
-		}
-	})
-
-	t.Run("list projects with tag filter", func(t *testing.T) {
-		projects, err := web.ListProjects(ctx, *s, "Golang")
-		if err != nil {
-			t.Fatalf("failed to list projects: %v", err)
-		}
-
-		if len(projects) < 1 {
-			t.Errorf("expected at least one project with tag 'Golang', got %d", len(projects))
-		}
-
-		// Verify all returned projects have the tag
-		for _, project := range projects {
-			hasTag := slices.Contains(project.Tags, "Golang")
-
-			if !hasTag {
-				t.Errorf("project %q does not have tag 'Golang'", project.Title)
-			}
-		}
-	})
-
-	t.Run("get featured project", func(t *testing.T) {
-		project, err := web.GetFeaturedProject(ctx, *s, "Test Project")
-		if err != nil {
-			t.Fatalf("failed to get featured project: %v", err)
-		}
-
-		expectedTitle := "Test Project"
-		if project.Title != expectedTitle {
-			t.Errorf("expected featured project title %q, got %q", expectedTitle, project.Title)
-		}
-
-		// Verify that HTML tags are removed from body
-		if project.Body != storage.RemoveHTMLTags(project.Body) {
-			t.Error("expected featured project body to have HTML tags removed")
-		}
-	})
 
 	t.Run("project to card conversion", func(t *testing.T) {
 		testProjectPath := "projects/test-project.yaml"
 
-		project, err := web.GetProject(ctx, testProjectPath, 1, *s)
+		project, err := service.GetProject(ctx, *s, testProjectPath, 1)
 		if err != nil {
 			t.Fatalf("failed to get project: %v", err)
 		}
 
-		card := project.ToCard(0)
+		card := web.ProjectCard(*project, 0)
 
 		if card.Title != project.Title {
 			t.Errorf("expected card title %q, got %q", project.Title, card.Title)

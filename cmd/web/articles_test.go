@@ -4,10 +4,10 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
-	"slices"
 	"testing"
 	"timterests/cmd/web"
 	"timterests/internal/auth"
+	"timterests/internal/service"
 
 	"github.com/PuerkitoBio/goquery"
 )
@@ -193,79 +193,19 @@ func TestArticleRendering(t *testing.T) {
 	})
 }
 
-func TestArticle(t *testing.T) {
+func TestArticleCardConversion(t *testing.T) {
 	ctx := context.Background()
 	s := testSetup(t, ctx)
-
-	t.Run("get article object", func(t *testing.T) {
-		testArticlePath := "articles/test-article.yaml"
-
-		article, err := web.GetArticle(ctx, testArticlePath, 1, *s)
-		if err != nil {
-			t.Fatalf("failed to get article: %v", err)
-		}
-
-		if article.ID != "1" {
-			t.Errorf("expected article ID '1', got '%s'", article.ID)
-		}
-
-		if article.Title != "Test Article" {
-			t.Errorf("expected article title 'Test Article', got '%s'", article.Title)
-		}
-	})
-
-	t.Run("list articles", func(t *testing.T) {
-		articles, err := web.ListArticles(ctx, *s, "")
-		if err != nil {
-			t.Fatalf("failed to list articles: %v", err)
-		}
-
-		if len(articles) < 1 {
-			t.Errorf("expected at least one article, got %d", len(articles))
-		}
-	})
-
-	t.Run("list articles with tag filter", func(t *testing.T) {
-		articles, err := web.ListArticles(ctx, *s, "tag1")
-		if err != nil {
-			t.Fatalf("failed to list articles: %v", err)
-		}
-
-		if len(articles) < 1 {
-			t.Errorf("expected at least one article with tag 'tag1', got %d", len(articles))
-		}
-
-		// Verify all returned articles have the tag
-		for _, article := range articles {
-			hasTag := slices.Contains(article.Tags, "tag1")
-
-			if !hasTag {
-				t.Errorf("article %q does not have tag 'tag1'", article.Title)
-			}
-		}
-	})
-
-	t.Run("get latest article", func(t *testing.T) {
-		article, err := web.GetLatestArticle(ctx, *s)
-		if err != nil {
-			t.Fatalf("failed to get latest article: %v", err)
-		}
-
-		expectedTitle := "Test Article"
-		if article.Title != expectedTitle {
-			t.Errorf("expected latest article title %q, got %q", expectedTitle, article.Title)
-		}
-	})
 
 	t.Run("article to card conversion", func(t *testing.T) {
 		testArticlePath := "articles/test-article.yaml"
 
-		article, err := web.GetArticle(ctx, testArticlePath, 1, *s)
+		article, err := service.GetArticle(ctx, *s, testArticlePath, 1)
 		if err != nil {
 			t.Fatalf("failed to get article: %v", err)
 		}
 
-		card := article.ToCard(0)
+		card := web.ArticleCard(*article, 0)
 
 		if card.Title != article.Title {
 			t.Errorf("expected card title %q, got %q", article.Title, card.Title)

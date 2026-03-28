@@ -3,12 +3,13 @@ package web
 import (
 	"log"
 	"net/http"
+	"timterests/internal/service"
 	"timterests/internal/storage"
 )
 
 // HomeHandler handles requests to the home page.
 func HomeHandler(w http.ResponseWriter, r *http.Request, s storage.Storage) {
-	latestArticle, err := GetLatestArticle(r.Context(), s)
+	latestArticle, err := service.GetLatestArticle(r.Context(), s)
 	if err != nil {
 		http.Error(w, "Failed to fetch latest article", http.StatusInternalServerError)
 		log.Printf("Error fetching latest article: %v", err)
@@ -16,7 +17,7 @@ func HomeHandler(w http.ResponseWriter, r *http.Request, s storage.Storage) {
 		return
 	}
 
-	featuredProject, err := GetFeaturedProject(r.Context(), s, "Timterests")
+	featuredProject, err := service.GetFeaturedProject(r.Context(), s, "Timterests")
 	if err != nil {
 		http.Error(w, "Failed to fetch featured project", http.StatusInternalServerError)
 		log.Printf("Error fetching featured project: %v", err)

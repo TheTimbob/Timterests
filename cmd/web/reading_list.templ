@@ -2,9 +2,10 @@ package web
 
 import (
     "timterests/cmd/web/components"
+    "timterests/internal/model"
 )
 
-templ ReadingListPage(readingLists []ReadingList, tags []string, design string) {
+templ ReadingListPage(readingLists []model.ReadingList, tags []string, design string) {
 	@Base("reading-list") {
 		<div id="reading-list-container">
 			<div class="header-controls">
@@ -19,39 +20,39 @@ templ ReadingListPage(readingLists []ReadingList, tags []string, design string) 
 	}
 }
 
-templ ReadingListList(readingList []ReadingList, design string) {
+templ ReadingListList(readingList []model.ReadingList, design string) {
 	<ul id="page-list" class="page-list">
     	if design == "grid" {
 			for i := 0; i < len(readingList); i += 4 {
 				<li class="grid-list-element">
 					for j := i; j < i+4 && j < len(readingList); j++ {
-						@readingList[j].ToCard(j).MiniCard()
+						@BookCard(readingList[j], j).MiniCard()
 					}
 				</li>
 			}
         } else if design == "links" {
             for i, book := range readingList {
                 <li>
-                    @book.ToCard(i).LinkCard()
+                    @BookCard(book, i).LinkCard()
                 </li>
             }
 		} else {
             for i, book := range readingList {
                 <li>
-                    @book.ToCard(i).LargeCard()
+                    @BookCard(book, i).LargeCard()
                 </li>
             }
         }
 	</ul>
 }
 
-templ BookPage(readingList ReadingList, userIsAdmin bool) {
+templ BookPage(readingList model.ReadingList, userIsAdmin bool) {
     @Base("reading-list") {
         @BookDisplay(readingList, userIsAdmin)
     }
 }
 
-templ BookDisplay(readingList ReadingList, userIsAdmin bool) {
+templ BookDisplay(readingList model.ReadingList, userIsAdmin bool) {
     @EditBookButton(readingList, userIsAdmin)
     @components.DownloadDocumentButton(readingList.Title, userIsAdmin)
 	<div id="reading-list-container">
@@ -68,7 +69,7 @@ templ BookDisplay(readingList ReadingList, userIsAdmin bool) {
 	</div>
 }
 
-templ EditBookButton(readingList ReadingList, userIsAdmin bool) {
+templ EditBookButton(readingList model.ReadingList, userIsAdmin bool) {
     if userIsAdmin {
         <form hx-post="/writer" hx-target="body" class="action-form">
             <input type="hidden" name="document-type" value="reading-list"/>

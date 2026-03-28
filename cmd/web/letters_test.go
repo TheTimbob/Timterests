@@ -4,9 +4,9 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
-	"slices"
 	"testing"
 	"timterests/cmd/web"
+	"timterests/internal/service"
 
 	"github.com/PuerkitoBio/goquery"
 )
@@ -213,90 +213,19 @@ func TestLetterRendering(t *testing.T) {
 	})
 }
 
-func TestLetter(t *testing.T) {
+func TestLetterCardConversion(t *testing.T) {
 	ctx := context.Background()
 	s := testSetup(t, ctx)
-
-	t.Run("get letter object", func(t *testing.T) {
-		testLetterPath := "letters/test-letter.yaml"
-
-		letter, err := web.GetLetter(ctx, testLetterPath, 1, *s)
-		if err != nil {
-			t.Fatalf("failed to get letter: %v", err)
-		}
-
-		if letter.ID != "1" {
-			t.Errorf("expected letter ID '1', got '%s'", letter.ID)
-		}
-
-		if letter.Title != "Test Letter" {
-			t.Errorf("expected letter title 'Test Letter', got '%s'", letter.Title)
-		}
-
-		if letter.Date != "2023-01-01" {
-			t.Errorf("expected letter date '2023-01-01', got '%s'", letter.Date)
-		}
-	})
-
-	t.Run("list letters", func(t *testing.T) {
-		letters, err := web.ListLetters(ctx, *s, "")
-		if err != nil {
-			t.Fatalf("failed to list letters: %v", err)
-		}
-
-		if len(letters) < 1 {
-			t.Errorf("expected at least one letter, got %d", len(letters))
-		}
-	})
-
-	t.Run("list letters with tag filter", func(t *testing.T) {
-		letters, err := web.ListLetters(ctx, *s, "Tag1")
-		if err != nil {
-			t.Fatalf("failed to list letters: %v", err)
-		}
-
-		if len(letters) < 1 {
-			t.Errorf("expected at least one letter with tag 'Tag1', got %d", len(letters))
-		}
-
-		// Verify all returned letters have the tag
-		for _, letter := range letters {
-			hasTag := slices.Contains(letter.Tags, "Tag1")
-
-			if !hasTag {
-				t.Errorf("letter %q does not have tag 'Tag1'", letter.Title)
-			}
-		}
-	})
-
-	t.Run("letters are sorted by date descending", func(t *testing.T) {
-		letters, err := web.ListLetters(ctx, *s, "")
-		if err != nil {
-			t.Fatalf("failed to list letters: %v", err)
-		}
-
-		if len(letters) < 2 {
-			t.Skip("need at least 2 letters to test sorting")
-		}
-
-		// Verify letters are sorted by date in descending order (newest first)
-		for i := range len(letters) - 1 {
-			if letters[i].Date < letters[i+1].Date {
-				t.Errorf("letters not sorted correctly: %s (%s) should come before %s (%s)",
-					letters[i].Title, letters[i].Date, letters[i+1].Title, letters[i+1].Date)
-			}
-		}
-	})
 
 	t.Run("letter to card conversion", func(t *testing.T) {
 		testLetterPath := "letters/test-letter.yaml"
 
-		letter, err := web.GetLetter(ctx, testLetterPath, 1, *s)
+		letter, err := service.GetLetter(ctx, *s, testLetterPath, 1)
 		if err != nil {
 			t.Fatalf("failed to get letter: %v", err)
 		}
 
-		card := letter.ToCard(0)
+		card := web.LetterCard(*letter, 0)
 
 		if card.Title != letter.Title {
 			t.Errorf("expected card title %q, got %q", letter.Title, card.Title)

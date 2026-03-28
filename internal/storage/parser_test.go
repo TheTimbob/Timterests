@@ -21,10 +21,12 @@ func getTestDocument() model.Document {
 func TestDocumentParser(t *testing.T) {
 	t.Parallel()
 
-	document := getTestDocument()
-
 	t.Run("body to HTML conversion", func(t *testing.T) {
 		t.Parallel()
+
+		// Use a local copy to avoid a race with the sibling sub-test that reads
+		// the same document concurrently.
+		document := getTestDocument()
 
 		err := storage.BodyToHTML(&document)
 		if err != nil {
@@ -80,6 +82,10 @@ func TestDocumentParser(t *testing.T) {
 	})
 	t.Run("get tags from document", func(t *testing.T) {
 		t.Parallel()
+
+		// Use a local copy to avoid a race with the sibling sub-test that writes
+		// to the shared document concurrently.
+		document := getTestDocument()
 
 		var tags []string
 
