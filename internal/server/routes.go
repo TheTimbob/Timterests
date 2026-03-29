@@ -3,11 +3,13 @@ package server
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
 
 	"timterests/cmd/web"
+	apperrors "timterests/internal/errors"
 	"timterests/internal/service"
 )
 
@@ -56,7 +58,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 		// Handle POST request - parse form data
 		err := r.ParseForm()
 		if err != nil {
-			http.Error(w, "Failed to parse form", http.StatusBadRequest)
+			HandleError(w, apperrors.ParseFormFailed(err), "writer", "parse_form")
 
 			return
 		}
@@ -72,7 +74,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 			typeID, err = strconv.Atoi(typeIDString)
 			if err != nil {
-				http.Error(w, "Invalid type ID: expected integer, got '"+typeIDString+"'", http.StatusBadRequest)
+				HandleError(w, apperrors.InvalidInput(fmt.Errorf("type-id must be an integer, got %q", typeIDString)), "writer", "parse_type_id")
 
 				return
 			}
@@ -126,7 +128,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	mux.Handle("/articles/list", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, err := service.ListArticles(r.Context(), *s.storage, "all")
 		if err != nil {
-			http.Error(w, "Failed to list articles", http.StatusInternalServerError)
+			HandleError(w, apperrors.StorageReadFailed(err), "articles/list", "list_articles")
 
 			return
 		}
@@ -145,7 +147,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	mux.Handle("/projects/list", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, err := service.ListProjects(r.Context(), *s.storage, "all")
 		if err != nil {
-			http.Error(w, "Failed to list projects", http.StatusInternalServerError)
+			HandleError(w, apperrors.StorageReadFailed(err), "projects/list", "list_projects")
 
 			return
 		}
@@ -164,7 +166,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	mux.Handle("/reading-list/list", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, err := service.ListBooks(r.Context(), *s.storage, "all")
 		if err != nil {
-			http.Error(w, "Failed to list books", http.StatusInternalServerError)
+			HandleError(w, apperrors.StorageReadFailed(err), "reading-list/list", "list_books")
 
 			return
 		}
@@ -183,14 +185,14 @@ func (s *Server) RegisterRoutes() http.Handler {
 	mux.Handle("/letters/list", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, err := service.ListLetters(r.Context(), *s.storage, "all")
 		if err != nil {
-			http.Error(w, "Failed to list letters", http.StatusInternalServerError)
+			HandleError(w, apperrors.StorageReadFailed(err), "letters/list", "list_letters")
 
 			return
 		}
 	}))
 
-	// Wrap the mux with middleware
-	return s.maxBytesMiddleware(s.corsMiddleware(mux))
+	// Wrap with recovery middleware (error handling), then maxBytes, then CORS (outermost).
+	return s.corsMiddleware(s.maxBytesMiddleware(RecoveryMiddleware(mux)))
 }
 
 // maxBytesMiddleware limits the request body to 10MB on all routes to prevent
