@@ -1,7 +1,6 @@
 package web
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"reflect"
@@ -21,8 +20,8 @@ func ReadingListPageHandler(w http.ResponseWriter, r *http.Request, s storage.St
 
 	books, err := service.ListBooks(r.Context(), s, currentTag)
 	if err != nil {
-		message := "Failed to fetch reading list"
-		http.Error(w, fmt.Sprintf("%s: %v", message, err), http.StatusInternalServerError)
+		log.Printf("ReadingListPageHandler: failed to fetch reading list: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 
 		return
 	}
@@ -41,8 +40,7 @@ func ReadingListPageHandler(w http.ResponseWriter, r *http.Request, s storage.St
 
 	err = component.Render(r.Context(), w)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		log.Printf("Error rendering in ReadingListHandler: %e", err)
+		log.Printf("ReadingListPageHandler: failed to render: %v", err)
 	}
 }
 
@@ -57,8 +55,11 @@ func GetReadingListBook(w http.ResponseWriter, r *http.Request, s storage.Storag
 		return
 	}
 
+	found := false
+
 	for _, book := range books {
 		if book.ID == bookID {
+			found = true
 			authenticated := a.IsAuthenticated(r)
 
 			if r.Header.Get("Hx-Request") == "true" {
@@ -69,9 +70,12 @@ func GetReadingListBook(w http.ResponseWriter, r *http.Request, s storage.Storag
 
 			err = component.Render(r.Context(), w)
 			if err != nil {
-				http.Error(w, err.Error(), http.StatusBadRequest)
-				log.Printf("Error rendering in GetReadingListBook: %e", err)
+				log.Printf("GetReadingListBook: failed to render: %v", err)
 			}
 		}
+	}
+
+	if !found {
+		http.Error(w, "Not Found", http.StatusNotFound)
 	}
 }

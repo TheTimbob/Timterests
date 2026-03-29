@@ -1,7 +1,7 @@
 package web
 
 import (
-	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -72,7 +72,7 @@ func DownloadNewDocumentHandler(w http.ResponseWriter, r *http.Request, a *auth.
 	defer func() {
 		err := os.Remove(localFilePath)
 		if err != nil {
-			fmt.Printf("Failed to remove temporary file: %v", err)
+			log.Printf("Failed to remove temporary file: %v", err)
 		}
 	}()
 

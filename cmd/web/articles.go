@@ -1,7 +1,6 @@
 package web
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"reflect"
@@ -22,8 +21,8 @@ func ArticlesPageHandler(w http.ResponseWriter, r *http.Request, s storage.Stora
 
 	articles, err := service.ListArticles(r.Context(), s, currentTag)
 	if err != nil {
-		message := "Failed to fetch articles"
-		http.Error(w, fmt.Sprintf("%s: %v", message, err), http.StatusInternalServerError)
+		log.Printf("ArticlesPageHandler: failed to fetch articles: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 
 		return
 	}
@@ -42,8 +41,7 @@ func ArticlesPageHandler(w http.ResponseWriter, r *http.Request, s storage.Stora
 
 	err = component.Render(r.Context(), w)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		log.Printf("Error rendering in ArticlesPosts: %e", err)
+		log.Printf("ArticlesPageHandler: failed to render: %v", err)
 	}
 }
 
@@ -56,8 +54,12 @@ func GetArticleHandler(w http.ResponseWriter, r *http.Request, s storage.Storage
 		return
 	}
 
+	found := false
+
 	for _, article := range articles {
 		if article.ID == articleID {
+			found = true
+
 			var component templ.Component
 
 			authenticated := a.IsAuthenticated(r)
@@ -70,10 +72,13 @@ func GetArticleHandler(w http.ResponseWriter, r *http.Request, s storage.Storage
 
 			err = component.Render(r.Context(), w)
 			if err != nil {
-				http.Error(w, err.Error(), http.StatusBadRequest)
-				log.Printf("Error rendering in GetArticleByIDHandler: %e", err)
+				log.Printf("GetArticleHandler: failed to render: %v", err)
 			}
 		}
+	}
+
+	if !found {
+		http.Error(w, "Not Found", http.StatusNotFound)
 	}
 }
 

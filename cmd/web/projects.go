@@ -1,7 +1,6 @@
 package web
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"reflect"
@@ -22,8 +21,8 @@ func ProjectsPageHandler(w http.ResponseWriter, r *http.Request, s storage.Stora
 
 	projects, err := service.ListProjects(r.Context(), s, currentTag)
 	if err != nil {
-		message := "Failed to fetch projects"
-		http.Error(w, fmt.Sprintf("%s: %v", message, err), http.StatusInternalServerError)
+		log.Printf("ProjectsPageHandler: failed to fetch projects: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 
 		return
 	}
@@ -42,8 +41,7 @@ func ProjectsPageHandler(w http.ResponseWriter, r *http.Request, s storage.Stora
 
 	err = component.Render(r.Context(), w)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		log.Printf("Error rendering in ProjectPosts: %e", err)
+		log.Printf("ProjectsPageHandler: failed to render: %v", err)
 	}
 }
 
@@ -56,8 +54,12 @@ func GetProjectHandler(w http.ResponseWriter, r *http.Request, s storage.Storage
 		return
 	}
 
+	found := false
+
 	for _, project := range projects {
 		if project.ID == projectID {
+			found = true
+
 			var component templ.Component
 
 			authenticated := a.IsAuthenticated(r)
@@ -70,9 +72,12 @@ func GetProjectHandler(w http.ResponseWriter, r *http.Request, s storage.Storage
 
 			err = component.Render(r.Context(), w)
 			if err != nil {
-				http.Error(w, err.Error(), http.StatusBadRequest)
-				log.Printf("Error rendering in GetProjectsHandler: %e", err)
+				log.Printf("GetProjectHandler: failed to render: %v", err)
 			}
 		}
+	}
+
+	if !found {
+		http.Error(w, "Not Found", http.StatusNotFound)
 	}
 }

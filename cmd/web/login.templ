@@ -1,14 +1,17 @@
 package web
 
-templ LoginPage() {
+templ LoginPage(errorMsg string) {
 	@Base("login") {
-		@LoginContainer()
+		@LoginContainer(errorMsg)
 	}
 }
 
-templ LoginContainer() {
+templ LoginContainer(errorMsg string) {
 	<div id="login-container">
 		<h1 class="category-title">Login</h1>
+		if errorMsg != "" {
+			<p class="error-message">{ errorMsg }</p>
+		}
 		<form method="POST" action="/login">
 			<div>
 				<label for="email" class="category-subtitle">Email:</label>

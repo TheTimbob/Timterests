@@ -1,7 +1,6 @@
 package web
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"reflect"
@@ -34,8 +33,8 @@ func LettersPageHandler(
 
 	letters, err := service.ListLetters(r.Context(), s, currentTag)
 	if err != nil {
-		message := "Failed to fetch letters"
-		http.Error(w, fmt.Sprintf("%s: %v", message, err), http.StatusInternalServerError)
+		log.Printf("LettersPageHandler: failed to fetch letters: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 
 		return
 	}
@@ -54,8 +53,7 @@ func LettersPageHandler(
 
 	err = component.Render(r.Context(), w)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		log.Printf("Error rendering in LettersPosts: %e", err)
+		log.Printf("LettersPageHandler: failed to render: %v", err)
 	}
 }
 
@@ -77,8 +75,12 @@ func GetLetterHandler(w http.ResponseWriter, r *http.Request, s storage.Storage,
 		return
 	}
 
+	found := false
+
 	for _, letter := range letters {
 		if letter.ID == letterID {
+			found = true
+
 			var component templ.Component
 			if r.Header.Get("Hx-Request") == "true" {
 				component = LetterDisplay(letter, authenticated)
@@ -88,9 +90,12 @@ func GetLetterHandler(w http.ResponseWriter, r *http.Request, s storage.Storage,
 
 			err = component.Render(r.Context(), w)
 			if err != nil {
-				http.Error(w, err.Error(), http.StatusBadRequest)
-				log.Printf("Error rendering in GetLetterByIDHandler: %e", err)
+				log.Printf("GetLetterHandler: failed to render: %v", err)
 			}
 		}
+	}
+
+	if !found {
+		http.Error(w, "Not Found", http.StatusNotFound)
 	}
 }

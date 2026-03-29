@@ -667,6 +667,16 @@ a:hover {
   margin-right: 0.5rem;
 }
 
+.error-message {
+  color: #c0392b;
+  font-size: 0.9rem;
+  margin-bottom: 0.75rem;
+}
+
+.dark .error-message {
+  color: #e74c3c;
+}
+
 .filter-select {
   font-size: 0.875rem;
   width: auto;

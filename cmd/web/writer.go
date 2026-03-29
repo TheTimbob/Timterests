@@ -43,7 +43,8 @@ func WriterPageHandler(
 	if key != "" {
 		content, err = getTypeContentRaw(r.Context(), docType, key, typeID, s)
 		if err != nil {
-			http.Error(w, "Failed to load document: "+err.Error(), http.StatusInternalServerError)
+			log.Printf("WriterPageHandler: failed to load document: %v", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 
 			return
 		}
@@ -71,8 +72,7 @@ func WriterPageHandler(
 
 	err = component.Render(r.Context(), w)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		log.Printf("Error rendering in WriterPage: %v", err)
+		log.Printf("WriterPageHandler: failed to render: %v", err)
 	}
 }
 
@@ -100,16 +100,16 @@ func WriteDocumentHandler(w http.ResponseWriter, r *http.Request, s storage.Stor
 
 	docType, err := extractDocType(formData)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		log.Printf("%v", err)
+		log.Printf("WriteDocumentHandler: invalid document type: %v", err)
+		http.Error(w, "Bad Request", http.StatusBadRequest)
 
 		return
 	}
 
 	filename, err := generateFilename(formData, docType)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		log.Printf("%v", err)
+		log.Printf("WriteDocumentHandler: invalid filename data: %v", err)
+		http.Error(w, "Bad Request", http.StatusBadRequest)
 
 		return
 	}
@@ -165,8 +165,7 @@ func WriterSuggestionHandler(w http.ResponseWriter, r *http.Request, a *auth.Aut
 
 		err := component.Render(r.Context(), w)
 		if err != nil {
-			http.Error(w, "Service temporarily unavailable", http.StatusBadRequest)
-			log.Printf("Error rendering in WriterSuggestionHandler: %v", err)
+			log.Printf("WriterSuggestionHandler: failed to render: %v", err)
 		}
 
 		return
@@ -184,12 +183,13 @@ func WriterSuggestionHandler(w http.ResponseWriter, r *http.Request, a *auth.Aut
 
 	suggestion, err := ai.GenerateSuggestion(r.Context(), bodyContent, instructionFile)
 	if err != nil {
-		component := AISuggestionError(fmt.Sprintf("Failed to get AI suggestion: %v", err))
+		log.Printf("WriterSuggestionHandler: failed to get AI suggestion: %v", err)
+
+		component := AISuggestionError("Failed to get AI suggestion.")
 
 		err = component.Render(r.Context(), w)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			log.Printf("Error rendering in WriterSuggestionHandler: %v", err)
+			log.Printf("WriterSuggestionHandler: failed to render error component: %v", err)
 		}
 
 		return
@@ -199,9 +199,7 @@ func WriterSuggestionHandler(w http.ResponseWriter, r *http.Request, a *auth.Aut
 
 	err = component.Render(r.Context(), w)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-
-		return
+		log.Printf("WriterSuggestionHandler: failed to render: %v", err)
 	}
 }
 

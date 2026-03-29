@@ -29,7 +29,6 @@ func HomeHandler(w http.ResponseWriter, r *http.Request, s storage.Storage) {
 
 	err = component.Render(r.Context(), w)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		log.Printf("Error rendering home page: %v", err)
+		log.Printf("HomeHandler: failed to render: %v", err)
 	}
 }

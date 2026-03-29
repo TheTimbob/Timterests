@@ -111,8 +111,7 @@ func AdminDocumentsPageHandler(w http.ResponseWriter, r *http.Request, s storage
 
 	err = component.Render(r.Context(), w)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		log.Printf("Error rendering AdminDocumentsPage: %v", err)
+		log.Printf("AdminDocumentsPageHandler: failed to render: %v", err)
 	}
 }
 

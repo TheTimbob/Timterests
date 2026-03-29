@@ -27,6 +27,12 @@ func AboutHandler(w http.ResponseWriter, r *http.Request, s storage.Storage) {
 		return
 	}
 
+	if len(aboutFile) == 0 {
+		http.Error(w, "Not Found", http.StatusNotFound)
+
+		return
+	}
+
 	key := *aboutFile[0].Key
 
 	err = s.GetPreparedFile(r.Context(), key, &about)
@@ -41,9 +47,6 @@ func AboutHandler(w http.ResponseWriter, r *http.Request, s storage.Storage) {
 
 	err = component.Render(r.Context(), w)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		log.Printf("Error rendering in AboutHandler: %e", err)
-
-		return
+		log.Printf("AboutHandler: failed to render: %v", err)
 	}
 }
