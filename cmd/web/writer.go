@@ -70,9 +70,10 @@ func WriterPageHandler(
 		component = WriterPage(content)
 	}
 
-	err = component.Render(r.Context(), w)
+	err = renderHTML(w, r, http.StatusOK, component)
 	if err != nil {
 		log.Printf("WriterPageHandler: failed to render: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
 }
 
@@ -163,9 +164,10 @@ func WriterSuggestionHandler(w http.ResponseWriter, r *http.Request, a *auth.Aut
 	if strings.TrimSpace(bodyContent) == "" {
 		component := AISuggestionError("Please enter some content in the body field first.")
 
-		err := component.Render(r.Context(), w)
+		err := renderHTML(w, r, http.StatusOK, component)
 		if err != nil {
 			log.Printf("WriterSuggestionHandler: failed to render: %v", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		}
 
 		return
@@ -187,9 +189,10 @@ func WriterSuggestionHandler(w http.ResponseWriter, r *http.Request, a *auth.Aut
 
 		component := AISuggestionError("Failed to get AI suggestion.")
 
-		err = component.Render(r.Context(), w)
+		err := renderHTML(w, r, http.StatusOK, component)
 		if err != nil {
 			log.Printf("WriterSuggestionHandler: failed to render error component: %v", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		}
 
 		return
@@ -197,9 +200,10 @@ func WriterSuggestionHandler(w http.ResponseWriter, r *http.Request, a *auth.Aut
 
 	component := AISuggestionResponse(suggestion)
 
-	err = component.Render(r.Context(), w)
+	err = renderHTML(w, r, http.StatusOK, component)
 	if err != nil {
 		log.Printf("WriterSuggestionHandler: failed to render: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
 }
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"runtime/debug"
 	"strconv"
 
 	"timterests/cmd/web"
@@ -194,16 +195,19 @@ func (s *Server) RegisterRoutes() http.Handler {
 		}
 	}))
 
-	// Wrap with recovery middleware, then maxBytes, then CORS (outermost).
-	return s.corsMiddleware(s.maxBytesMiddleware(recoveryMiddleware(mux)))
+	// Wrap: recovery is outermost so it catches panics from all inner middleware.
+	return recoveryMiddleware(s.corsMiddleware(s.maxBytesMiddleware(mux)))
 }
 
 // recoveryMiddleware catches panics and returns a 500 rather than crashing the server.
+// It logs the panic value, stack trace, and request context for debugging.
 func recoveryMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if rec := recover(); rec != nil {
-				log.Printf("panic recovered: %v", rec)
+				stack := debug.Stack()
+				log.Printf("panic recovered: %v\nrequest: %s %s\nstack:\n%s",
+					rec, r.Method, r.URL.Path, stack)
 				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			}
 		}()

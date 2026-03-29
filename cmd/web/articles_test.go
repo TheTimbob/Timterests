@@ -193,6 +193,22 @@ func TestArticleRendering(t *testing.T) {
 	})
 }
 
+func TestGetArticleNotFound(t *testing.T) {
+	s := testSetup(t, context.Background())
+	a := auth.NewAuth("test-session-key-minimum-32-bytes")
+
+	t.Run("returns 404 for non-existent article ID", func(t *testing.T) {
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/article?id=non-existent-id", nil)
+		rec := httptest.NewRecorder()
+
+		web.GetArticleHandler(rec, req, *s, "non-existent-id", a)
+
+		if rec.Code != http.StatusNotFound {
+			t.Errorf("expected status 404, got %d", rec.Code)
+		}
+	})
+}
+
 func TestArticleCardConversion(t *testing.T) {
 	ctx := context.Background()
 	s := testSetup(t, ctx)

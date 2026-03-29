@@ -39,9 +39,10 @@ func ArticlesPageHandler(w http.ResponseWriter, r *http.Request, s storage.Stora
 		component = ArticlesListPage(articles, tags, design)
 	}
 
-	err = component.Render(r.Context(), w)
+	err = renderHTML(w, r, http.StatusOK, component)
 	if err != nil {
 		log.Printf("ArticlesPageHandler: failed to render: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
 }
 
@@ -54,12 +55,8 @@ func GetArticleHandler(w http.ResponseWriter, r *http.Request, s storage.Storage
 		return
 	}
 
-	found := false
-
 	for _, article := range articles {
 		if article.ID == articleID {
-			found = true
-
 			var component templ.Component
 
 			authenticated := a.IsAuthenticated(r)
@@ -70,16 +67,19 @@ func GetArticleHandler(w http.ResponseWriter, r *http.Request, s storage.Storage
 				component = ArticlePage(article, authenticated)
 			}
 
-			err = component.Render(r.Context(), w)
+			err = renderHTML(w, r, http.StatusOK, component)
 			if err != nil {
 				log.Printf("GetArticleHandler: failed to render: %v", err)
+				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+
+				return
 			}
+
+			return
 		}
 	}
 
-	if !found {
-		http.Error(w, "Not Found", http.StatusNotFound)
-	}
+	http.Error(w, "Not Found", http.StatusNotFound)
 }
 
 // FormatDateForFilename converts a date string to a filename-safe format.

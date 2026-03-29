@@ -20,8 +20,9 @@ func AdminPageHandler(w http.ResponseWriter, r *http.Request, a *auth.Auth) {
 
 	component = AdminPage()
 
-	err := component.Render(r.Context(), w)
+	err := renderHTML(w, r, http.StatusOK, component)
 	if err != nil {
 		log.Printf("AdminPageHandler: failed to render: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
 }

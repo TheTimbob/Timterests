@@ -109,9 +109,10 @@ func AdminDocumentsPageHandler(w http.ResponseWriter, r *http.Request, s storage
 		component = AdminDocumentsPage(params)
 	}
 
-	err = component.Render(r.Context(), w)
+	err = renderHTML(w, r, http.StatusOK, component)
 	if err != nil {
 		log.Printf("AdminDocumentsPageHandler: failed to render: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
 }
 

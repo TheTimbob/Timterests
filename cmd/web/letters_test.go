@@ -213,6 +213,24 @@ func TestLetterRendering(t *testing.T) {
 	})
 }
 
+func TestGetLetterNotFound(t *testing.T) {
+	s := testSetup(t, context.Background())
+	a, addAuthCookie := testAuthentication(t)
+
+	t.Run("returns 404 for non-existent letter ID", func(t *testing.T) {
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/letter?id=non-existent-id", nil)
+		rec := httptest.NewRecorder()
+
+		addAuthCookie(req)
+
+		web.GetLetterHandler(rec, req, *s, "non-existent-id", a)
+
+		if rec.Code != http.StatusNotFound {
+			t.Errorf("expected status 404, got %d", rec.Code)
+		}
+	})
+}
+
 func TestLetterCardConversion(t *testing.T) {
 	ctx := context.Background()
 	s := testSetup(t, ctx)

@@ -4,6 +4,8 @@ import (
 	"log"
 	"net/http"
 	"timterests/internal/storage"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
 )
 
 // About represents About page content.
@@ -33,7 +35,12 @@ func AboutHandler(w http.ResponseWriter, r *http.Request, s storage.Storage) {
 		return
 	}
 
-	key := *aboutFile[0].Key
+	key := aws.ToString(aboutFile[0].Key)
+	if key == "" {
+		http.Error(w, "Not Found", http.StatusNotFound)
+
+		return
+	}
 
 	err = s.GetPreparedFile(r.Context(), key, &about)
 	if err != nil {
@@ -45,8 +52,9 @@ func AboutHandler(w http.ResponseWriter, r *http.Request, s storage.Storage) {
 
 	component := AboutForm(about)
 
-	err = component.Render(r.Context(), w)
+	err = renderHTML(w, r, http.StatusOK, component)
 	if err != nil {
 		log.Printf("AboutHandler: failed to render: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
 }

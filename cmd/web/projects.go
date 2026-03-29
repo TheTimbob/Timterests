@@ -39,9 +39,10 @@ func ProjectsPageHandler(w http.ResponseWriter, r *http.Request, s storage.Stora
 		component = ProjectsListPage(projects, tags, design)
 	}
 
-	err = component.Render(r.Context(), w)
+	err = renderHTML(w, r, http.StatusOK, component)
 	if err != nil {
 		log.Printf("ProjectsPageHandler: failed to render: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
 }
 
@@ -54,12 +55,8 @@ func GetProjectHandler(w http.ResponseWriter, r *http.Request, s storage.Storage
 		return
 	}
 
-	found := false
-
 	for _, project := range projects {
 		if project.ID == projectID {
-			found = true
-
 			var component templ.Component
 
 			authenticated := a.IsAuthenticated(r)
@@ -70,14 +67,17 @@ func GetProjectHandler(w http.ResponseWriter, r *http.Request, s storage.Storage
 				component = ProjectPage(project, authenticated)
 			}
 
-			err = component.Render(r.Context(), w)
+			err = renderHTML(w, r, http.StatusOK, component)
 			if err != nil {
 				log.Printf("GetProjectHandler: failed to render: %v", err)
+				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+
+				return
 			}
+
+			return
 		}
 	}
 
-	if !found {
-		http.Error(w, "Not Found", http.StatusNotFound)
-	}
+	http.Error(w, "Not Found", http.StatusNotFound)
 }

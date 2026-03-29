@@ -51,9 +51,10 @@ func LettersPageHandler(
 		component = LettersListPage(letters, tags, design)
 	}
 
-	err = component.Render(r.Context(), w)
+	err = renderHTML(w, r, http.StatusOK, component)
 	if err != nil {
 		log.Printf("LettersPageHandler: failed to render: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
 }
 
@@ -75,27 +76,27 @@ func GetLetterHandler(w http.ResponseWriter, r *http.Request, s storage.Storage,
 		return
 	}
 
-	found := false
-
 	for _, letter := range letters {
 		if letter.ID == letterID {
-			found = true
-
 			var component templ.Component
+
 			if r.Header.Get("Hx-Request") == "true" {
 				component = LetterDisplay(letter, authenticated)
 			} else {
 				component = LetterPage(letter, authenticated)
 			}
 
-			err = component.Render(r.Context(), w)
+			err = renderHTML(w, r, http.StatusOK, component)
 			if err != nil {
 				log.Printf("GetLetterHandler: failed to render: %v", err)
+				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+
+				return
 			}
+
+			return
 		}
 	}
 
-	if !found {
-		http.Error(w, "Not Found", http.StatusNotFound)
-	}
+	http.Error(w, "Not Found", http.StatusNotFound)
 }
