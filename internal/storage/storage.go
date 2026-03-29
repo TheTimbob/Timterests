@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"log"
 	"os"
 	"path/filepath"
@@ -22,6 +23,7 @@ type Storage struct {
 	UseS3      bool
 	BucketName string
 	BaseDir    string // Directory for local storage, defaults to "storage"
+	PromptsDir string // Directory for prompt files, defaults to "prompts"
 	S3Client   *s3.Client
 }
 
@@ -41,6 +43,7 @@ func NewStorage(ctx context.Context) (*Storage, error) {
 	}
 
 	baseDir = filepath.Join(projectRoot, "storage")
+	promptsDir := filepath.Join(projectRoot, "prompts")
 
 	// Verify storage directory exists
 	_, err = os.Stat(baseDir)
@@ -68,6 +71,7 @@ func NewStorage(ctx context.Context) (*Storage, error) {
 			UseS3:      true,
 			BucketName: bucketName,
 			BaseDir:    baseDir,
+			PromptsDir: promptsDir,
 			S3Client:   client,
 		}, nil
 	}
@@ -76,6 +80,7 @@ func NewStorage(ctx context.Context) (*Storage, error) {
 		UseS3:      false,
 		BucketName: "",
 		BaseDir:    baseDir,
+		PromptsDir: promptsDir,
 		S3Client:   nil,
 	}, nil
 }
@@ -483,4 +488,56 @@ func WriteYAMLDocument(filePath string, formData map[string]any) error {
 	}
 
 	return nil
+}
+
+// GetPromptContent returns the system prompt content for the given document type.
+// docType should be one of: "articles", "projects", "reading-list", "letters".
+func (s *Storage) GetPromptContent(ctx context.Context, docType string) (string, error) {
+	// Validate docType against allowlist to prevent directory traversal
+	validDocTypes := map[string]string{
+		"articles":     "articles.txt",
+		"projects":     "projects.txt",
+		"reading-list": "reading-list.txt",
+		"letters":      "letters.txt",
+	}
+
+	filename, exists := validDocTypes[docType]
+	if !exists {
+		return "", fmt.Errorf("unsupported document type: %s", docType)
+	}
+
+	if s.UseS3 {
+		// Read from S3
+		key := filename
+
+		result, err := s.S3Client.GetObject(ctx, &s3.GetObjectInput{
+			Bucket: aws.String(s.BucketName),
+			Key:    aws.String(key),
+		})
+		if err != nil {
+			return "", fmt.Errorf("failed to read prompt from S3: %w", err)
+		}
+
+		defer func() {
+			cerr := result.Body.Close()
+			if cerr != nil {
+				err = fmt.Errorf("failed to close S3 response body: %w", cerr)
+			}
+		}()
+
+		content, err := io.ReadAll(result.Body)
+		if err != nil {
+			return "", fmt.Errorf("failed to read S3 object: %w", err)
+		}
+
+		return string(content), nil
+	}
+
+	// Read from local filesystem
+	content, err := fs.ReadFile(os.DirFS(s.PromptsDir), filename)
+	if err != nil {
+		return "", fmt.Errorf("failed to read prompt file %q: %w", filename, err)
+	}
+
+	return string(content), nil
 }

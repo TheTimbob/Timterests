@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -145,7 +144,7 @@ func WriteDocumentHandler(w http.ResponseWriter, r *http.Request, s storage.Stor
 }
 
 // WriterSuggestionHandler handles AI-powered content suggestions for the writer.
-func WriterSuggestionHandler(w http.ResponseWriter, r *http.Request, a *auth.Auth) {
+func WriterSuggestionHandler(w http.ResponseWriter, r *http.Request, s storage.Storage, a *auth.Auth) {
 	if !a.IsAuthenticated(r) {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 
@@ -154,7 +153,8 @@ func WriterSuggestionHandler(w http.ResponseWriter, r *http.Request, a *auth.Aut
 
 	err := r.ParseForm()
 	if err != nil {
-		http.Error(w, "Failed to parse form", http.StatusBadRequest)
+		http.Error(w, "Failed to parse form", http.StatusInternalServerError)
+		log.Printf("Error parsing form in WriterSuggestionHandler: %v", err)
 
 		return
 	}
@@ -165,30 +165,42 @@ func WriterSuggestionHandler(w http.ResponseWriter, r *http.Request, a *auth.Aut
 
 		err := component.Render(r.Context(), w)
 		if err != nil {
-			http.Error(w, "Service temporarily unavailable", http.StatusBadRequest)
+			http.Error(w, "Service temporarily unavailable", http.StatusInternalServerError)
 			log.Printf("Error rendering in WriterSuggestionHandler: %v", err)
 		}
 
 		return
 	}
 
-	instructionFile := r.FormValue("prompt-select")
+	docType := r.FormValue("document-type")
+	if strings.TrimSpace(docType) == "" {
+		docType = "articles" // default
+	}
 
-	instructionFile = filepath.Base(filepath.Clean(instructionFile))
-	if strings.TrimSpace(instructionFile) == "" || strings.Contains(instructionFile, string(filepath.Separator)) {
-		http.Error(w, "Invalid prompt file", http.StatusBadRequest)
-		log.Printf("Invalid prompt file: %q", instructionFile)
+	systemInstruction, err := s.GetPromptContent(r.Context(), docType)
+	if err != nil {
+		log.Printf("Failed to load system prompt for docType %q: %v", docType, err) // #nosec G706
+
+		component := AISuggestionError("AI suggestions are temporarily unavailable. Please try again later.")
+
+		err = component.Render(r.Context(), w)
+		if err != nil {
+			http.Error(w, "Service temporarily unavailable", http.StatusInternalServerError)
+			log.Printf("Error rendering in WriterSuggestionHandler: %v", err)
+		}
 
 		return
 	}
 
-	suggestion, err := ai.GenerateSuggestion(r.Context(), bodyContent, instructionFile)
+	suggestion, err := ai.GenerateSuggestion(r.Context(), bodyContent, systemInstruction)
 	if err != nil {
-		component := AISuggestionError(fmt.Sprintf("Failed to get AI suggestion: %v", err))
+		log.Printf("Failed to generate AI suggestion: %v", err)
+
+		component := AISuggestionError("Failed to get AI suggestion. Please try again later.")
 
 		err = component.Render(r.Context(), w)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			http.Error(w, "Service temporarily unavailable", http.StatusInternalServerError)
 			log.Printf("Error rendering in WriterSuggestionHandler: %v", err)
 		}
 
@@ -199,7 +211,8 @@ func WriterSuggestionHandler(w http.ResponseWriter, r *http.Request, a *auth.Aut
 
 	err = component.Render(r.Context(), w)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, "Service temporarily unavailable", http.StatusInternalServerError)
+		log.Printf("Error rendering AISuggestionResponse in WriterSuggestionHandler: %v", err)
 
 		return
 	}
