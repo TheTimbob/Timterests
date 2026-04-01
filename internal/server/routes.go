@@ -90,7 +90,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	}))
 
 	mux.Handle("/write/suggest", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		web.WriterSuggestionHandler(w, r, s.auth)
+		web.WriterSuggestionHandler(w, r, *s.storage, s.auth)
 	}))
 
 	mux.Handle("/download", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

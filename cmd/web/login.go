@@ -20,7 +20,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request, a *auth.Auth) {
 			return
 		}
 
-		log.Printf("login: authentication failed for %q: %v", email, err)
+		log.Printf("login: authentication failed: %v", err)
 
 		// Distinguish invalid credentials (401) from unexpected server errors (500).
 		if err != nil && !errors.Is(err, auth.ErrInvalidCredentials) {

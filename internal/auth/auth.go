@@ -3,6 +3,7 @@ package auth
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"net/http"
@@ -85,7 +86,11 @@ func (a *Auth) Authenticate(
 
 	err = db.QueryRowContext(ctx, "SELECT password FROM users WHERE email = ?", email).Scan(&passwordHash)
 	if err != nil {
-		return false, ErrInvalidCredentials
+		if errors.Is(err, sql.ErrNoRows) {
+			return false, ErrInvalidCredentials
+		}
+
+		return false, fmt.Errorf("failed to query user: %w", err)
 	}
 
 	// Compare the provided password with the hashed password
