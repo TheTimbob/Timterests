@@ -186,6 +186,83 @@ func TestFallbackFullPageBehavior(t *testing.T) {
 	}
 }
 
+func TestFallbackFullPageBehavior(t *testing.T) {
+	s := testSetup(t, context.Background())
+	a := auth.NewAuth("test-session-key-minimum-32-bytes")
+	_, addAuthCookie := testAuthentication(t)
+
+	routes := []struct {
+		name    string
+		handler func(rec *httptest.ResponseRecorder, req *http.Request)
+		path    string
+	}{
+		{
+			name: "articles list",
+			path: "/articles",
+			handler: func(rec *httptest.ResponseRecorder, req *http.Request) {
+				web.ArticlesPageHandler(rec, req, *s, "all", "list")
+			},
+		},
+		{
+			name: "article detail",
+			path: "/article?id=0",
+			handler: func(rec *httptest.ResponseRecorder, req *http.Request) {
+				web.GetArticleHandler(rec, req, *s, "0", a)
+			},
+		},
+		{
+			name: "projects list",
+			path: "/projects",
+			handler: func(rec *httptest.ResponseRecorder, req *http.Request) {
+				web.ProjectsPageHandler(rec, req, *s, "all", "list")
+			},
+		},
+		{
+			name: "project detail",
+			path: "/project?id=0",
+			handler: func(rec *httptest.ResponseRecorder, req *http.Request) {
+				web.GetProjectHandler(rec, req, *s, "0", a)
+			},
+		},
+		{
+			name: "reading list",
+			path: "/reading-list",
+			handler: func(rec *httptest.ResponseRecorder, req *http.Request) {
+				web.ReadingListPageHandler(rec, req, *s, "all", "list")
+			},
+		},
+		{
+			name: "book detail",
+			path: "/book?id=0",
+			handler: func(rec *httptest.ResponseRecorder, req *http.Request) {
+				web.GetReadingListBook(rec, req, *s, "0", a)
+			},
+		},
+	}
+
+	for _, route := range routes {
+		t.Run(route.name+" - no HX-Request returns full page", func(t *testing.T) {
+			t.Parallel()
+
+			req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, route.path, nil)
+			addAuthCookie(req)
+			// Deliberately omit HX-Request header to simulate back-button / direct nav
+			rec := httptest.NewRecorder()
+
+			route.handler(rec, req)
+
+			body := rec.Body.String()
+			if !strings.Contains(body, "<title>") {
+				t.Errorf("%s: expected full page with <title> when HX-Request is absent, got partial", route.name)
+			}
+
+			if !strings.Contains(body, "<html") {
+				t.Errorf("%s: expected full page with <html> when HX-Request is absent, got partial", route.name)
+			}
+		})
+	}
+}
+
 // TestArticlesBackButtonBehavior tests that back-button navigation returns a full page.
 func TestArticlesBackButtonBehavior(t *testing.T) {
 	s := testSetup(t, context.Background())
