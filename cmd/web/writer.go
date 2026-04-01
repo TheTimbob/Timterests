@@ -153,7 +153,7 @@ func WriterSuggestionHandler(w http.ResponseWriter, r *http.Request, s storage.S
 
 	err := r.ParseForm()
 	if err != nil {
-		http.Error(w, "Failed to parse form", http.StatusInternalServerError)
+		http.Error(w, "Failed to parse form", http.StatusBadRequest)
 		log.Printf("Error parsing form in WriterSuggestionHandler: %v", err)
 
 		return

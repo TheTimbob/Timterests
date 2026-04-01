@@ -33,15 +33,11 @@ func LoadAPIKey() (string, error) {
 }
 
 // GenerateSuggestion generates content suggestions using OpenAI's API.
-func GenerateSuggestion(ctx context.Context, prompt, instructionFile string) (string, error) {
+// systemInstruction is the system prompt content (not a filename).
+func GenerateSuggestion(ctx context.Context, prompt, systemInstruction string) (string, error) {
 	apiKey, envLoadErr := LoadAPIKey()
 	if envLoadErr != nil {
 		return "", envLoadErr
-	}
-
-	systemInstruction, err := GetInstruction(instructionFile)
-	if err != nil {
-		return "", err
 	}
 
 	client := openai.NewClient(

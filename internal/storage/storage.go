@@ -503,7 +503,7 @@ func (s *Storage) GetPromptContent(ctx context.Context, docType string) (string,
 
 	filename, exists := validDocTypes[docType]
 	if !exists {
-		return "", fmt.Errorf("unsupported document type: %s", docType)
+		return "", fmt.Errorf("unsupported document type: %q", docType)
 	}
 
 	if s.UseS3 {
@@ -521,7 +521,7 @@ func (s *Storage) GetPromptContent(ctx context.Context, docType string) (string,
 		defer func() {
 			cerr := result.Body.Close()
 			if cerr != nil {
-				err = fmt.Errorf("failed to close S3 response body: %w", cerr)
+				log.Printf("failed to close S3 response body: %v", cerr)
 			}
 		}()
 

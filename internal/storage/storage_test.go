@@ -1,7 +1,9 @@
 package storage_test
 
 import (
+	"context"
 	"os"
+	"path/filepath"
 	"testing"
 	"testing/fstest"
 
@@ -82,6 +84,97 @@ func TestStorage(t *testing.T) {
 			t.Fatalf("File was not created: %v", err)
 		}
 	})
+}
+
+func TestGetPromptContent(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	promptsDir := t.TempDir()
+
+	docTypes := []string{"articles", "projects", "reading-list", "letters"}
+	for _, docType := range docTypes {
+		promptFile := filepath.Join(promptsDir, docType+".txt")
+
+		content := "test prompt for " + docType
+
+		err := os.WriteFile(promptFile, []byte(content), 0600)
+		if err != nil {
+			t.Fatalf("failed to write prompt file for %s: %v", docType, err)
+		}
+	}
+
+	s := &storage.Storage{
+		UseS3:      false,
+		BucketName: "",
+		BaseDir:    t.TempDir(),
+		PromptsDir: promptsDir,
+		S3Client:   nil,
+	}
+
+	tests := []struct {
+		name          string
+		docType       string
+		expectError   bool
+		expectContent string
+	}{
+		{
+			name:          "articles",
+			docType:       "articles",
+			expectError:   false,
+			expectContent: "test prompt for articles",
+		},
+		{
+			name:          "projects",
+			docType:       "projects",
+			expectError:   false,
+			expectContent: "test prompt for projects",
+		},
+		{
+			name:          "reading-list",
+			docType:       "reading-list",
+			expectError:   false,
+			expectContent: "test prompt for reading-list",
+		},
+		{
+			name:          "letters",
+			docType:       "letters",
+			expectError:   false,
+			expectContent: "test prompt for letters",
+		},
+		{
+			name:        "invalid docType",
+			docType:     "invalid",
+			expectError: true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			content, err := s.GetPromptContent(ctx, tc.docType)
+
+			if tc.expectError {
+				if err == nil {
+					t.Errorf("expected error for docType %q, got nil", tc.docType)
+				}
+
+				return
+			}
+
+			if err != nil {
+				t.Errorf("GetPromptContent failed for %q: %v", tc.docType, err)
+
+				return
+			}
+
+			if content != tc.expectContent {
+				t.Errorf("expected content %q, got %q", tc.expectContent, content)
+			}
+		})
+	}
 }
 
 func getYAMLDocument() *fstest.MapFile {
