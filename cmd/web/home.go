@@ -27,9 +27,9 @@ func HomeHandler(w http.ResponseWriter, r *http.Request, s storage.Storage) {
 
 	component := HomeForm(latestArticle, featuredProject)
 
-	err = component.Render(r.Context(), w)
+	err = renderHTML(w, r, http.StatusOK, component)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		log.Printf("Error rendering home page: %v", err)
+		log.Printf("HomeHandler: failed to render: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
 }

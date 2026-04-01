@@ -1,10 +1,11 @@
-// Package server provides HTTP server and routing configuration.
 package server
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
+	"runtime/debug"
 	"strconv"
 
 	"timterests/cmd/web"
@@ -53,10 +54,10 @@ func (s *Server) RegisterRoutes() http.Handler {
 			typeID       int
 		)
 
-		// Handle POST request - parse form data
 		err := r.ParseForm()
 		if err != nil {
-			http.Error(w, "Failed to parse form", http.StatusBadRequest)
+			log.Printf("writer: failed to parse form: %v", err)
+			http.Error(w, "Bad Request", http.StatusBadRequest)
 
 			return
 		}
@@ -72,7 +73,8 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 			typeID, err = strconv.Atoi(typeIDString)
 			if err != nil {
-				http.Error(w, "Invalid type ID: expected integer, got '"+typeIDString+"'", http.StatusBadRequest)
+				log.Printf("writer: invalid type-id %q: %v", typeIDString, err)
+				http.Error(w, fmt.Sprintf("type-id must be an integer, got %q", typeIDString), http.StatusBadRequest)
 
 				return
 			}
@@ -126,7 +128,8 @@ func (s *Server) RegisterRoutes() http.Handler {
 	mux.Handle("/articles/list", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, err := service.ListArticles(r.Context(), *s.storage, "all")
 		if err != nil {
-			http.Error(w, "Failed to list articles", http.StatusInternalServerError)
+			log.Printf("articles/list: %v", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 
 			return
 		}
@@ -145,7 +148,8 @@ func (s *Server) RegisterRoutes() http.Handler {
 	mux.Handle("/projects/list", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, err := service.ListProjects(r.Context(), *s.storage, "all")
 		if err != nil {
-			http.Error(w, "Failed to list projects", http.StatusInternalServerError)
+			log.Printf("projects/list: %v", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 
 			return
 		}
@@ -164,7 +168,8 @@ func (s *Server) RegisterRoutes() http.Handler {
 	mux.Handle("/reading-list/list", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, err := service.ListBooks(r.Context(), *s.storage, "all")
 		if err != nil {
-			http.Error(w, "Failed to list books", http.StatusInternalServerError)
+			log.Printf("reading-list/list: %v", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 
 			return
 		}
@@ -183,14 +188,32 @@ func (s *Server) RegisterRoutes() http.Handler {
 	mux.Handle("/letters/list", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, err := service.ListLetters(r.Context(), *s.storage, "all")
 		if err != nil {
-			http.Error(w, "Failed to list letters", http.StatusInternalServerError)
+			log.Printf("letters/list: %v", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 
 			return
 		}
 	}))
 
-	// Wrap the mux with middleware
-	return s.maxBytesMiddleware(s.corsMiddleware(mux))
+	// Wrap: recovery is outermost so it catches panics from all inner middleware.
+	return recoveryMiddleware(s.corsMiddleware(s.maxBytesMiddleware(mux)))
+}
+
+// recoveryMiddleware catches panics and returns a 500 rather than crashing the server.
+// It logs the panic value, stack trace, and request context for debugging.
+func recoveryMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if rec := recover(); rec != nil {
+				stack := debug.Stack()
+				log.Printf("panic recovered: %v\nrequest: %s %s\nstack:\n%s",
+					rec, r.Method, r.URL.Path, stack)
+				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			}
+		}()
+
+		next.ServeHTTP(w, r)
+	})
 }
 
 // maxBytesMiddleware limits the request body to 10MB on all routes to prevent
@@ -242,7 +265,6 @@ func (s *Server) HelloWorldHandler(w http.ResponseWriter, _ *http.Request) {
 }
 
 func (s *Server) healthHandler(w http.ResponseWriter, _ *http.Request) {
-	// Marshal the health check response
 	resp, err := json.Marshal(s.storage.Health())
 	if err != nil {
 		http.Error(w, "Failed to marshal health check response", http.StatusInternalServerError)

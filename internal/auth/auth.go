@@ -3,6 +3,7 @@ package auth
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"net/http"
@@ -11,6 +12,10 @@ import (
 
 	"golang.org/x/crypto/bcrypt"
 )
+
+// ErrInvalidCredentials is returned when authentication fails due to bad email or password.
+// It is distinct from infrastructure errors (DB failures, session errors).
+var ErrInvalidCredentials = errors.New("invalid credentials")
 
 // Auth provides authentication and session management functionality.
 type Auth struct {
@@ -81,12 +86,16 @@ func (a *Auth) Authenticate(
 
 	err = db.QueryRowContext(ctx, "SELECT password FROM users WHERE email = ?", email).Scan(&passwordHash)
 	if err != nil {
-		return false, errors.New("invalid credentials")
+		if errors.Is(err, sql.ErrNoRows) {
+			return false, ErrInvalidCredentials
+		}
+
+		return false, fmt.Errorf("failed to query user: %w", err)
 	}
 
 	// Compare the provided password with the hashed password
 	if !ValidatePassword(password, passwordHash) {
-		return false, errors.New("invalid credentials")
+		return false, ErrInvalidCredentials
 	}
 
 	sessionValues := map[any]any{"email": email}

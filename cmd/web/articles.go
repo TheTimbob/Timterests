@@ -1,7 +1,6 @@
 package web
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"reflect"
@@ -22,8 +21,8 @@ func ArticlesPageHandler(w http.ResponseWriter, r *http.Request, s storage.Stora
 
 	articles, err := service.ListArticles(r.Context(), s, currentTag)
 	if err != nil {
-		message := "Failed to fetch articles"
-		http.Error(w, fmt.Sprintf("%s: %v", message, err), http.StatusInternalServerError)
+		log.Printf("ArticlesPageHandler: failed to fetch articles: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 
 		return
 	}
@@ -40,10 +39,10 @@ func ArticlesPageHandler(w http.ResponseWriter, r *http.Request, s storage.Stora
 		component = ArticlesListPage(articles, tags, design)
 	}
 
-	err = component.Render(r.Context(), w)
+	err = renderHTML(w, r, http.StatusOK, component)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		log.Printf("Error rendering in ArticlesPosts: %e", err)
+		log.Printf("ArticlesPageHandler: failed to render: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
 }
 
@@ -68,13 +67,19 @@ func GetArticleHandler(w http.ResponseWriter, r *http.Request, s storage.Storage
 				component = ArticlePage(article, authenticated)
 			}
 
-			err = component.Render(r.Context(), w)
+			err = renderHTML(w, r, http.StatusOK, component)
 			if err != nil {
-				http.Error(w, err.Error(), http.StatusBadRequest)
-				log.Printf("Error rendering in GetArticleByIDHandler: %e", err)
+				log.Printf("GetArticleHandler: failed to render: %v", err)
+				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+
+				return
 			}
+
+			return
 		}
 	}
+
+	http.Error(w, "Not Found", http.StatusNotFound)
 }
 
 // FormatDateForFilename converts a date string to a filename-safe format.

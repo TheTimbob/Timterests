@@ -42,7 +42,8 @@ func WriterPageHandler(
 	if key != "" {
 		content, err = getTypeContentRaw(r.Context(), docType, key, typeID, s)
 		if err != nil {
-			http.Error(w, "Failed to load document: "+err.Error(), http.StatusInternalServerError)
+			log.Printf("WriterPageHandler: failed to load document: %v", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 
 			return
 		}
@@ -68,10 +69,10 @@ func WriterPageHandler(
 		component = WriterPage(content)
 	}
 
-	err = component.Render(r.Context(), w)
+	err = renderHTML(w, r, http.StatusOK, component)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		log.Printf("Error rendering in WriterPage: %v", err)
+		log.Printf("WriterPageHandler: failed to render: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
 }
 
@@ -99,16 +100,16 @@ func WriteDocumentHandler(w http.ResponseWriter, r *http.Request, s storage.Stor
 
 	docType, err := extractDocType(formData)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		log.Printf("%v", err)
+		log.Printf("WriteDocumentHandler: invalid document type: %v", err)
+		http.Error(w, "Bad Request", http.StatusBadRequest)
 
 		return
 	}
 
 	filename, err := generateFilename(formData, docType)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		log.Printf("%v", err)
+		log.Printf("WriteDocumentHandler: invalid filename data: %v", err)
+		http.Error(w, "Bad Request", http.StatusBadRequest)
 
 		return
 	}
@@ -163,10 +164,10 @@ func WriterSuggestionHandler(w http.ResponseWriter, r *http.Request, s storage.S
 	if strings.TrimSpace(bodyContent) == "" {
 		component := AISuggestionError("Please enter some content in the body field first.")
 
-		err := component.Render(r.Context(), w)
+		err := renderHTML(w, r, http.StatusOK, component)
 		if err != nil {
-			http.Error(w, "Service temporarily unavailable", http.StatusInternalServerError)
 			log.Printf("Error rendering in WriterSuggestionHandler: %v", err)
+			http.Error(w, "Service temporarily unavailable", http.StatusInternalServerError)
 		}
 
 		return
@@ -198,10 +199,10 @@ func WriterSuggestionHandler(w http.ResponseWriter, r *http.Request, s storage.S
 
 		component := AISuggestionError("Failed to get AI suggestion. Please try again later.")
 
-		err = component.Render(r.Context(), w)
+		err := renderHTML(w, r, http.StatusOK, component)
 		if err != nil {
-			http.Error(w, "Service temporarily unavailable", http.StatusInternalServerError)
 			log.Printf("Error rendering in WriterSuggestionHandler: %v", err)
+			http.Error(w, "Service temporarily unavailable", http.StatusInternalServerError)
 		}
 
 		return
@@ -209,10 +210,10 @@ func WriterSuggestionHandler(w http.ResponseWriter, r *http.Request, s storage.S
 
 	component := AISuggestionResponse(suggestion)
 
-	err = component.Render(r.Context(), w)
+	err = renderHTML(w, r, http.StatusOK, component)
 	if err != nil {
-		http.Error(w, "Service temporarily unavailable", http.StatusInternalServerError)
 		log.Printf("Error rendering AISuggestionResponse in WriterSuggestionHandler: %v", err)
+		http.Error(w, "Service temporarily unavailable", http.StatusInternalServerError)
 
 		return
 	}
