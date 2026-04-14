@@ -454,7 +454,8 @@ func DecodeFile(file io.Reader, out any) error {
 		return fmt.Errorf("decode error: %w", err)
 	}
 
-	if err := yaml.Unmarshal(frontmatter, out); err != nil {
+	err = yaml.Unmarshal(frontmatter, out)
+	if err != nil {
 		log.Printf("Failed to decode frontmatter: %v", err)
 
 		return fmt.Errorf("decode error: %w", err)
@@ -477,7 +478,7 @@ func DecodeFile(file io.Reader, out any) error {
 
 // splitFrontmatter splits a Markdown file into its YAML frontmatter and body.
 // The file must begin with "---\n". Returns the raw frontmatter bytes and body bytes.
-func splitFrontmatter(content []byte) (frontmatter []byte, body []byte, err error) {
+func splitFrontmatter(content []byte) ([]byte, []byte, error) {
 	s := string(content)
 
 	if !strings.HasPrefix(s, "---\n") {
@@ -486,8 +487,8 @@ func splitFrontmatter(content []byte) (frontmatter []byte, body []byte, err erro
 
 	rest := s[4:] // skip opening "---\n"
 
-	idx := strings.Index(rest, "\n---\n")
-	if idx == -1 {
+	fm, bodyStr, found := strings.Cut(rest, "\n---\n")
+	if !found {
 		// Handle closing delimiter at end of file (no trailing newline after body)
 		if strings.HasSuffix(strings.TrimRight(rest, "\n"), "\n---") {
 			trimmed := strings.TrimRight(rest, "\n")
@@ -499,8 +500,7 @@ func splitFrontmatter(content []byte) (frontmatter []byte, body []byte, err erro
 		return nil, content, errors.New("unterminated frontmatter block")
 	}
 
-	fm := rest[:idx]
-	bodyStr := strings.TrimPrefix(rest[idx+5:], "\n") // skip "\n---\n" and optional leading newline
+	bodyStr = strings.TrimPrefix(bodyStr, "\n") // strip optional leading newline after closing ---
 
 	return []byte(fm), []byte(bodyStr), nil
 }

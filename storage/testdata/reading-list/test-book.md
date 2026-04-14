@@ -8,8 +8,8 @@ isbn: "978-0-134685991"
 website: https://example.com/test-book
 status: read
 tags:
-- Data Structures
-- Testing
+  - Data Structures
+  - Testing
 ---
 
 This is a test book description.
