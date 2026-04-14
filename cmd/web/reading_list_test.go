@@ -224,7 +224,7 @@ func TestBookCardConversion(t *testing.T) {
 	s := testSetup(t, ctx)
 
 	t.Run("book to card conversion", func(t *testing.T) {
-		testBookPath := "reading-list/test-book.yaml"
+		testBookPath := "reading-list/test-book.md"
 
 		book, err := service.GetBook(ctx, *s, testBookPath, 1)
 		if err != nil {

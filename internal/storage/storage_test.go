@@ -33,16 +33,16 @@ func TestStorage(t *testing.T) {
 		}
 	})
 
-	t.Run("decode YAML document", func(t *testing.T) {
+	t.Run("decode markdown document", func(t *testing.T) {
 		t.Parallel()
 
 		var (
 			document model.Document
-			filename = "document.yaml"
+			filename = "document.md"
 		)
 
 		fs := &fstest.MapFS{
-			filename: getYAMLDocument(),
+			filename: getMarkdownDocument(),
 		}
 
 		file, err := fs.Open(filename)
@@ -55,12 +55,17 @@ func TestStorage(t *testing.T) {
 			t.Fatalf("Expected no error, got %v", err)
 		}
 
+		expectedTitle := "Test Document"
+		if document.Title != expectedTitle {
+			t.Errorf("Expected title '%s', got %v", expectedTitle, document.Title)
+		}
+
 		expectedBody := "Test Body"
 		if document.Body != expectedBody {
 			t.Errorf("Expected body '%s', got %v", expectedBody, document.Body)
 		}
 	})
-	t.Run("write YAML document", func(t *testing.T) {
+	t.Run("write markdown document", func(t *testing.T) {
 		t.Parallel()
 
 		formData := map[string]any{
@@ -71,9 +76,9 @@ func TestStorage(t *testing.T) {
 		}
 
 		tempDir := t.TempDir()
-		localFilePath := tempDir + "/test-document.yaml"
+		localFilePath := tempDir + "/test-document.md"
 
-		err := storage.WriteYAMLDocument(localFilePath, formData)
+		err := storage.WriteMarkdownDocument(localFilePath, formData)
 		if err != nil {
 			t.Fatalf("Expected no error, got %v", err)
 		}
@@ -82,6 +87,44 @@ func TestStorage(t *testing.T) {
 		_, err = os.Stat(localFilePath)
 		if os.IsNotExist(err) {
 			t.Fatalf("File was not created: %v", err)
+		}
+	})
+	t.Run("write and re-read markdown document", func(t *testing.T) {
+		t.Parallel()
+
+		formData := map[string]any{
+			"title":    "Round Trip",
+			"subtitle": "Subtitle",
+			"body":     "Body content here.",
+		}
+
+		tempDir := t.TempDir()
+		localFilePath := tempDir + "/round-trip.md"
+
+		err := storage.WriteMarkdownDocument(localFilePath, formData)
+		if err != nil {
+			t.Fatalf("Expected no error writing, got %v", err)
+		}
+
+		file, err := os.Open(localFilePath)
+		if err != nil {
+			t.Fatalf("Expected no error opening, got %v", err)
+		}
+		defer file.Close()
+
+		var doc model.Document
+
+		err = storage.DecodeFile(file, &doc)
+		if err != nil {
+			t.Fatalf("Expected no error decoding, got %v", err)
+		}
+
+		if doc.Title != "Round Trip" {
+			t.Errorf("Expected title 'Round Trip', got %q", doc.Title)
+		}
+
+		if doc.Body != "Body content here." {
+			t.Errorf("Expected body 'Body content here.', got %q", doc.Body)
 		}
 	})
 }
@@ -177,14 +220,8 @@ func TestGetPromptContent(t *testing.T) {
 	}
 }
 
-func getYAMLDocument() *fstest.MapFile {
+func getMarkdownDocument() *fstest.MapFile {
 	return &fstest.MapFile{
-		Data: []byte(`title: Test Document
-subtitle: Test Subtitle
-body: Test Body
-tags:
-  - test
-  - document
-`),
+		Data: []byte("---\ntitle: Test Document\nsubtitle: Test Subtitle\ntags:\n  - test\n  - document\n---\n\nTest Body\n"),
 	}
 }

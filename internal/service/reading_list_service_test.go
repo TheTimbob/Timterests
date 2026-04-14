@@ -67,7 +67,7 @@ func TestGetBook(t *testing.T) {
 	s := testSetup(t, ctx)
 
 	t.Run("retrieves book by key and id", func(t *testing.T) {
-		book, err := service.GetBook(ctx, *s, "reading-list/test-book.yaml", 0)
+		book, err := service.GetBook(ctx, *s, "reading-list/test-book.md", 0)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -90,7 +90,7 @@ func TestGetBook(t *testing.T) {
 	})
 
 	t.Run("returns error for non-existent key", func(t *testing.T) {
-		_, err := service.GetBook(ctx, *s, "reading-list/does-not-exist.yaml", 0)
+		_, err := service.GetBook(ctx, *s, "reading-list/does-not-exist.md", 0)
 		if err == nil {
 			t.Error("expected error for non-existent file, got nil")
 		}

@@ -122,7 +122,7 @@ func WriteDocumentHandler(w http.ResponseWriter, r *http.Request, s storage.Stor
 		return
 	}
 
-	err = storage.WriteYAMLDocument(localFilePath, formData)
+	err = storage.WriteMarkdownDocument(localFilePath, formData)
 	if err != nil {
 		http.Error(w, "Failed to save document", http.StatusInternalServerError)
 		log.Printf("Error writing document: %v", err)
@@ -321,8 +321,8 @@ func generateFilename(formData map[string]any, docType string) (string, error) {
 
 		articleDate = service.FormatArticleDateForFilename(articleDate)
 
-		return fmt.Sprintf("%s-%s.yaml", sanitizedTitle, articleDate), nil
+		return fmt.Sprintf("%s-%s.md", sanitizedTitle, articleDate), nil
 	}
 
-	return sanitizedTitle + ".yaml", nil
+	return sanitizedTitle + ".md", nil
 }

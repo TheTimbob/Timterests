@@ -1,3 +1,4 @@
+---
 title: Test Book
 subtitle: This is a test book
 imagePath: testdata/images/test.png
@@ -6,8 +7,11 @@ published: "2024"
 isbn: "978-0-134685991"
 website: https://example.com/test-book
 status: read
-tags: ["Data Structures", "Testing"]
-body: |
-  This is a test book description.
+tags:
+- Data Structures
+- Testing
+---
 
-  It has multiple paragraphs for testing.
+This is a test book description.
+
+It has multiple paragraphs for testing.

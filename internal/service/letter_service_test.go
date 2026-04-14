@@ -80,7 +80,7 @@ func TestGetLetter(t *testing.T) {
 	s := testSetup(t, ctx)
 
 	t.Run("retrieves letter by key and id", func(t *testing.T) {
-		letter, err := service.GetLetter(ctx, *s, "letters/test-letter.yaml", 0)
+		letter, err := service.GetLetter(ctx, *s, "letters/test-letter.md", 0)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -95,7 +95,7 @@ func TestGetLetter(t *testing.T) {
 	})
 
 	t.Run("returns error for non-existent key", func(t *testing.T) {
-		_, err := service.GetLetter(ctx, *s, "letters/does-not-exist.yaml", 0)
+		_, err := service.GetLetter(ctx, *s, "letters/does-not-exist.md", 0)
 		if err == nil {
 			t.Error("expected error for non-existent file, got nil")
 		}

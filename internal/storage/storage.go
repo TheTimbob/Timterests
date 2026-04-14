@@ -9,7 +9,9 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"reflect"
 	"sort"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -436,18 +438,71 @@ func LocalPath(path, filename string) (string, error) {
 
 // --- Helpers ---
 
-// DecodeFile decodes a YAML file into the provided output structure.
+// DecodeFile decodes a Markdown file with YAML frontmatter into the provided output structure.
+// The file must begin with a "---" frontmatter block containing metadata fields.
+// The content after the closing "---" is set as the Body field.
 func DecodeFile(file io.Reader, out any) error {
-	decoder := yaml.NewDecoder(file)
-
-	err := decoder.Decode(out)
+	content, err := io.ReadAll(file)
 	if err != nil {
-		log.Printf("Failed to decode file: %v", err)
+		log.Printf("Failed to read file: %v", err)
+
+		return fmt.Errorf("read error: %w", err)
+	}
+
+	frontmatter, body, err := splitFrontmatter(content)
+	if err != nil {
+		return fmt.Errorf("decode error: %w", err)
+	}
+
+	if err := yaml.Unmarshal(frontmatter, out); err != nil {
+		log.Printf("Failed to decode frontmatter: %v", err)
 
 		return fmt.Errorf("decode error: %w", err)
 	}
 
+	v := reflect.ValueOf(out)
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
+	}
+
+	if v.Kind() == reflect.Struct {
+		bodyField := v.FieldByName("Body")
+		if bodyField.IsValid() && bodyField.CanSet() && bodyField.Kind() == reflect.String {
+			bodyField.SetString(strings.TrimSpace(string(body)))
+		}
+	}
+
 	return nil
+}
+
+// splitFrontmatter splits a Markdown file into its YAML frontmatter and body.
+// The file must begin with "---\n". Returns the raw frontmatter bytes and body bytes.
+func splitFrontmatter(content []byte) (frontmatter []byte, body []byte, err error) {
+	s := string(content)
+
+	if !strings.HasPrefix(s, "---\n") {
+		return nil, content, nil
+	}
+
+	rest := s[4:] // skip opening "---\n"
+
+	idx := strings.Index(rest, "\n---\n")
+	if idx == -1 {
+		// Handle closing delimiter at end of file (no trailing newline after body)
+		if strings.HasSuffix(strings.TrimRight(rest, "\n"), "\n---") {
+			trimmed := strings.TrimRight(rest, "\n")
+			fmEnd := strings.LastIndex(trimmed, "\n---")
+
+			return []byte(trimmed[:fmEnd]), nil, nil
+		}
+
+		return nil, content, errors.New("unterminated frontmatter block")
+	}
+
+	fm := rest[:idx]
+	bodyStr := strings.TrimPrefix(rest[idx+5:], "\n") // skip "\n---\n" and optional leading newline
+
+	return []byte(fm), []byte(bodyStr), nil
 }
 
 // FormatFileSize formats a byte count as a human-readable string.
@@ -459,11 +514,26 @@ func FormatFileSize(size int64) string {
 	return fmt.Sprintf("%.1f KB", float64(size)/1024)
 }
 
-// WriteYAMLDocument writes a YAML document to a file.
-func WriteYAMLDocument(filePath string, formData map[string]any) error {
+// WriteMarkdownDocument writes a Markdown document with YAML frontmatter to a file.
+// The "body" key in formData is written as the Markdown body after the frontmatter block.
+func WriteMarkdownDocument(filePath string, formData map[string]any) error {
 	err := os.MkdirAll(filepath.Dir(filePath), 0750)
 	if err != nil {
 		return fmt.Errorf("failed to create directories for %s: %w", filePath, err)
+	}
+
+	body, _ := formData["body"].(string)
+
+	frontmatterData := make(map[string]any, len(formData)-1)
+	for k, v := range formData {
+		if k != "body" {
+			frontmatterData[k] = v
+		}
+	}
+
+	fm, err := yaml.Marshal(frontmatterData)
+	if err != nil {
+		return fmt.Errorf("failed to marshal frontmatter: %w", err)
 	}
 
 	// #nosec G304 -- filePath comes from internal code paths, validated by callers using LocalPath
@@ -473,18 +543,9 @@ func WriteYAMLDocument(filePath string, formData map[string]any) error {
 	}
 	defer file.Close()
 
-	enc := yaml.NewEncoder(file)
-
-	defer func() {
-		err := enc.Close()
-		if err != nil {
-			log.Printf("Failed to close YAML encoder: %v", err)
-		}
-	}()
-
-	err = enc.Encode(formData)
+	_, err = fmt.Fprintf(file, "---\n%s---\n\n%s", fm, body)
 	if err != nil {
-		return fmt.Errorf("failed to encode YAML: %w", err)
+		return fmt.Errorf("failed to write markdown document: %w", err)
 	}
 
 	return nil

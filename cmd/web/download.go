@@ -18,12 +18,12 @@ func DownloadDocumentHandler(w http.ResponseWriter, r *http.Request, title strin
 		return
 	}
 
-	fileName := storage.SanitizeFilename(title) + ".yaml"
+	fileName := storage.SanitizeFilename(title) + ".md"
 	filePath := filepath.Join("storage", fileName)
 
 	// Set headers to force download
 	w.Header().Set("Content-Disposition", "attachment; filename=\""+fileName+"\"")
-	w.Header().Set("Content-Type", "application/x-yaml")
+	w.Header().Set("Content-Type", "text/markdown")
 
 	http.ServeFile(w, r, filePath)
 }
@@ -44,7 +44,7 @@ func DownloadNewDocumentHandler(w http.ResponseWriter, r *http.Request, a *auth.
 		return
 	}
 
-	filename := storage.SanitizeFilename("") + ".yaml"
+	filename := storage.SanitizeFilename("") + ".md"
 
 	// Convert url.Values to map[string]any
 	formData := make(map[string]any)
@@ -61,9 +61,9 @@ func DownloadNewDocumentHandler(w http.ResponseWriter, r *http.Request, a *auth.
 
 	localFilePath := filepath.Join("storage", filename)
 
-	err = storage.WriteYAMLDocument(localFilePath, formData)
+	err = storage.WriteMarkdownDocument(localFilePath, formData)
 	if err != nil {
-		http.Error(w, "Failed to write YAML document", http.StatusInternalServerError)
+		http.Error(w, "Failed to write Markdown document", http.StatusInternalServerError)
 
 		return
 	}
@@ -83,11 +83,11 @@ func DownloadNewDocumentHandler(w http.ResponseWriter, r *http.Request, a *auth.
 		return
 	}
 
-	downloadFilename := storage.SanitizeFilename(title) + ".yaml"
+	downloadFilename := storage.SanitizeFilename(title) + ".md"
 
 	// Set headers to force download
 	w.Header().Set("Content-Disposition", "attachment; filename=\""+downloadFilename+"\"")
-	w.Header().Set("Content-Type", "application/x-yaml")
+	w.Header().Set("Content-Type", "text/markdown")
 
 	http.ServeFile(w, r, localFilePath)
 }
