@@ -438,10 +438,24 @@ func LocalPath(path, filename string) (string, error) {
 
 // --- Helpers ---
 
-// DecodeFile decodes a Markdown file with YAML frontmatter into the provided output structure.
-// The file must begin with a "---" frontmatter block containing metadata fields.
-// The content after the closing "---" is set as the Body field.
+// DecodeFile decodes a Markdown file into the provided output structure.
+// If the file begins with a "---" YAML frontmatter block, its metadata fields are unmarshaled into out.
+// The content after the closing "---" is set as the Body field; otherwise, the entire file content is used as Body.
 func DecodeFile(file io.Reader, out any) error {
+	if out == nil {
+		return errors.New("decode error: out must be a non-nil pointer to a struct")
+	}
+
+	v := reflect.ValueOf(out)
+	if v.Kind() != reflect.Ptr || v.IsNil() {
+		return errors.New("decode error: out must be a non-nil pointer to a struct")
+	}
+
+	v = v.Elem()
+	if v.Kind() != reflect.Struct {
+		return errors.New("decode error: out must be a pointer to a struct")
+	}
+
 	content, err := io.ReadAll(file)
 	if err != nil {
 		log.Printf("Failed to read file: %v", err)
@@ -461,16 +475,9 @@ func DecodeFile(file io.Reader, out any) error {
 		return fmt.Errorf("decode error: %w", err)
 	}
 
-	v := reflect.ValueOf(out)
-	if v.Kind() == reflect.Ptr {
-		v = v.Elem()
-	}
-
-	if v.Kind() == reflect.Struct {
-		bodyField := v.FieldByName("Body")
-		if bodyField.IsValid() && bodyField.CanSet() && bodyField.Kind() == reflect.String {
-			bodyField.SetString(strings.TrimSpace(string(body)))
-		}
+	bodyField := v.FieldByName("Body")
+	if bodyField.IsValid() && bodyField.CanSet() && bodyField.Kind() == reflect.String {
+		bodyField.SetString(string(body))
 	}
 
 	return nil
@@ -478,18 +485,19 @@ func DecodeFile(file io.Reader, out any) error {
 
 // splitFrontmatter splits a Markdown file into its YAML frontmatter and body.
 // The file must begin with "---\n". Returns the raw frontmatter bytes and body bytes.
+// CRLF line endings are normalized to LF before parsing.
 func splitFrontmatter(content []byte) ([]byte, []byte, error) {
-	s := string(content)
+	s := strings.ReplaceAll(string(content), "\r\n", "\n")
 
 	if !strings.HasPrefix(s, "---\n") {
-		return nil, content, nil
+		return nil, []byte(s), nil
 	}
 
 	rest := s[4:] // skip opening "---\n"
 
 	fm, bodyStr, found := strings.Cut(rest, "\n---\n")
 	if !found {
-		// Handle closing delimiter at end of file (no trailing newline after body)
+		// Handle closing delimiter at EOF with no body content
 		if strings.HasSuffix(strings.TrimRight(rest, "\n"), "\n---") {
 			trimmed := strings.TrimRight(rest, "\n")
 			fmEnd := strings.LastIndex(trimmed, "\n---")
@@ -524,7 +532,7 @@ func WriteMarkdownDocument(filePath string, formData map[string]any) error {
 
 	body, _ := formData["body"].(string)
 
-	frontmatterData := make(map[string]any, len(formData)-1)
+	frontmatterData := make(map[string]any, len(formData))
 	for k, v := range formData {
 		if k != "body" {
 			frontmatterData[k] = v

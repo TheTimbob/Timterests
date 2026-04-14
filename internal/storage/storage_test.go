@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"testing/fstest"
 
@@ -60,9 +61,47 @@ func TestStorage(t *testing.T) {
 			t.Errorf("Expected title '%s', got %v", expectedTitle, document.Title)
 		}
 
-		expectedBody := "Test Body"
+		expectedBody := "Test Body\n"
 		if document.Body != expectedBody {
-			t.Errorf("Expected body '%s', got %v", expectedBody, document.Body)
+			t.Errorf("Expected body %q, got %q", expectedBody, document.Body)
+		}
+	})
+	t.Run("decode rejects nil pointer", func(t *testing.T) {
+		t.Parallel()
+
+		err := storage.DecodeFile(strings.NewReader(""), (*model.Document)(nil))
+		if err == nil {
+			t.Fatal("Expected error for nil pointer, got nil")
+		}
+	})
+	t.Run("decode rejects non-pointer", func(t *testing.T) {
+		t.Parallel()
+
+		var doc model.Document
+
+		err := storage.DecodeFile(strings.NewReader(""), doc)
+		if err == nil {
+			t.Fatal("Expected error for non-pointer, got nil")
+		}
+	})
+	t.Run("decode normalizes CRLF line endings", func(t *testing.T) {
+		t.Parallel()
+
+		crlfData := "---\r\ntitle: CRLF Doc\r\n---\r\n\r\nBody here.\r\n"
+
+		var doc model.Document
+
+		err := storage.DecodeFile(strings.NewReader(crlfData), &doc)
+		if err != nil {
+			t.Fatalf("Expected no error, got %v", err)
+		}
+
+		if doc.Title != "CRLF Doc" {
+			t.Errorf("Expected title 'CRLF Doc', got %q", doc.Title)
+		}
+
+		if doc.Body != "Body here.\n" {
+			t.Errorf("Expected body 'Body here.\\n', got %q", doc.Body)
 		}
 	})
 	t.Run("write markdown document", func(t *testing.T) {
