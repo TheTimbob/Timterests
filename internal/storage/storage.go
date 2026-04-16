@@ -9,7 +9,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"reflect"
 	"sort"
 	"strings"
 
@@ -438,79 +437,63 @@ func LocalPath(path, filename string) (string, error) {
 
 // --- Helpers ---
 
-// DecodeFile decodes a Markdown file into the provided output structure.
-// If the file begins with a "---" YAML frontmatter block, its metadata fields are unmarshaled into out.
-// The content after the closing "---" is set as the Body field; otherwise, the entire file content is used as Body.
+// DecodeFile decodes a YAML file into the provided output structure.
 func DecodeFile(file io.Reader, out any) error {
-	if out == nil {
-		return errors.New("decode error: out must be a non-nil pointer to a struct")
-	}
+	decoder := yaml.NewDecoder(file)
 
-	v := reflect.ValueOf(out)
-	if v.Kind() != reflect.Ptr || v.IsNil() {
-		return errors.New("decode error: out must be a non-nil pointer to a struct")
-	}
-
-	v = v.Elem()
-	if v.Kind() != reflect.Struct {
-		return errors.New("decode error: out must be a pointer to a struct")
-	}
-
-	content, err := io.ReadAll(file)
+	err := decoder.Decode(out)
 	if err != nil {
-		log.Printf("Failed to read file: %v", err)
-
-		return fmt.Errorf("read error: %w", err)
-	}
-
-	frontmatter, body, err := splitFrontmatter(content)
-	if err != nil {
-		return fmt.Errorf("decode error: %w", err)
-	}
-
-	err = yaml.Unmarshal(frontmatter, out)
-	if err != nil {
-		log.Printf("Failed to decode frontmatter: %v", err)
+		log.Printf("Failed to decode file: %v", err)
 
 		return fmt.Errorf("decode error: %w", err)
-	}
-
-	bodyField := v.FieldByName("Body")
-	if bodyField.IsValid() && bodyField.CanSet() && bodyField.Kind() == reflect.String {
-		bodyField.SetString(string(body))
 	}
 
 	return nil
 }
 
-// splitFrontmatter splits a Markdown file into its YAML frontmatter and body.
-// The file must begin with "---\n". Returns the raw frontmatter bytes and body bytes.
-// CRLF line endings are normalized to LF before parsing.
-func splitFrontmatter(content []byte) ([]byte, []byte, error) {
-	s := strings.ReplaceAll(string(content), "\r\n", "\n")
-
-	if !strings.HasPrefix(s, "---\n") {
-		return nil, []byte(s), nil
+// FileExists reports whether a file exists in storage (local or S3).
+func (s *Storage) FileExists(ctx context.Context, key string) bool {
+	localPath, err := LocalPath(s.BaseDir, key)
+	if err != nil {
+		return false
 	}
 
-	rest := s[4:] // skip opening "---\n"
+	if s.UseS3 {
+		_, err := s.S3Client.HeadObject(ctx, &s3.HeadObjectInput{
+			Bucket: aws.String(s.BucketName),
+			Key:    aws.String(key),
+		})
 
-	fm, bodyStr, found := strings.Cut(rest, "\n---\n")
-	if !found {
-		// Handle closing delimiter at EOF with no body content
-		if strings.HasSuffix(strings.TrimRight(rest, "\n"), "\n---") {
-			trimmed := strings.TrimRight(rest, "\n")
-			fmEnd := strings.LastIndex(trimmed, "\n---")
-
-			return []byte(trimmed[:fmEnd]), nil, nil
-		}
-
-		return nil, content, errors.New("unterminated frontmatter block")
+		return err == nil
 	}
 
-	bodyStr = strings.TrimPrefix(bodyStr, "\n") // strip optional leading newline after closing ---
+	_, err = os.Stat(localPath)
 
-	return []byte(fm), []byte(bodyStr), nil
+	return err == nil
+}
+
+// GetDocumentBody reads the Markdown body file paired with yamlKey, converts it to HTML, and returns it.
+// The body file is expected at the same path as yamlKey but with a .md extension.
+func (s *Storage) GetDocumentBody(ctx context.Context, yamlKey string) (string, error) {
+	mdKey := strings.TrimSuffix(yamlKey, ".yaml") + ".md"
+
+	file, err := s.GetFile(ctx, mdKey)
+	if err != nil {
+		return "", fmt.Errorf("failed to get body file %s: %w", mdKey, err)
+	}
+	defer file.Close()
+
+	content, err := io.ReadAll(file)
+	if err != nil {
+		return "", fmt.Errorf("failed to read body: %w", err)
+	}
+
+	html, err := MarkdownToHTML(content)
+	if err != nil {
+		return "", err
+	}
+
+	return html, nil
 }
 
 // FormatFileSize formats a byte count as a human-readable string.
@@ -522,38 +505,63 @@ func FormatFileSize(size int64) string {
 	return fmt.Sprintf("%.1f KB", float64(size)/1024)
 }
 
-// WriteMarkdownDocument writes a Markdown document with YAML frontmatter to a file.
-// The "body" key in formData is written as the Markdown body after the frontmatter block.
-func WriteMarkdownDocument(filePath string, formData map[string]any) error {
-	err := os.MkdirAll(filepath.Dir(filePath), 0750)
+// WriteMarkdownDocument writes a document as two files: a YAML metadata file at yamlPath
+// and a Markdown body file at mdPath. The "body" key in formData is written to mdPath;
+// all other keys are written as YAML to yamlPath.
+func WriteMarkdownDocument(yamlPath, mdPath string, formData map[string]any) error {
+	err := os.MkdirAll(filepath.Dir(yamlPath), 0750)
 	if err != nil {
-		return fmt.Errorf("failed to create directories for %s: %w", filePath, err)
+		return fmt.Errorf("failed to create directories for %s: %w", yamlPath, err)
 	}
 
-	body, _ := formData["body"].(string)
+	var body string
 
-	frontmatterData := make(map[string]any, len(formData))
-	for k, v := range formData {
-		if k != "body" {
-			frontmatterData[k] = v
+	if bodyVal, exists := formData["body"]; exists {
+		var ok bool
+
+		body, ok = bodyVal.(string)
+		if !ok {
+			return fmt.Errorf("WriteMarkdownDocument: body must be a string, got %T", bodyVal)
 		}
 	}
 
-	fm, err := yaml.Marshal(frontmatterData)
-	if err != nil {
-		return fmt.Errorf("failed to marshal frontmatter: %w", err)
+	metaData := make(map[string]any, len(formData))
+	for k, v := range formData {
+		if k != "body" {
+			metaData[k] = v
+		}
 	}
 
-	// #nosec G304 -- filePath comes from internal code paths, validated by callers using LocalPath
-	file, err := os.Create(filePath)
+	fm, err := yaml.Marshal(metaData)
 	if err != nil {
-		return fmt.Errorf("failed to create file: %w", err)
+		return fmt.Errorf("failed to marshal metadata: %w", err)
 	}
-	defer file.Close()
 
-	_, err = fmt.Fprintf(file, "---\n%s---\n\n%s", fm, body)
+	// #nosec G304 -- yamlPath comes from internal code paths, validated by callers using LocalPath
+	yf, err := os.Create(yamlPath)
 	if err != nil {
-		return fmt.Errorf("failed to write markdown document: %w", err)
+		return fmt.Errorf("failed to create yaml file: %w", err)
+	}
+	defer yf.Close()
+
+	_, err = yf.Write(fm)
+	if err != nil {
+		return fmt.Errorf("failed to write yaml file: %w", err)
+	}
+
+	// #nosec G304 -- mdPath comes from internal code paths, validated by callers using LocalPath
+	mf, err := os.Create(mdPath)
+	if err != nil {
+		return fmt.Errorf("failed to create markdown file: %w", err)
+	}
+	defer mf.Close()
+
+	title, _ := formData["title"].(string)
+	subtitle, _ := formData["subtitle"].(string)
+
+	_, err = fmt.Fprintf(mf, "# %s\n## %s\n\n%s", title, subtitle, body)
+	if err != nil {
+		return fmt.Errorf("failed to write markdown file: %w", err)
 	}
 
 	return nil

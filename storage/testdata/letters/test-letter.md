@@ -1,12 +1,5 @@
----
-title: Test Letter
-subtitle: This is a test letter
-date: 2023-01-01
-source: Timterests
-tags:
-  - Tag1
-  - Tag2
----
+# Test Letter
+## This is a test letter
 
 This is a test letter body.
 

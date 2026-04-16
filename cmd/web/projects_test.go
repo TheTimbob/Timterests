@@ -222,7 +222,7 @@ func TestProjectCardConversion(t *testing.T) {
 	s := testSetup(t, ctx)
 
 	t.Run("project to card conversion", func(t *testing.T) {
-		testProjectPath := "projects/test-project.md"
+		testProjectPath := "projects/test-project.yaml"
 
 		project, err := service.GetProject(ctx, *s, testProjectPath, 1)
 		if err != nil {

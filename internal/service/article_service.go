@@ -9,6 +9,7 @@ import (
 	"log"
 	"slices"
 	"sort"
+	"strings"
 	"time"
 	"timterests/internal/model"
 	"timterests/internal/storage"
@@ -28,17 +29,27 @@ func ListArticles(ctx context.Context, s storage.Storage, tag string) ([]model.A
 		return nil, fmt.Errorf("failed to list objects with prefix %q: %w", prefix, err)
 	}
 
-	for id, obj := range articleFiles {
+	docIdx := 0
+
+	for _, obj := range articleFiles {
 		key := aws.ToString(obj.Key)
 
-		if key == prefix {
+		if key == prefix || !strings.HasSuffix(key, ".yaml") {
 			continue
 		}
 
-		article, err := GetArticle(ctx, s, key, id)
+		if !s.FileExists(ctx, strings.TrimSuffix(key, ".yaml")+".md") {
+			log.Printf("ListArticles: skipping %s — no paired .md body file", key)
+
+			continue
+		}
+
+		article, err := GetArticle(ctx, s, key, docIdx)
 		if err != nil {
 			return nil, err
 		}
+
+		docIdx++
 
 		if tag == "all" || tag == "" || slices.Contains(article.Tags, tag) {
 			articles = append(articles, *article)
@@ -71,7 +82,6 @@ func GetLatestArticle(ctx context.Context, s storage.Storage) (*model.Article, e
 
 	// Articles are sorted by date desc — first element is latest.
 	latestArticle := articles[0]
-	latestArticle.Body = storage.RemoveHTMLTags(latestArticle.Body)
 
 	return &latestArticle, nil
 }

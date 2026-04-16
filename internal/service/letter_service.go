@@ -3,8 +3,10 @@ package service
 import (
 	"context"
 	"fmt"
+	"log"
 	"slices"
 	"sort"
+	"strings"
 	"timterests/internal/model"
 	"timterests/internal/storage"
 
@@ -23,17 +25,27 @@ func ListLetters(ctx context.Context, s storage.Storage, tag string) ([]model.Le
 
 	letters := make([]model.Letter, 0, len(letterFiles))
 
-	for id, obj := range letterFiles {
+	docIdx := 0
+
+	for _, obj := range letterFiles {
 		key := aws.ToString(obj.Key)
 
-		if key == prefix {
+		if key == prefix || !strings.HasSuffix(key, ".yaml") {
 			continue
 		}
 
-		letter, err := GetLetter(ctx, s, key, id)
+		if !s.FileExists(ctx, strings.TrimSuffix(key, ".yaml")+".md") {
+			log.Printf("ListLetters: skipping %s — no paired .md body file", key)
+
+			continue
+		}
+
+		letter, err := GetLetter(ctx, s, key, docIdx)
 		if err != nil {
 			return nil, err
 		}
+
+		docIdx++
 
 		if tag == "all" || tag == "" || slices.Contains(letter.Tags, tag) {
 			letters = append(letters, *letter)

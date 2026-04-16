@@ -56,8 +56,6 @@ templ ArticleDisplay(article model.Article, userIsAdmin bool) {
     @EditArticleButton(article, userIsAdmin)
     @components.DownloadDocumentButton(article.Title+"-"+FormatDateForFilename(article.Date), userIsAdmin)
 	<div id="article-container">
-		<h1 class="category-title">{ article.Title }</h1>
-		<h2 class="category-subtitle">{ article.Subtitle }</h2>
 		@templ.Raw(article.Body)
 	</div>
 }

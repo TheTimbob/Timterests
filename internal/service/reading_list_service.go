@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"slices"
+	"strings"
 	"timterests/internal/model"
 	"timterests/internal/storage"
 
@@ -23,17 +24,27 @@ func ListBooks(ctx context.Context, s storage.Storage, tag string) ([]model.Read
 		return nil, fmt.Errorf("failed to list objects: %w", err)
 	}
 
-	for id, obj := range files {
+	docIdx := 0
+
+	for _, obj := range files {
 		key := aws.ToString(obj.Key)
 
-		if key == prefix {
+		if key == prefix || !strings.HasSuffix(key, ".yaml") {
 			continue
 		}
 
-		book, err := GetBook(ctx, s, key, id)
+		if !s.FileExists(ctx, strings.TrimSuffix(key, ".yaml")+".md") {
+			log.Printf("ListBooks: skipping %s — no paired .md body file", key)
+
+			continue
+		}
+
+		book, err := GetBook(ctx, s, key, docIdx)
 		if err != nil {
 			return nil, err
 		}
+
+		docIdx++
 
 		if tag == "all" || tag == "" || slices.Contains(book.Tags, tag) {
 			readingList = append(readingList, *book)

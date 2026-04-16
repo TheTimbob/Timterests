@@ -56,8 +56,6 @@ templ LetterDisplay(letter model.Letter, userIsAdmin bool) {
     @EditLetterButton(letter, userIsAdmin)
     @components.DownloadDocumentButton(letter.Title, userIsAdmin)
     <div id="letter-container">
-        <h1 class="category-title">{ letter.Title }</h1>
-        <h2 class="category-subtitle">{ letter.Subtitle }</h2>
         @templ.Raw(letter.Body)
     </div>
 }

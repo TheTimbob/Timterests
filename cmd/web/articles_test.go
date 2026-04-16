@@ -214,7 +214,7 @@ func TestArticleCardConversion(t *testing.T) {
 	s := testSetup(t, ctx)
 
 	t.Run("article to card conversion", func(t *testing.T) {
-		testArticlePath := "articles/test-article.md"
+		testArticlePath := "articles/test-article.yaml"
 
 		article, err := service.GetArticle(ctx, *s, testArticlePath, 1)
 		if err != nil {

@@ -7,7 +7,8 @@ type Document struct {
 	S3Key    string
 	Title    string   `yaml:"title"`
 	Subtitle string   `yaml:"subtitle"`
-	Body     string   `yaml:"body"`
+	Preview  string   `yaml:"preview"`
+	Body     string   `yaml:"-"`
 	Tags     []string `yaml:"tags"`
 }
 

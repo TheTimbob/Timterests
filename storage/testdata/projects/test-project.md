@@ -1,14 +1,5 @@
----
-title: Test Project
-subtitle: This is a test project.
-imagePath: testdata/images/test.png
-repository: Private
-tags:
-  - Golang
-  - HTMX
-  - AWS
-  - Docker
----
+# Test Project
+## This is a test project.
 
 This is body text.
 

@@ -27,7 +27,6 @@ func ReadingListPageHandler(w http.ResponseWriter, r *http.Request, s storage.St
 	}
 
 	for i := range books {
-		books[i].Body = storage.RemoveHTMLTags(books[i].Body)
 		v := reflect.ValueOf(books[i])
 		tags = storage.GetTags(v, tags)
 	}
@@ -56,6 +55,16 @@ func GetReadingListBook(w http.ResponseWriter, r *http.Request, s storage.Storag
 
 	for _, book := range books {
 		if book.ID == bookID {
+			body, err := s.GetDocumentBody(r.Context(), book.S3Key)
+			if err != nil {
+				log.Printf("GetReadingListBook: failed to load body for %s: %v", book.S3Key, err)
+				http.Error(w, "Not Found", http.StatusNotFound)
+
+				return
+			}
+
+			book.Body = body
+
 			var component templ.Component
 
 			authenticated := a.IsAuthenticated(r)

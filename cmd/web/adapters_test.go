@@ -14,7 +14,7 @@ func TestArticleAdapters(t *testing.T) {
 	s := testSetup(t, ctx)
 
 	t.Run("ArticleCard preserves all fields", func(t *testing.T) {
-		ma, err := service.GetArticle(ctx, *s, "articles/test-article.md", 1)
+		ma, err := service.GetArticle(ctx, *s, "articles/test-article.yaml", 1)
 		if err != nil {
 			t.Fatalf("service.GetArticle failed: %v", err)
 		}
@@ -51,7 +51,7 @@ func TestArticleAdapters(t *testing.T) {
 	})
 
 	t.Run("ArticleCard produces correct URL", func(t *testing.T) {
-		ma, err := service.GetArticle(ctx, *s, "articles/test-article.md", 5)
+		ma, err := service.GetArticle(ctx, *s, "articles/test-article.yaml", 5)
 		if err != nil {
 			t.Fatalf("service.GetArticle failed: %v", err)
 		}
@@ -79,7 +79,7 @@ func TestProjectAdapters(t *testing.T) {
 	s := testSetup(t, ctx)
 
 	t.Run("ProjectCard preserves all fields", func(t *testing.T) {
-		mp, err := service.GetProject(ctx, *s, "projects/test-project.md", 2)
+		mp, err := service.GetProject(ctx, *s, "projects/test-project.yaml", 2)
 		if err != nil {
 			t.Fatalf("service.GetProject failed: %v", err)
 		}
@@ -112,7 +112,7 @@ func TestProjectAdapters(t *testing.T) {
 	})
 
 	t.Run("ProjectCard produces correct URL and ImagePath", func(t *testing.T) {
-		mp, err := service.GetProject(ctx, *s, "projects/test-project.md", 3)
+		mp, err := service.GetProject(ctx, *s, "projects/test-project.yaml", 3)
 		if err != nil {
 			t.Fatalf("service.GetProject failed: %v", err)
 		}
@@ -140,7 +140,7 @@ func TestLetterAdapters(t *testing.T) {
 	s := testSetup(t, ctx)
 
 	t.Run("LetterCard preserves all fields", func(t *testing.T) {
-		ml, err := service.GetLetter(ctx, *s, "letters/test-letter.md", 1)
+		ml, err := service.GetLetter(ctx, *s, "letters/test-letter.yaml", 1)
 		if err != nil {
 			t.Fatalf("service.GetLetter failed: %v", err)
 		}
@@ -173,7 +173,7 @@ func TestLetterAdapters(t *testing.T) {
 	})
 
 	t.Run("LetterCard produces correct URL", func(t *testing.T) {
-		ml, err := service.GetLetter(ctx, *s, "letters/test-letter.md", 4)
+		ml, err := service.GetLetter(ctx, *s, "letters/test-letter.yaml", 4)
 		if err != nil {
 			t.Fatalf("service.GetLetter failed: %v", err)
 		}
@@ -197,7 +197,7 @@ func TestReadingListAdapters(t *testing.T) {
 	s := testSetup(t, ctx)
 
 	t.Run("BookCard preserves all fields", func(t *testing.T) {
-		mb, err := service.GetBook(ctx, *s, "reading-list/test-book.md", 1)
+		mb, err := service.GetBook(ctx, *s, "reading-list/test-book.yaml", 1)
 		if err != nil {
 			t.Fatalf("service.GetBook failed: %v", err)
 		}
@@ -230,7 +230,7 @@ func TestReadingListAdapters(t *testing.T) {
 	})
 
 	t.Run("BookCard produces correct URL and ImagePath", func(t *testing.T) {
-		mb, err := service.GetBook(ctx, *s, "reading-list/test-book.md", 7)
+		mb, err := service.GetBook(ctx, *s, "reading-list/test-book.yaml", 7)
 		if err != nil {
 			t.Fatalf("service.GetBook failed: %v", err)
 		}

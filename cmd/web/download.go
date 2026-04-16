@@ -57,16 +57,22 @@ func DownloadNewDocumentHandler(w http.ResponseWriter, r *http.Request, a *auth.
 	}
 
 	downloadFilename := storage.SanitizeFilename(title) + ".md"
-	localFilePath := filepath.Join("storage", downloadFilename)
 
-	// #nosec G304 -- localFilePath is sanitized via SanitizeFilename
-	f, err := os.Create(localFilePath)
+	f, err := os.CreateTemp("", "download-*.md")
 	if err != nil {
 		http.Error(w, "Failed to create file", http.StatusInternalServerError)
 		log.Printf("DownloadNewDocumentHandler: failed to create temp file: %v", err)
 
 		return
 	}
+
+	// Cleanup temporary file after serving
+	defer func() {
+		removeErr := os.Remove(f.Name())
+		if removeErr != nil {
+			log.Printf("Failed to remove temporary file: %v", removeErr)
+		}
+	}()
 
 	_, err = fmt.Fprintf(f, "# %s\n## %s\n\n%s", title, subtitle, body)
 
@@ -82,16 +88,8 @@ func DownloadNewDocumentHandler(w http.ResponseWriter, r *http.Request, a *auth.
 		return
 	}
 
-	// Cleanup temporary file after serving
-	defer func() {
-		removeErr := os.Remove(localFilePath)
-		if removeErr != nil {
-			log.Printf("Failed to remove temporary file: %v", removeErr)
-		}
-	}()
-
 	w.Header().Set("Content-Disposition", "attachment; filename=\""+downloadFilename+"\"")
 	w.Header().Set("Content-Type", "text/markdown")
 
-	http.ServeFile(w, r, localFilePath)
+	http.ServeFile(w, r, f.Name())
 }

@@ -17,8 +17,8 @@ import (
 	"github.com/yuin/goldmark/renderer/html"
 )
 
-// BodyToHTML converts body text from markdown to HTML.
-func BodyToHTML(document any) error {
+// MarkdownToHTML converts raw markdown bytes to styled HTML.
+func MarkdownToHTML(content []byte) (string, error) {
 	var buf bytes.Buffer
 
 	md := goldmark.New(
@@ -27,6 +27,23 @@ func BodyToHTML(document any) error {
 		),
 	)
 
+	err := md.Convert(content, &buf)
+	if err != nil {
+		log.Printf("failed to convert markdown to HTML: %v", err)
+
+		return "", fmt.Errorf("conversion error: %w", err)
+	}
+
+	body := buf.String()
+	body = strings.ReplaceAll(body, "<p>", `<p class="content-text">`)
+	body = strings.ReplaceAll(body, "<h2>", `<h2 class="category-subtitle">`)
+	body = strings.ReplaceAll(body, "<li>", `<li class="content-text">`)
+
+	return body, nil
+}
+
+// BodyToHTML converts body text from markdown to HTML.
+func BodyToHTML(document any) error {
 	// Get reflect value of the document
 	v := reflect.ValueOf(document)
 	if v.Kind() != reflect.Ptr || v.IsNil() {
@@ -46,23 +63,13 @@ func BodyToHTML(document any) error {
 		return errors.New("document does not have a valid Body field of type string")
 	}
 
-	body := bodyField.String()
-
-	err := md.Convert([]byte(body), &buf)
+	html, err := MarkdownToHTML([]byte(bodyField.String()))
 	if err != nil {
-		log.Printf("failed to convert body to HTML: %v", err)
-
-		return fmt.Errorf("conversion error: %w", err)
+		return err
 	}
 
-	body = buf.String()
-
-	body = strings.ReplaceAll(body, "<p>", `<p class="content-text">`)
-	body = strings.ReplaceAll(body, "<h2>", `<h2 class="category-subtitle">`)
-	body = strings.ReplaceAll(body, "<li>", `<li class="content-text">`)
-
 	if bodyField.CanSet() {
-		bodyField.SetString(body)
+		bodyField.SetString(html)
 	} else {
 		return errors.New("body field cannot be set in the document struct")
 	}

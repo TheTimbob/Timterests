@@ -40,7 +40,6 @@ func LettersPageHandler(
 	}
 
 	for i := range letters {
-		letters[i].Body = storage.RemoveHTMLTags(letters[i].Body)
 		v := reflect.ValueOf(letters[i])
 		tags = storage.GetTags(v, tags)
 	}
@@ -78,6 +77,16 @@ func GetLetterHandler(w http.ResponseWriter, r *http.Request, s storage.Storage,
 
 	for _, letter := range letters {
 		if letter.ID == letterID {
+			body, err := s.GetDocumentBody(r.Context(), letter.S3Key)
+			if err != nil {
+				log.Printf("GetLetterHandler: failed to load body for %s: %v", letter.S3Key, err)
+				http.Error(w, "Not Found", http.StatusNotFound)
+
+				return
+			}
+
+			letter.Body = body
+
 			var component templ.Component
 
 			if r.Header.Get("Hx-Request") == "true" {

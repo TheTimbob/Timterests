@@ -56,8 +56,6 @@ templ ProjectDisplay(project model.Project, userIsAdmin bool) {
     @EditProjectButton(project, userIsAdmin)
     @components.DownloadDocumentButton(project.Title, userIsAdmin)
     <div id="project-container">
-        <h1 class="category-title">{ project.Title }</h1>
-        <h2 class="category-subtitle">{ project.Subtitle }</h2>
 		if project.Repository != "Private" {
 			<p class="content-text"><i class="fa-brands fa-github"></i> Repository: <a href={ templ.SafeURL(project.Repository) } class="content-text" target="_blank">{ project.Repository }</a></p>
 		}

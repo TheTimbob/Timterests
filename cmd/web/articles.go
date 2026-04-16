@@ -28,7 +28,6 @@ func ArticlesPageHandler(w http.ResponseWriter, r *http.Request, s storage.Stora
 	}
 
 	for i := range articles {
-		articles[i].Body = storage.RemoveHTMLTags(articles[i].Body)
 		v := reflect.ValueOf(articles[i])
 		tags = storage.GetTags(v, tags)
 	}
@@ -57,6 +56,16 @@ func GetArticleHandler(w http.ResponseWriter, r *http.Request, s storage.Storage
 
 	for _, article := range articles {
 		if article.ID == articleID {
+			body, err := s.GetDocumentBody(r.Context(), article.S3Key)
+			if err != nil {
+				log.Printf("GetArticleHandler: failed to load body for %s: %v", article.S3Key, err)
+				http.Error(w, "Not Found", http.StatusNotFound)
+
+				return
+			}
+
+			article.Body = body
+
 			var component templ.Component
 
 			authenticated := a.IsAuthenticated(r)

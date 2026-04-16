@@ -28,7 +28,6 @@ func ProjectsPageHandler(w http.ResponseWriter, r *http.Request, s storage.Stora
 	}
 
 	for i := range projects {
-		projects[i].Body = storage.RemoveHTMLTags(projects[i].Body)
 		v := reflect.ValueOf(projects[i])
 		tags = storage.GetTags(v, tags)
 	}
@@ -57,6 +56,16 @@ func GetProjectHandler(w http.ResponseWriter, r *http.Request, s storage.Storage
 
 	for _, project := range projects {
 		if project.ID == projectID {
+			body, err := s.GetDocumentBody(r.Context(), project.S3Key)
+			if err != nil {
+				log.Printf("GetProjectHandler: failed to load body for %s: %v", project.S3Key, err)
+				http.Error(w, "Not Found", http.StatusNotFound)
+
+				return
+			}
+
+			project.Body = body
+
 			var component templ.Component
 
 			authenticated := a.IsAuthenticated(r)

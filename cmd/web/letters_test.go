@@ -236,7 +236,7 @@ func TestLetterCardConversion(t *testing.T) {
 	s := testSetup(t, ctx)
 
 	t.Run("letter to card conversion", func(t *testing.T) {
-		testLetterPath := "letters/test-letter.md"
+		testLetterPath := "letters/test-letter.yaml"
 
 		letter, err := service.GetLetter(ctx, *s, testLetterPath, 1)
 		if err != nil {

@@ -67,7 +67,7 @@ func TestGetProject(t *testing.T) {
 	s := testSetup(t, ctx)
 
 	t.Run("retrieves project by key and id", func(t *testing.T) {
-		project, err := service.GetProject(ctx, *s, "projects/test-project.md", 0)
+		project, err := service.GetProject(ctx, *s, "projects/test-project.yaml", 0)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -82,7 +82,7 @@ func TestGetProject(t *testing.T) {
 	})
 
 	t.Run("returns error for non-existent key", func(t *testing.T) {
-		_, err := service.GetProject(ctx, *s, "projects/does-not-exist.md", 0)
+		_, err := service.GetProject(ctx, *s, "projects/does-not-exist.yaml", 0)
 		if err == nil {
 			t.Error("expected error for non-existent file, got nil")
 		}

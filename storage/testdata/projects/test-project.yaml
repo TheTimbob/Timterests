@@ -1,0 +1,10 @@
+title: Test Project
+subtitle: This is a test project.
+preview: A brief preview of the test project.
+imagePath: testdata/images/test.png
+repository: Private
+tags:
+  - Golang
+  - HTMX
+  - AWS
+  - Docker

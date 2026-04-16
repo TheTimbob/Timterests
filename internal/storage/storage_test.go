@@ -34,16 +34,16 @@ func TestStorage(t *testing.T) {
 		}
 	})
 
-	t.Run("decode markdown document", func(t *testing.T) {
+	t.Run("decode yaml document", func(t *testing.T) {
 		t.Parallel()
 
 		var (
 			document model.Document
-			filename = "document.md"
+			filename = "document.yaml"
 		)
 
 		fs := &fstest.MapFS{
-			filename: getMarkdownDocument(),
+			filename: getYAMLDocument(),
 		}
 
 		file, err := fs.Open(filename)
@@ -61,93 +61,65 @@ func TestStorage(t *testing.T) {
 			t.Errorf("Expected title '%s', got %v", expectedTitle, document.Title)
 		}
 
-		expectedBody := "Test Body\n"
-		if document.Body != expectedBody {
-			t.Errorf("Expected body %q, got %q", expectedBody, document.Body)
+		expectedPreview := "A brief preview."
+		if document.Preview != expectedPreview {
+			t.Errorf("Expected preview %q, got %q", expectedPreview, document.Preview)
 		}
 	})
-	t.Run("decode rejects nil pointer", func(t *testing.T) {
-		t.Parallel()
 
-		err := storage.DecodeFile(strings.NewReader(""), (*model.Document)(nil))
-		if err == nil {
-			t.Fatal("Expected error for nil pointer, got nil")
-		}
-	})
-	t.Run("decode rejects non-pointer", func(t *testing.T) {
-		t.Parallel()
-
-		var doc model.Document
-
-		err := storage.DecodeFile(strings.NewReader(""), doc)
-		if err == nil {
-			t.Fatal("Expected error for non-pointer, got nil")
-		}
-	})
-	t.Run("decode normalizes CRLF line endings", func(t *testing.T) {
-		t.Parallel()
-
-		crlfData := "---\r\ntitle: CRLF Doc\r\n---\r\n\r\nBody here.\r\n"
-
-		var doc model.Document
-
-		err := storage.DecodeFile(strings.NewReader(crlfData), &doc)
-		if err != nil {
-			t.Fatalf("Expected no error, got %v", err)
-		}
-
-		if doc.Title != "CRLF Doc" {
-			t.Errorf("Expected title 'CRLF Doc', got %q", doc.Title)
-		}
-
-		if doc.Body != "Body here.\n" {
-			t.Errorf("Expected body 'Body here.\\n', got %q", doc.Body)
-		}
-	})
-	t.Run("write markdown document", func(t *testing.T) {
+	t.Run("write markdown document creates yaml and md files", func(t *testing.T) {
 		t.Parallel()
 
 		formData := map[string]any{
 			"title":    "Test Document",
 			"subtitle": "Test Subtitle",
-			"body":     "Test Body",
+			"preview":  "A brief preview.",
+			"body":     "Test Body content.",
 			"tags":     []string{"test", "document"},
 		}
 
 		tempDir := t.TempDir()
-		localFilePath := tempDir + "/test-document.md"
+		yamlPath := tempDir + "/test-document.yaml"
+		mdPath := tempDir + "/test-document.md"
 
-		err := storage.WriteMarkdownDocument(localFilePath, formData)
+		err := storage.WriteMarkdownDocument(yamlPath, mdPath, formData)
 		if err != nil {
 			t.Fatalf("Expected no error, got %v", err)
 		}
 
-		// Verify the file was created
-		_, err = os.Stat(localFilePath)
+		_, err = os.Stat(yamlPath)
 		if os.IsNotExist(err) {
-			t.Fatalf("File was not created: %v", err)
+			t.Fatalf("YAML file was not created")
+		}
+
+		_, err = os.Stat(mdPath)
+		if os.IsNotExist(err) {
+			t.Fatalf("Markdown file was not created")
 		}
 	})
-	t.Run("write and re-read markdown document", func(t *testing.T) {
+
+	t.Run("write and re-read yaml metadata", func(t *testing.T) {
 		t.Parallel()
 
 		formData := map[string]any{
 			"title":    "Round Trip",
 			"subtitle": "Subtitle",
+			"preview":  "Preview text.",
 			"body":     "Body content here.",
 		}
 
 		tempDir := t.TempDir()
-		localFilePath := tempDir + "/round-trip.md"
+		yamlPath := tempDir + "/round-trip.yaml"
+		mdPath := tempDir + "/round-trip.md"
 
-		err := storage.WriteMarkdownDocument(localFilePath, formData)
+		err := storage.WriteMarkdownDocument(yamlPath, mdPath, formData)
 		if err != nil {
 			t.Fatalf("Expected no error writing, got %v", err)
 		}
 
-		file, err := os.Open(localFilePath)
+		file, err := os.Open(yamlPath)
 		if err != nil {
-			t.Fatalf("Expected no error opening, got %v", err)
+			t.Fatalf("Expected no error opening yaml, got %v", err)
 		}
 		defer file.Close()
 
@@ -162,8 +134,45 @@ func TestStorage(t *testing.T) {
 			t.Errorf("Expected title 'Round Trip', got %q", doc.Title)
 		}
 
-		if doc.Body != "Body content here." {
-			t.Errorf("Expected body 'Body content here.', got %q", doc.Body)
+		if doc.Preview != "Preview text." {
+			t.Errorf("Expected preview 'Preview text.', got %q", doc.Preview)
+		}
+
+		// Body is not stored in YAML — it should be empty after decode
+		if doc.Body != "" {
+			t.Errorf("Expected empty body after YAML decode, got %q", doc.Body)
+		}
+	})
+
+	t.Run("write and re-read markdown body", func(t *testing.T) {
+		t.Parallel()
+
+		formData := map[string]any{
+			"title":    "Body Test",
+			"subtitle": "Sub",
+			"body":     "The actual body content.",
+		}
+
+		tempDir := t.TempDir()
+		yamlPath := tempDir + "/body-test.yaml"
+		mdPath := tempDir + "/body-test.md"
+
+		err := storage.WriteMarkdownDocument(yamlPath, mdPath, formData)
+		if err != nil {
+			t.Fatalf("Expected no error writing, got %v", err)
+		}
+
+		content, err := os.ReadFile(mdPath)
+		if err != nil {
+			t.Fatalf("Expected no error reading md file, got %v", err)
+		}
+
+		if !strings.Contains(string(content), "The actual body content.") {
+			t.Errorf("Markdown file does not contain expected body, got: %s", string(content))
+		}
+
+		if !strings.HasPrefix(string(content), "# Body Test") {
+			t.Errorf("Markdown file should start with title header, got: %s", string(content))
 		}
 	})
 }
@@ -259,8 +268,11 @@ func TestGetPromptContent(t *testing.T) {
 	}
 }
 
-func getMarkdownDocument() *fstest.MapFile {
+func getYAMLDocument() *fstest.MapFile {
 	return &fstest.MapFile{
-		Data: []byte("---\ntitle: Test Document\nsubtitle: Test Subtitle\ntags:\n  - test\n  - document\n---\n\nTest Body\n"),
+		Data: []byte(
+			"title: Test Document\nsubtitle: Test Subtitle\n" +
+				"preview: A brief preview.\ntags:\n  - test\n  - document\n",
+		),
 	}
 }

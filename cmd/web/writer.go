@@ -106,7 +106,7 @@ func WriteDocumentHandler(w http.ResponseWriter, r *http.Request, s storage.Stor
 		return
 	}
 
-	filename, err := generateFilename(formData, docType)
+	slug, err := generateSlug(formData, docType)
 	if err != nil {
 		log.Printf("WriteDocumentHandler: invalid filename data: %v", err)
 		http.Error(w, "Bad Request", http.StatusBadRequest)
@@ -114,15 +114,26 @@ func WriteDocumentHandler(w http.ResponseWriter, r *http.Request, s storage.Stor
 		return
 	}
 
-	localFilePath, err := storage.LocalPath(s.BaseDir, filename)
+	yamlFilename := docType + "/" + slug + ".yaml"
+	mdFilename := docType + "/" + slug + ".md"
+
+	yamlPath, err := storage.LocalPath(s.BaseDir, yamlFilename)
 	if err != nil {
 		http.Error(w, "Invalid file path", http.StatusBadRequest)
-		log.Printf("Invalid local file path: %v", err)
+		log.Printf("Invalid local yaml path: %v", err)
 
 		return
 	}
 
-	err = storage.WriteMarkdownDocument(localFilePath, formData)
+	mdPath, err := storage.LocalPath(s.BaseDir, mdFilename)
+	if err != nil {
+		http.Error(w, "Invalid file path", http.StatusBadRequest)
+		log.Printf("Invalid local md path: %v", err)
+
+		return
+	}
+
+	err = storage.WriteMarkdownDocument(yamlPath, mdPath, formData)
 	if err != nil {
 		http.Error(w, "Failed to save document", http.StatusInternalServerError)
 		log.Printf("Error writing document: %v", err)
@@ -131,9 +142,14 @@ func WriteDocumentHandler(w http.ResponseWriter, r *http.Request, s storage.Stor
 	}
 
 	if s3Upload {
-		s3Path := docType + "/" + filename
+		err = s.UploadFileToS3(r.Context(), yamlFilename)
+		if err != nil {
+			http.Error(w, "Failed to upload document to storage", http.StatusInternalServerError)
 
-		err = s.UploadFileToS3(r.Context(), s3Path)
+			return
+		}
+
+		err = s.UploadFileToS3(r.Context(), mdFilename)
 		if err != nil {
 			http.Error(w, "Failed to upload document to storage", http.StatusInternalServerError)
 
@@ -304,8 +320,8 @@ func extractDocType(formData map[string]any) (string, error) {
 	return docType, nil
 }
 
-// generateFilename creates a filename based on the document type and form data.
-func generateFilename(formData map[string]any, docType string) (string, error) {
+// generateSlug creates a base filename slug (without extension) from the document type and form data.
+func generateSlug(formData map[string]any, docType string) (string, error) {
 	title, ok := formData["title"].(string)
 	if !ok || strings.TrimSpace(title) == "" {
 		return "", errors.New("invalid or missing title in form data")
@@ -321,8 +337,8 @@ func generateFilename(formData map[string]any, docType string) (string, error) {
 
 		articleDate = service.FormatArticleDateForFilename(articleDate)
 
-		return fmt.Sprintf("%s-%s.md", sanitizedTitle, articleDate), nil
+		return fmt.Sprintf("%s-%s", sanitizedTitle, articleDate), nil
 	}
 
-	return sanitizedTitle + ".md", nil
+	return sanitizedTitle, nil
 }

@@ -11,7 +11,7 @@ func ArticleCard(a model.Article, i int) components.Card {
 		Title:     a.Title,
 		Subtitle:  a.Subtitle,
 		Date:      a.Date,
-		Body:      a.Body,
+		Body:      a.Preview,
 		ImagePath: "",
 		Get:       "/article?id=" + a.ID,
 		Tags:      a.Tags,

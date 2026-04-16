@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"slices"
+	"strings"
 	"timterests/internal/model"
 	"timterests/internal/storage"
 
@@ -24,19 +25,29 @@ func ListProjects(ctx context.Context, s storage.Storage, tag string) ([]model.P
 		return nil, fmt.Errorf("failed to list objects: %w", err)
 	}
 
-	for id, obj := range projectFiles {
+	docIdx := 0
+
+	for _, obj := range projectFiles {
 		key := aws.ToString(obj.Key)
 
-		if key == prefix {
+		if key == prefix || !strings.HasSuffix(key, ".yaml") {
 			continue
 		}
 
-		project, err := GetProject(ctx, s, key, id)
+		if !s.FileExists(ctx, strings.TrimSuffix(key, ".yaml")+".md") {
+			log.Printf("ListProjects: skipping %s — no paired .md body file", key)
+
+			continue
+		}
+
+		project, err := GetProject(ctx, s, key, docIdx)
 		if err != nil {
 			log.Printf("Failed to get project: %v", err)
 
 			return nil, err
 		}
+
+		docIdx++
 
 		if tag == "" || tag == "all" || slices.Contains(project.Tags, tag) {
 			projects = append(projects, *project)
@@ -81,7 +92,6 @@ func GetFeaturedProject(ctx context.Context, s storage.Storage, featuredProjectT
 	for _, project := range projects {
 		if project.Title == featuredProjectTitle {
 			p := project
-			p.Body = storage.RemoveHTMLTags(p.Body)
 
 			return &p, nil
 		}

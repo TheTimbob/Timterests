@@ -56,14 +56,12 @@ templ BookDisplay(readingList model.ReadingList, userIsAdmin bool) {
     @EditBookButton(readingList, userIsAdmin)
     @components.DownloadDocumentButton(readingList.Title, userIsAdmin)
 	<div id="reading-list-container">
-		<h1 class="category-title">{ readingList.Title }</h1>
-		<h2 class="category-subtitle">{ readingList.Subtitle }</h2>
+		@templ.Raw(readingList.Body)
 		<p>Author: { readingList.Author }</p>
 		<p>Published: { readingList.Published }</p>
 		<p>ISBN: { readingList.ISBN }</p>
 		<p>Website: <a href={ templ.SafeURL(readingList.Website) } target="_blank">{ readingList.Website }</a></p>
 		<p>Status: { readingList.Status }</p>
-		@templ.Raw(readingList.Body)
 		<br>
 		<div>I am not affiliated with, nor do I own any rights to, the books listed in my reading list. All purchase links are non-affiliate and provided solely for informational purposes.</div>
 	</div>
