@@ -1,6 +1,7 @@
 package web
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -29,6 +30,7 @@ func DownloadDocumentHandler(w http.ResponseWriter, r *http.Request, title strin
 }
 
 // DownloadNewDocumentHandler handles requests to download a new document based on form data.
+// It writes only the Markdown body (with title/subtitle headers) to a temporary file and serves it.
 func DownloadNewDocumentHandler(w http.ResponseWriter, r *http.Request, a *auth.Auth) {
 	// Only admins can download documents
 	if !a.IsAuthenticated(r) {
@@ -44,48 +46,50 @@ func DownloadNewDocumentHandler(w http.ResponseWriter, r *http.Request, a *auth.
 		return
 	}
 
-	filename := storage.SanitizeFilename("") + ".md"
+	title := r.FormValue("title")
+	subtitle := r.FormValue("subtitle")
+	body := r.FormValue("body")
 
-	// Convert url.Values to map[string]any
-	formData := make(map[string]any)
-
-	for key, values := range r.Form {
-		if len(values) == 1 {
-			formData[key] = values[0]
-		} else {
-			formData[key] = values
-		}
-	}
-
-	delete(formData, "document-type")
-
-	localFilePath := filepath.Join("storage", filename)
-
-	err = storage.WriteMarkdownDocument(localFilePath, formData)
-	if err != nil {
-		http.Error(w, "Failed to write Markdown document", http.StatusInternalServerError)
-
-		return
-	}
-
-	// Cleanup temporary file after serving
-	defer func() {
-		err := os.Remove(localFilePath)
-		if err != nil {
-			log.Printf("Failed to remove temporary file: %v", err)
-		}
-	}()
-
-	title, ok := formData["title"].(string)
-	if !ok || title == "" {
+	if title == "" {
 		http.Error(w, "Missing or invalid title field", http.StatusBadRequest)
 
 		return
 	}
 
 	downloadFilename := storage.SanitizeFilename(title) + ".md"
+	localFilePath := filepath.Join("storage", downloadFilename)
 
-	// Set headers to force download
+	// #nosec G304 -- localFilePath is sanitized via SanitizeFilename
+	f, err := os.Create(localFilePath)
+	if err != nil {
+		http.Error(w, "Failed to create file", http.StatusInternalServerError)
+		log.Printf("DownloadNewDocumentHandler: failed to create temp file: %v", err)
+
+		return
+	}
+
+	_, err = fmt.Fprintf(f, "# %s\n## %s\n\n%s", title, subtitle, body)
+
+	closeErr := f.Close()
+	if closeErr != nil {
+		log.Printf("DownloadNewDocumentHandler: failed to close temp file: %v", closeErr)
+	}
+
+	if err != nil {
+		http.Error(w, "Failed to write file", http.StatusInternalServerError)
+		log.Printf("DownloadNewDocumentHandler: failed to write temp file: %v", err)
+
+		return
+	}
+
+	// Cleanup temporary file after serving
+	defer func() {
+		removeErr := os.Remove(localFilePath)
+		if removeErr != nil {
+			log.Printf("Failed to remove temporary file: %v", removeErr)
+		}
+	}()
+
 	w.Header().Set("Content-Disposition", "attachment; filename=\""+downloadFilename+"\"")
 	w.Header().Set("Content-Type", "text/markdown")
 
