@@ -137,11 +137,6 @@ func TestStorage(t *testing.T) {
 		if doc.Preview != "Preview text." {
 			t.Errorf("Expected preview 'Preview text.', got %q", doc.Preview)
 		}
-
-		// Body is not stored in YAML — it should be empty after decode
-		if doc.Body != "" {
-			t.Errorf("Expected empty body after YAML decode, got %q", doc.Body)
-		}
 	})
 
 	t.Run("write and re-read markdown body", func(t *testing.T) {

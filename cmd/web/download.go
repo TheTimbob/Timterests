@@ -11,7 +11,7 @@ import (
 )
 
 // DownloadDocumentHandler handles document download requests for authenticated users.
-func DownloadDocumentHandler(w http.ResponseWriter, r *http.Request, title string, a *auth.Auth) {
+func DownloadDocumentHandler(w http.ResponseWriter, r *http.Request, s storage.Storage, key string, a *auth.Auth) {
 	// Only admins can download documents
 	if !a.IsAuthenticated(r) {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -19,14 +19,38 @@ func DownloadDocumentHandler(w http.ResponseWriter, r *http.Request, title strin
 		return
 	}
 
-	fileName := storage.SanitizeFilename(title) + ".md"
-	filePath := filepath.Join("storage", fileName)
+	if key == "" {
+		http.Error(w, "Missing document key", http.StatusBadRequest)
+
+		return
+	}
+
+	// Ensure the key is within the storage directory (prevents path traversal)
+	localPath, err := storage.LocalPath(s.BaseDir, key)
+	if err != nil {
+		http.Error(w, "Invalid document key", http.StatusBadRequest)
+
+		return
+	}
+
+	// Download from S3 if needed
+	if s.UseS3 {
+		err := s.DownloadS3File(r.Context(), key)
+		if err != nil {
+			log.Printf("DownloadDocumentHandler: failed to download from S3: %v", err)
+			http.Error(w, "Failed to retrieve document", http.StatusInternalServerError)
+
+			return
+		}
+	}
+
+	fileName := filepath.Base(key)
 
 	// Set headers to force download
 	w.Header().Set("Content-Disposition", "attachment; filename=\""+fileName+"\"")
 	w.Header().Set("Content-Type", "text/markdown")
 
-	http.ServeFile(w, r, filePath)
+	http.ServeFile(w, r, localPath)
 }
 
 // DownloadNewDocumentHandler handles requests to download a new document based on form data.

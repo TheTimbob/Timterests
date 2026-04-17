@@ -25,6 +25,14 @@ func ListProjects(ctx context.Context, s storage.Storage, tag string) ([]model.P
 		return nil, fmt.Errorf("failed to list objects: %w", err)
 	}
 
+	mdKeys := make(map[string]bool, len(projectFiles))
+	for _, obj := range projectFiles {
+		key := aws.ToString(obj.Key)
+		if strings.HasSuffix(key, ".md") {
+			mdKeys[key] = true
+		}
+	}
+
 	docIdx := 0
 
 	for _, obj := range projectFiles {
@@ -34,7 +42,7 @@ func ListProjects(ctx context.Context, s storage.Storage, tag string) ([]model.P
 			continue
 		}
 
-		if !s.FileExists(ctx, strings.TrimSuffix(key, ".yaml")+".md") {
+		if !mdKeys[strings.TrimSuffix(key, ".yaml")+".md"] {
 			log.Printf("ListProjects: skipping %s — no paired .md body file", key)
 
 			continue

@@ -24,6 +24,14 @@ func ListBooks(ctx context.Context, s storage.Storage, tag string) ([]model.Read
 		return nil, fmt.Errorf("failed to list objects: %w", err)
 	}
 
+	mdKeys := make(map[string]bool, len(files))
+	for _, obj := range files {
+		key := aws.ToString(obj.Key)
+		if strings.HasSuffix(key, ".md") {
+			mdKeys[key] = true
+		}
+	}
+
 	docIdx := 0
 
 	for _, obj := range files {
@@ -33,7 +41,7 @@ func ListBooks(ctx context.Context, s storage.Storage, tag string) ([]model.Read
 			continue
 		}
 
-		if !s.FileExists(ctx, strings.TrimSuffix(key, ".yaml")+".md") {
+		if !mdKeys[strings.TrimSuffix(key, ".yaml")+".md"] {
 			log.Printf("ListBooks: skipping %s — no paired .md body file", key)
 
 			continue

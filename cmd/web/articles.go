@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"reflect"
 	"timterests/internal/auth"
+	"timterests/internal/model"
 	"timterests/internal/service"
 	"timterests/internal/storage"
 
@@ -64,16 +65,20 @@ func GetArticleHandler(w http.ResponseWriter, r *http.Request, s storage.Storage
 				return
 			}
 
-			article.Body = body
+			dc := model.DisplayContent{
+				ID:    article.ID,
+				S3Key: article.S3Key,
+				Body:  body,
+			}
 
 			var component templ.Component
 
 			authenticated := a.IsAuthenticated(r)
 
 			if r.Header.Get("Hx-Request") == "true" {
-				component = ArticleDisplay(article, authenticated)
+				component = ArticleDisplay(dc, authenticated)
 			} else {
-				component = ArticlePage(article, authenticated)
+				component = ArticlePage(dc, authenticated)
 			}
 
 			err = renderHTML(w, r, http.StatusOK, component)

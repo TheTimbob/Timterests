@@ -23,6 +23,14 @@ func ListLetters(ctx context.Context, s storage.Storage, tag string) ([]model.Le
 		return nil, fmt.Errorf("failed to list objects: %w", err)
 	}
 
+	mdKeys := make(map[string]bool, len(letterFiles))
+	for _, obj := range letterFiles {
+		key := aws.ToString(obj.Key)
+		if strings.HasSuffix(key, ".md") {
+			mdKeys[key] = true
+		}
+	}
+
 	letters := make([]model.Letter, 0, len(letterFiles))
 
 	docIdx := 0
@@ -34,7 +42,7 @@ func ListLetters(ctx context.Context, s storage.Storage, tag string) ([]model.Le
 			continue
 		}
 
-		if !s.FileExists(ctx, strings.TrimSuffix(key, ".yaml")+".md") {
+		if !mdKeys[strings.TrimSuffix(key, ".yaml")+".md"] {
 			log.Printf("ListLetters: skipping %s — no paired .md body file", key)
 
 			continue

@@ -274,9 +274,8 @@ func (s *Storage) UploadFileToS3(ctx context.Context, objectKey string) error {
 	return nil
 }
 
-// GetPreparedFile retrieves a file, decodes it, and converts markdown to HTML.
+// GetPreparedFile retrieves a file and decodes it.
 func (s *Storage) GetPreparedFile(ctx context.Context, key string, document any) error {
-	// Retrieve file content (downloads to localFilePath if S3, or effectively checks existence if Local)
 	file, err := s.GetFile(ctx, key)
 	if err != nil {
 		return err
@@ -288,16 +287,11 @@ func (s *Storage) GetPreparedFile(ctx context.Context, key string, document any)
 		return fmt.Errorf("failed to decode %s: %w", key, err)
 	}
 
-	err = BodyToHTML(document)
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
 
-// GetRawFile retrieves a file and decodes it without converting markdown to HTML.
-// Use this when the raw markdown content is needed (e.g. for editing).
+// GetRawFile retrieves a YAML file and decodes it into the document struct.
+// Use this when you need the metadata from a YAML file (e.g. for editing forms).
 func (s *Storage) GetRawFile(ctx context.Context, key string, document any) error {
 	file, err := s.GetFile(ctx, key)
 	if err != nil {
@@ -451,25 +445,23 @@ func DecodeFile(file io.Reader, out any) error {
 	return nil
 }
 
-// FileExists reports whether a file exists in storage (local or S3).
-func (s *Storage) FileExists(ctx context.Context, key string) bool {
-	localPath, err := LocalPath(s.BaseDir, key)
+// GetDocumentBodyRaw reads the Markdown body file paired with yamlKey and returns raw markdown.
+// The body file is expected at the same path as yamlKey but with a .md extension.
+func (s *Storage) GetDocumentBodyRaw(ctx context.Context, yamlKey string) (string, error) {
+	mdKey := strings.TrimSuffix(yamlKey, ".yaml") + ".md"
+
+	file, err := s.GetFile(ctx, mdKey)
 	if err != nil {
-		return false
+		return "", fmt.Errorf("failed to get body file %s: %w", mdKey, err)
+	}
+	defer file.Close()
+
+	content, err := io.ReadAll(file)
+	if err != nil {
+		return "", fmt.Errorf("failed to read body: %w", err)
 	}
 
-	if s.UseS3 {
-		_, err := s.S3Client.HeadObject(ctx, &s3.HeadObjectInput{
-			Bucket: aws.String(s.BucketName),
-			Key:    aws.String(key),
-		})
-
-		return err == nil
-	}
-
-	_, err = os.Stat(localPath)
-
-	return err == nil
+	return string(content), nil
 }
 
 // GetDocumentBody reads the Markdown body file paired with yamlKey, converts it to HTML, and returns it.
@@ -505,9 +497,10 @@ func FormatFileSize(size int64) string {
 	return fmt.Sprintf("%.1f KB", float64(size)/1024)
 }
 
-// WriteMarkdownDocument writes a document as two files: a YAML metadata file at yamlPath
-// and a Markdown body file at mdPath. The "body" key in formData is written to mdPath;
-// all other keys are written as YAML to yamlPath.
+// WriteMarkdownDocument writes a document as two separate files:
+// - yamlPath: YAML metadata file containing title, subtitle, tags, author, etc.
+// - mdPath: Markdown body file containing the document content.
+// The "body" key in formData is written to mdPath; all other keys are written as YAML to yamlPath.
 func WriteMarkdownDocument(yamlPath, mdPath string, formData map[string]any) error {
 	err := os.MkdirAll(filepath.Dir(yamlPath), 0750)
 	if err != nil {

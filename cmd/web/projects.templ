@@ -46,29 +46,29 @@ templ ProjectsList(projects []model.Project, design string) {
 	</ul>
 }
 
-templ ProjectPage(project model.Project, userIsAdmin bool) {
+templ ProjectPage(dc model.DisplayContent, repository string, userIsAdmin bool) {
     @Base("projects") {
-        @ProjectDisplay(project, userIsAdmin)
+        @ProjectDisplay(dc, repository, userIsAdmin)
     }
 }
 
-templ ProjectDisplay(project model.Project, userIsAdmin bool) {
-    @EditProjectButton(project, userIsAdmin)
-    @components.DownloadDocumentButton(project.Title, userIsAdmin)
+templ ProjectDisplay(dc model.DisplayContent, repository string, userIsAdmin bool) {
+    @EditProjectButton(dc, userIsAdmin)
+    @components.DownloadDocumentButton(dc.S3Key, userIsAdmin)
     <div id="project-container">
-		if project.Repository != "Private" {
-			<p class="content-text"><i class="fa-brands fa-github"></i> Repository: <a href={ templ.SafeURL(project.Repository) } class="content-text" target="_blank">{ project.Repository }</a></p>
+		if repository != "Private" {
+			<p class="content-text"><i class="fa-brands fa-github"></i> Repository: <a href={ templ.SafeURL(repository) } class="content-text" target="_blank">{ repository }</a></p>
 		}
-        @templ.Raw(project.Body)
+        @templ.Raw(dc.Body)
     </div>
 }
 
-templ EditProjectButton(project model.Project, userIsAdmin bool) {
+templ EditProjectButton(dc model.DisplayContent, userIsAdmin bool) {
     if userIsAdmin {
         <form hx-post="/writer" hx-target="body" class="action-form">
             <input type="hidden" name="document-type" value="projects"/>
-            <input type="hidden" name="document-key" value={project.S3Key}/>
-            <input type="hidden" name="type-id" value={project.ID}/>
+            <input type="hidden" name="document-key" value={dc.S3Key}/>
+            <input type="hidden" name="type-id" value={dc.ID}/>
             <button type="submit" class="button">Edit</button>
         </form>
     }

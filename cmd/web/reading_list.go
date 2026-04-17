@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"reflect"
 	"timterests/internal/auth"
+	"timterests/internal/model"
 	"timterests/internal/service"
 	"timterests/internal/storage"
 
@@ -63,16 +64,20 @@ func GetReadingListBook(w http.ResponseWriter, r *http.Request, s storage.Storag
 				return
 			}
 
-			book.Body = body
+			dc := model.DisplayContent{
+				ID:    book.ID,
+				S3Key: book.S3Key,
+				Body:  body,
+			}
 
 			var component templ.Component
 
 			authenticated := a.IsAuthenticated(r)
 
 			if r.Header.Get("Hx-Request") == "true" {
-				component = BookDisplay(book, authenticated)
+				component = BookDisplay(book, dc, authenticated)
 			} else {
-				component = BookPage(book, authenticated)
+				component = BookPage(book, dc, authenticated)
 			}
 
 			err = renderHTML(w, r, http.StatusOK, component)

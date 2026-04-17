@@ -46,26 +46,26 @@ templ LettersList(letters []model.Letter, design string) {
 	</ul>
 }
 
-templ LetterPage(letter model.Letter, userIsAdmin bool){
+templ LetterPage(dc model.DisplayContent, userIsAdmin bool){
     @Base("letters") {
-        @LetterDisplay(letter, userIsAdmin)
+        @LetterDisplay(dc, userIsAdmin)
     }
 }
 
-templ LetterDisplay(letter model.Letter, userIsAdmin bool) {
-    @EditLetterButton(letter, userIsAdmin)
-    @components.DownloadDocumentButton(letter.Title, userIsAdmin)
+templ LetterDisplay(dc model.DisplayContent, userIsAdmin bool) {
+    @EditLetterButton(dc, userIsAdmin)
+    @components.DownloadDocumentButton(dc.S3Key, userIsAdmin)
     <div id="letter-container">
-        @templ.Raw(letter.Body)
+        @templ.Raw(dc.Body)
     </div>
 }
 
-templ EditLetterButton(letter model.Letter, userIsAdmin bool) {
+templ EditLetterButton(dc model.DisplayContent, userIsAdmin bool) {
     if userIsAdmin {
         <form hx-post="/writer" hx-target="body" class="action-form">
             <input type="hidden" name="document-type" value="letters"/>
-            <input type="hidden" name="document-key" value={letter.S3Key}/>
-            <input type="hidden" name="type-id" value={letter.ID}/>
+            <input type="hidden" name="document-key" value={dc.S3Key}/>
+            <input type="hidden" name="type-id" value={dc.ID}/>
             <button type="submit" class="button">Edit</button>
         </form>
     }

@@ -18,6 +18,36 @@ import (
 	"github.com/a-h/templ"
 )
 
+// WriterFormData holds all data needed to render the writer form.
+type WriterFormData struct {
+	Doc     model.Document
+	Body    string
+	DocType string
+	Fields  templ.Component
+}
+
+// emptyFormData returns a zero-value WriterFormData for a new document of the given type.
+func emptyFormData(docType string) WriterFormData {
+	switch docType {
+	case "projects":
+		doc := model.Project{}
+
+		return WriterFormData{Doc: doc.Document, DocType: "projects", Fields: ProjectFormContent(&doc)}
+	case "reading-list":
+		doc := model.ReadingList{}
+
+		return WriterFormData{Doc: doc.Document, DocType: "reading-list", Fields: BookFormContent(&doc)}
+	case "letters":
+		doc := model.Letter{}
+
+		return WriterFormData{Doc: doc.Document, DocType: "letters", Fields: LetterFormContent(&doc)}
+	default: // "articles" and fallback
+		doc := model.Article{}
+
+		return WriterFormData{Doc: doc.Document, DocType: "articles", Fields: ArticleFormContent(&doc)}
+	}
+}
+
 // WriterPageHandler handles requests to the writer page, ensuring authentication and rendering the appropriate content.
 func WriterPageHandler(
 	w http.ResponseWriter,
@@ -27,7 +57,7 @@ func WriterPageHandler(
 	typeID int,
 	a *auth.Auth) {
 	var (
-		content   any
+		data      WriterFormData
 		err       error
 		component templ.Component
 	)
@@ -38,9 +68,8 @@ func WriterPageHandler(
 		return
 	}
 
-	// If key is provided, load the existing document with raw markdown (no HTML conversion)
 	if key != "" {
-		content, err = getTypeContentRaw(r.Context(), docType, key, typeID, s)
+		data, err = getTypeContentRaw(r.Context(), docType, key, typeID, s)
 		if err != nil {
 			log.Printf("WriterPageHandler: failed to load document: %v", err)
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -48,25 +77,13 @@ func WriterPageHandler(
 			return
 		}
 	} else {
-		// Create empty content based on docType
-		switch docType {
-		case "articles":
-			content = &model.Article{}
-		case "projects":
-			content = &model.Project{}
-		case "reading-list":
-			content = &model.ReadingList{}
-		case "letters":
-			content = &model.Letter{}
-		default:
-			content = &model.Article{} // default to Article
-		}
+		data = emptyFormData(docType)
 	}
 
 	if r.Header.Get("Hx-Request") == "true" && key == "" {
-		component = FormContentByType(content)
+		component = WriterFormContent(data)
 	} else {
-		component = WriterPage(content)
+		component = WriterPage(data)
 	}
 
 	err = renderHTML(w, r, http.StatusOK, component)
@@ -241,37 +258,65 @@ type metaSetter interface {
 }
 
 // loadRawDoc initialises a zero-value T, sets its metadata, fetches the raw
-// (non-HTML-converted) file from storage, and returns a pointer to the result.
+// (non-HTML-converted) file from storage, and returns Content with the doc and raw markdown body.
 func loadRawDoc[T any, PT interface {
 	*T
 	metaSetter
-}](ctx context.Context, key, idStr string, s storage.Storage) (*T, error) {
+}](ctx context.Context, key, idStr string, s storage.Storage) (model.Content[T], error) {
 	var doc T
 	PT(&doc).SetMeta(idStr, key)
 
 	err := s.GetRawFile(ctx, key, PT(&doc))
 	if err != nil {
-		return nil, fmt.Errorf("failed to get raw file: %w", err)
+		return model.Content[T]{}, fmt.Errorf("failed to get raw file: %w", err)
 	}
 
-	return &doc, nil
+	body, err := s.GetDocumentBodyRaw(ctx, key)
+	if err != nil {
+		log.Printf("loadRawDoc: failed to get raw body, leaving empty: %v", err)
+
+		body = ""
+	}
+
+	return model.Content[T]{Doc: doc, Body: body}, nil
 }
 
 // getTypeContentRaw retrieves content for editing, keeping the body as raw markdown.
-func getTypeContentRaw(ctx context.Context, docType, key string, id int, s storage.Storage) (any, error) {
+func getTypeContentRaw(ctx context.Context, docType, key string, id int, s storage.Storage) (WriterFormData, error) {
 	idStr := strconv.Itoa(id)
 
 	switch docType {
 	case "articles":
-		return loadRawDoc[model.Article](ctx, key, idStr, s)
+		c, err := loadRawDoc[model.Article](ctx, key, idStr, s)
+		if err != nil {
+			return WriterFormData{}, err
+		}
+
+		return WriterFormData{Doc: c.Doc.Document, Body: c.Body, DocType: "articles", Fields: ArticleFormContent(&c.Doc)}, nil
 	case "projects":
-		return loadRawDoc[model.Project](ctx, key, idStr, s)
+		c, err := loadRawDoc[model.Project](ctx, key, idStr, s)
+		if err != nil {
+			return WriterFormData{}, err
+		}
+
+		return WriterFormData{Doc: c.Doc.Document, Body: c.Body, DocType: "projects", Fields: ProjectFormContent(&c.Doc)}, nil
 	case "reading-list":
-		return loadRawDoc[model.ReadingList](ctx, key, idStr, s)
+		c, err := loadRawDoc[model.ReadingList](ctx, key, idStr, s)
+		if err != nil {
+			return WriterFormData{}, err
+		}
+
+		return WriterFormData{Doc: c.Doc.Document, Body: c.Body, DocType: "reading-list",
+			Fields: BookFormContent(&c.Doc)}, nil
 	case "letters":
-		return loadRawDoc[model.Letter](ctx, key, idStr, s)
+		c, err := loadRawDoc[model.Letter](ctx, key, idStr, s)
+		if err != nil {
+			return WriterFormData{}, err
+		}
+
+		return WriterFormData{Doc: c.Doc.Document, Body: c.Body, DocType: "letters", Fields: LetterFormContent(&c.Doc)}, nil
 	default:
-		return nil, fmt.Errorf("unsupported document type: %s", docType)
+		return WriterFormData{}, fmt.Errorf("unsupported document type: %s", docType)
 	}
 }
 

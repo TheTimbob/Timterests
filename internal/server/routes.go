@@ -94,8 +94,8 @@ func (s *Server) RegisterRoutes() http.Handler {
 	}))
 
 	mux.Handle("/download", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		documentTitle := r.URL.Query().Get("title")
-		web.DownloadDocumentHandler(w, r, documentTitle, s.auth)
+		documentKey := r.URL.Query().Get("key")
+		web.DownloadDocumentHandler(w, r, *s.storage, documentKey, s.auth)
 	}))
 
 	mux.Handle("/download/new", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

@@ -29,6 +29,14 @@ func ListArticles(ctx context.Context, s storage.Storage, tag string) ([]model.A
 		return nil, fmt.Errorf("failed to list objects with prefix %q: %w", prefix, err)
 	}
 
+	mdKeys := make(map[string]bool, len(articleFiles))
+	for _, obj := range articleFiles {
+		key := aws.ToString(obj.Key)
+		if strings.HasSuffix(key, ".md") {
+			mdKeys[key] = true
+		}
+	}
+
 	docIdx := 0
 
 	for _, obj := range articleFiles {
@@ -38,7 +46,7 @@ func ListArticles(ctx context.Context, s storage.Storage, tag string) ([]model.A
 			continue
 		}
 
-		if !s.FileExists(ctx, strings.TrimSuffix(key, ".yaml")+".md") {
+		if !mdKeys[strings.TrimSuffix(key, ".yaml")+".md"] {
 			log.Printf("ListArticles: skipping %s — no paired .md body file", key)
 
 			continue

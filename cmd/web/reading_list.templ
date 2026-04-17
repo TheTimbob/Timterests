@@ -46,33 +46,33 @@ templ ReadingListList(readingList []model.ReadingList, design string) {
 	</ul>
 }
 
-templ BookPage(readingList model.ReadingList, userIsAdmin bool) {
+templ BookPage(book model.ReadingList, dc model.DisplayContent, userIsAdmin bool) {
     @Base("reading-list") {
-        @BookDisplay(readingList, userIsAdmin)
+        @BookDisplay(book, dc, userIsAdmin)
     }
 }
 
-templ BookDisplay(readingList model.ReadingList, userIsAdmin bool) {
-    @EditBookButton(readingList, userIsAdmin)
-    @components.DownloadDocumentButton(readingList.Title, userIsAdmin)
+templ BookDisplay(book model.ReadingList, dc model.DisplayContent, userIsAdmin bool) {
+    @EditBookButton(dc, userIsAdmin)
+    @components.DownloadDocumentButton(dc.S3Key, userIsAdmin)
 	<div id="reading-list-container">
-		@templ.Raw(readingList.Body)
-		<p>Author: { readingList.Author }</p>
-		<p>Published: { readingList.Published }</p>
-		<p>ISBN: { readingList.ISBN }</p>
-		<p>Website: <a href={ templ.SafeURL(readingList.Website) } target="_blank">{ readingList.Website }</a></p>
-		<p>Status: { readingList.Status }</p>
+		@templ.Raw(dc.Body)
+		<p>Author: { book.Author }</p>
+		<p>Published: { book.Published }</p>
+		<p>ISBN: { book.ISBN }</p>
+		<p>Website: <a href={ templ.SafeURL(book.Website) } target="_blank">{ book.Website }</a></p>
+		<p>Status: { book.Status }</p>
 		<br>
 		<div>I am not affiliated with, nor do I own any rights to, the books listed in my reading list. All purchase links are non-affiliate and provided solely for informational purposes.</div>
 	</div>
 }
 
-templ EditBookButton(readingList model.ReadingList, userIsAdmin bool) {
+templ EditBookButton(dc model.DisplayContent, userIsAdmin bool) {
     if userIsAdmin {
         <form hx-post="/writer" hx-target="body" class="action-form">
             <input type="hidden" name="document-type" value="reading-list"/>
-            <input type="hidden" name="document-key" value={readingList.S3Key}/>
-            <input type="hidden" name="type-id" value={readingList.ID}/>
+            <input type="hidden" name="document-key" value={dc.S3Key}/>
+            <input type="hidden" name="type-id" value={dc.ID}/>
             <button type="submit" class="button">Edit</button>
         </form>
     }

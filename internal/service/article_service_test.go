@@ -99,7 +99,7 @@ func TestGetArticle(t *testing.T) {
 	})
 
 	t.Run("returns error for non-existent key", func(t *testing.T) {
-		_, err := service.GetArticle(ctx, *s, "articles/does-not-exist.md", 0)
+		_, err := service.GetArticle(ctx, *s, "articles/does-not-exist.yaml", 0)
 		if err == nil {
 			t.Error("expected error for non-existent file, got nil")
 		}

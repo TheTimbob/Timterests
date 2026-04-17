@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"reflect"
 	"timterests/internal/auth"
+	"timterests/internal/model"
 	"timterests/internal/service"
 	"timterests/internal/storage"
 
@@ -64,16 +65,20 @@ func GetProjectHandler(w http.ResponseWriter, r *http.Request, s storage.Storage
 				return
 			}
 
-			project.Body = body
+			dc := model.DisplayContent{
+				ID:    project.ID,
+				S3Key: project.S3Key,
+				Body:  body,
+			}
 
 			var component templ.Component
 
 			authenticated := a.IsAuthenticated(r)
 
 			if r.Header.Get("Hx-Request") == "true" {
-				component = ProjectDisplay(project, authenticated)
+				component = ProjectDisplay(dc, project.Repository, authenticated)
 			} else {
-				component = ProjectPage(project, authenticated)
+				component = ProjectPage(dc, project.Repository, authenticated)
 			}
 
 			err = renderHTML(w, r, http.StatusOK, component)

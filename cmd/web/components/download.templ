@@ -1,9 +1,9 @@
 package components
 
-templ DownloadDocumentButton(title string, userIsAdmin bool) {
+templ DownloadDocumentButton(s3Key string, userIsAdmin bool) {
     if userIsAdmin {
         <form action="/download" method="get" class="action-form">
-            <input type="hidden" name="title" value={title}/>
+            <input type="hidden" name="key" value={s3Key}/>
             <button type="submit" class="button">Download</button>
         </form>
     }
