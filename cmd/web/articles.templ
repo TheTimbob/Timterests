@@ -46,28 +46,26 @@ templ ArticlesList(articles []model.Article, design string) {
     </ul>
 }
 
-templ ArticlePage(article model.Article, userIsAdmin bool) {
+templ ArticlePage(dc model.DisplayContent, userIsAdmin bool) {
     @Base("articles") {
-        @ArticleDisplay(article, userIsAdmin)
+        @ArticleDisplay(dc, userIsAdmin)
     }
 }
 
-templ ArticleDisplay(article model.Article, userIsAdmin bool) {
-    @EditArticleButton(article, userIsAdmin)
-    @components.DownloadDocumentButton(article.Title+"-"+FormatDateForFilename(article.Date), userIsAdmin)
+templ ArticleDisplay(dc model.DisplayContent, userIsAdmin bool) {
+    @EditArticleButton(dc, userIsAdmin)
+    @components.DownloadDocumentButton(dc.S3Key, userIsAdmin)
 	<div id="article-container">
-		<h1 class="category-title">{ article.Title }</h1>
-		<h2 class="category-subtitle">{ article.Subtitle }</h2>
-		@templ.Raw(article.Body)
+		@templ.Raw(dc.Body)
 	</div>
 }
 
-templ EditArticleButton(article model.Article, userIsAdmin bool) {
+templ EditArticleButton(dc model.DisplayContent, userIsAdmin bool) {
     if userIsAdmin {
         <form hx-post="/writer" hx-target="body" class="action-form">
             <input type="hidden" name="document-type" value="articles"/>
-            <input type="hidden" name="document-key" value={article.S3Key}/>
-            <input type="hidden" name="type-id" value={article.ID}/>
+            <input type="hidden" name="document-key" value={dc.S3Key}/>
+            <input type="hidden" name="type-id" value={dc.ID}/>
             <button type="submit" class="button">Edit</button>
         </form>
     }

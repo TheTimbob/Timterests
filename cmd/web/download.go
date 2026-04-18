@@ -1,16 +1,18 @@
 package web
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"timterests/internal/auth"
 	"timterests/internal/storage"
 )
 
 // DownloadDocumentHandler handles document download requests for authenticated users.
-func DownloadDocumentHandler(w http.ResponseWriter, r *http.Request, title string, a *auth.Auth) {
+func DownloadDocumentHandler(w http.ResponseWriter, r *http.Request, s storage.Storage, key string, a *auth.Auth) {
 	// Only admins can download documents
 	if !a.IsAuthenticated(r) {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -18,17 +20,47 @@ func DownloadDocumentHandler(w http.ResponseWriter, r *http.Request, title strin
 		return
 	}
 
-	fileName := storage.SanitizeFilename(title) + ".yaml"
-	filePath := filepath.Join("storage", fileName)
+	if key == "" {
+		http.Error(w, "Missing document key", http.StatusBadRequest)
+
+		return
+	}
+
+	// Document listings use .yaml keys; serve the paired .md body file instead.
+	if base, ok := strings.CutSuffix(key, ".yaml"); ok {
+		key = base + ".md"
+	}
+
+	// Ensure the key is within the storage directory (prevents path traversal)
+	localPath, err := storage.LocalPath(s.BaseDir, key)
+	if err != nil {
+		http.Error(w, "Invalid document key", http.StatusBadRequest)
+
+		return
+	}
+
+	// Download from S3 if needed
+	if s.UseS3 {
+		err := s.DownloadS3File(r.Context(), key)
+		if err != nil {
+			log.Printf("DownloadDocumentHandler: failed to download from S3: %v", err)
+			http.Error(w, "Failed to retrieve document", http.StatusInternalServerError)
+
+			return
+		}
+	}
+
+	fileName := filepath.Base(key)
 
 	// Set headers to force download
 	w.Header().Set("Content-Disposition", "attachment; filename=\""+fileName+"\"")
-	w.Header().Set("Content-Type", "application/x-yaml")
+	w.Header().Set("Content-Type", "text/markdown")
 
-	http.ServeFile(w, r, filePath)
+	http.ServeFile(w, r, localPath)
 }
 
 // DownloadNewDocumentHandler handles requests to download a new document based on form data.
+// It writes only the Markdown body (with title/subtitle headers) to a temporary file and serves it.
 func DownloadNewDocumentHandler(w http.ResponseWriter, r *http.Request, a *auth.Auth) {
 	// Only admins can download documents
 	if !a.IsAuthenticated(r) {
@@ -44,50 +76,50 @@ func DownloadNewDocumentHandler(w http.ResponseWriter, r *http.Request, a *auth.
 		return
 	}
 
-	filename := storage.SanitizeFilename("") + ".yaml"
+	title := r.FormValue("title")
+	subtitle := r.FormValue("subtitle")
+	body := r.FormValue("body")
 
-	// Convert url.Values to map[string]any
-	formData := make(map[string]any)
+	if title == "" {
+		http.Error(w, "Missing or invalid title field", http.StatusBadRequest)
 
-	for key, values := range r.Form {
-		if len(values) == 1 {
-			formData[key] = values[0]
-		} else {
-			formData[key] = values
-		}
+		return
 	}
 
-	delete(formData, "document-type")
+	downloadFilename := storage.SanitizeFilename(title) + ".md"
 
-	localFilePath := filepath.Join("storage", filename)
-
-	err = storage.WriteYAMLDocument(localFilePath, formData)
+	f, err := os.CreateTemp("", "download-*.md")
 	if err != nil {
-		http.Error(w, "Failed to write YAML document", http.StatusInternalServerError)
+		http.Error(w, "Failed to create file", http.StatusInternalServerError)
+		log.Printf("DownloadNewDocumentHandler: failed to create temp file: %v", err)
 
 		return
 	}
 
 	// Cleanup temporary file after serving
 	defer func() {
-		err := os.Remove(localFilePath)
-		if err != nil {
-			log.Printf("Failed to remove temporary file: %v", err)
+		removeErr := os.Remove(f.Name())
+		if removeErr != nil {
+			log.Printf("Failed to remove temporary file: %v", removeErr)
 		}
 	}()
 
-	title, ok := formData["title"].(string)
-	if !ok || title == "" {
-		http.Error(w, "Missing or invalid title field", http.StatusBadRequest)
+	_, err = fmt.Fprintf(f, "# %s\n## %s\n\n%s", title, subtitle, body)
+
+	closeErr := f.Close()
+	if closeErr != nil {
+		log.Printf("DownloadNewDocumentHandler: failed to close temp file: %v", closeErr)
+	}
+
+	if err != nil {
+		http.Error(w, "Failed to write file", http.StatusInternalServerError)
+		log.Printf("DownloadNewDocumentHandler: failed to write temp file: %v", err)
 
 		return
 	}
 
-	downloadFilename := storage.SanitizeFilename(title) + ".yaml"
-
-	// Set headers to force download
 	w.Header().Set("Content-Disposition", "attachment; filename=\""+downloadFilename+"\"")
-	w.Header().Set("Content-Type", "application/x-yaml")
+	w.Header().Set("Content-Type", "text/markdown")
 
-	http.ServeFile(w, r, localFilePath)
+	http.ServeFile(w, r, f.Name())
 }

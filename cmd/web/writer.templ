@@ -7,43 +7,47 @@ import (
     "timterests/internal/model"
 )
 
-templ WriterPage(content any) {
+templ WriterPage(data WriterFormData) {
     @Base("writer") {
-        @WriterDisplay(content)
+        @WriterDisplay(data)
     }
 }
 
-templ WriterDisplay(content any) {
+templ WriterDisplay(data WriterFormData) {
     <div id="writer-container" class="form-container">
         <h1 class="category-title">Create a Document</h1>
-        @FormContentByType(content)
+        @WriterFormContent(data)
         <hr>
         <h2 class="category-subtitle">AI Suggestions</h2>
         @OpenAISuggestion()
     </div>
 }
 
-templ WriterFormContent(content model.Document, component templ.Component, docType string) {
+templ WriterFormContent(data WriterFormData) {
     <form id="writer-form" action="/write" method="post">
         <div>
             <label class="form-label" for="s3-upload">Upload to S3:</label>
             <input type="checkbox" id="s3-upload" name="s3-upload">
         </div>
-        @DocumentTypeComponent(docType)
+        @DocumentTypeComponent(data.DocType)
         <div class="form-field">
             <label class="form-label" for="title">Title:</label>
-            <input class="form-input" type="text" id="title" name="title" value={content.Title} required>
+            <input class="form-input" type="text" id="title" name="title" value={data.Doc.Title} required>
         </div>
         <div class="form-field">
             <label class="form-label" for="subtitle">Subtitle:</label>
-            <input class="form-input" type="text" id="subtitle" name="subtitle" value={content.Subtitle} required>
+            <input class="form-input" type="text" id="subtitle" name="subtitle" value={data.Doc.Subtitle} required>
+        </div>
+        <div class="form-field">
+            <label class="form-label" for="preview">Preview:</label>
+            <input class="form-input" type="text" id="preview" name="preview" value={data.Doc.Preview}>
         </div>
         <div id="document-form">
-            @component
+            @data.Fields
         </div>
         <div class="form-field">
             <label class="form-label" for="body">Content:</label>
-            <textarea class="form-textarea" id="body" name="body" required>{content.Body}</textarea>
+            <textarea class="form-textarea" id="body" name="body" required>{data.Body}</textarea>
         </div>
         <div class="form-field">
             <button class="button" type="submit">Submit</button>
@@ -168,18 +172,4 @@ templ AISuggestionResponse(content string) {
 
 templ AISuggestionError(errorMsg string) {
     <p class="ai-error">{ errorMsg }</p>
-}
-
-// HTMX template for dynamic form content switching
-templ FormContentByType(content any) {
-    switch c := content.(type) {
-        case *model.Article:
-            @WriterFormContent(c.Document, ArticleFormContent(c), "articles")
-        case *model.Letter:
-            @WriterFormContent(c.Document, LetterFormContent(c), "letters")
-        case *model.Project:
-            @WriterFormContent(c.Document, ProjectFormContent(c), "projects")
-        case *model.ReadingList:
-            @WriterFormContent(c.Document, BookFormContent(c), "reading-list")
-    }
 }

@@ -13,22 +13,19 @@ func getTestDocument() model.Document {
 	return model.Document{
 		Title:    "Test Document",
 		Subtitle: "Test Subtitle",
-		Body:     "This is a test body.\n\n- Item 1\n- Item 2\n\n## Subtitle\n\n[Link](http://example.com)",
 		Tags:     []string{"test", "document"},
 	}
 }
 
-func TestDocumentParser(t *testing.T) {
+func TestMarkdownToHTML(t *testing.T) {
 	t.Parallel()
 
-	t.Run("body to HTML conversion", func(t *testing.T) {
+	t.Run("markdown to HTML conversion", func(t *testing.T) {
 		t.Parallel()
 
-		// Use a local copy to avoid a race with the sibling sub-test that reads
-		// the same document concurrently.
-		document := getTestDocument()
+		input := []byte("This is a test body.\n\n- Item 1\n- Item 2\n\n## Subtitle\n\n[Link](http://example.com)")
 
-		err := storage.BodyToHTML(&document)
+		html, err := storage.MarkdownToHTML(input)
 		if err != nil {
 			t.Fatalf("Expected no error, got %v", err)
 		}
@@ -42,7 +39,7 @@ func TestDocumentParser(t *testing.T) {
 						<p class="content-text"><a href="http://example.com">Link</a></p>`
 
 		// Normalize whitespace for comparison
-		gotNormalized := strings.ReplaceAll(document.Body, " ", "")
+		gotNormalized := strings.ReplaceAll(html, " ", "")
 		gotNormalized = strings.ReplaceAll(gotNormalized, "\n", "")
 		gotNormalized = strings.ReplaceAll(gotNormalized, "\t", "")
 		expectedNormalized := strings.ReplaceAll(expectedBody, " ", "")
@@ -50,41 +47,32 @@ func TestDocumentParser(t *testing.T) {
 		expectedNormalized = strings.ReplaceAll(expectedNormalized, "\t", "")
 
 		if gotNormalized != expectedNormalized {
-			t.Errorf("BodyToHTML did not produce expected output.\nGot:\n%s\nExpected:\n%s", document.Body, expectedBody)
-		}
-
-		// Test incorrect type handling
-		invalidInput := 42
-
-		err = storage.BodyToHTML(&invalidInput)
-		if err == nil {
-			t.Fatalf("Expected error for invalid input type, got nil")
-		}
-
-		// Test empty body handling
-		emptyDocument := model.Document{
-			ID:       "",
-			S3Key:    "",
-			Title:    "Empty Document",
-			Subtitle: "",
-			Body:     "",
-			Tags:     []string{},
-		}
-
-		err = storage.BodyToHTML(&emptyDocument)
-		if err != nil {
-			t.Fatalf("Expected no error for empty body, got %v", err)
-		}
-
-		if emptyDocument.Body != "" {
-			t.Errorf("Expected empty body to remain empty, got %s", emptyDocument.Body)
+			t.Errorf("MarkdownToHTML did not produce expected output.\nGot:\n%s\nExpected:\n%s", html, expectedBody)
 		}
 	})
+
+	t.Run("empty body remains empty", func(t *testing.T) {
+		t.Parallel()
+
+		input := []byte("")
+
+		html, err := storage.MarkdownToHTML(input)
+		if err != nil {
+			t.Fatalf("Expected no error for empty input, got %v", err)
+		}
+
+		if html != "" {
+			t.Errorf("Expected empty HTML, got %s", html)
+		}
+	})
+}
+
+func TestGetTags(t *testing.T) {
+	t.Parallel()
+
 	t.Run("get tags from document", func(t *testing.T) {
 		t.Parallel()
 
-		// Use a local copy to avoid a race with the sibling sub-test that writes
-		// to the shared document concurrently.
 		document := getTestDocument()
 
 		var tags []string

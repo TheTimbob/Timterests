@@ -2,7 +2,6 @@ package storage
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"log"
 	"path"
@@ -17,8 +16,8 @@ import (
 	"github.com/yuin/goldmark/renderer/html"
 )
 
-// BodyToHTML converts body text from markdown to HTML.
-func BodyToHTML(document any) error {
+// MarkdownToHTML converts raw markdown bytes to styled HTML.
+func MarkdownToHTML(content []byte) (string, error) {
 	var buf bytes.Buffer
 
 	md := goldmark.New(
@@ -27,47 +26,20 @@ func BodyToHTML(document any) error {
 		),
 	)
 
-	// Get reflect value of the document
-	v := reflect.ValueOf(document)
-	if v.Kind() != reflect.Ptr || v.IsNil() {
-		return errors.New("document must be a non-nil pointer to a struct")
-	}
-
-	v = v.Elem()
-
-	// Check if the underlying value is a struct before getting Body
-	if v.Kind() != reflect.Struct {
-		return errors.New("document must point to a struct")
-	}
-
-	// Set the Body field to the modified HTML content
-	bodyField := v.FieldByName("Body")
-	if !bodyField.IsValid() || bodyField.Kind() != reflect.String {
-		return errors.New("document does not have a valid Body field of type string")
-	}
-
-	body := bodyField.String()
-
-	err := md.Convert([]byte(body), &buf)
+	err := md.Convert(content, &buf)
 	if err != nil {
-		log.Printf("failed to convert body to HTML: %v", err)
+		log.Printf("failed to convert markdown to HTML: %v", err)
 
-		return fmt.Errorf("conversion error: %w", err)
+		return "", fmt.Errorf("conversion error: %w", err)
 	}
 
-	body = buf.String()
-
+	body := buf.String()
 	body = strings.ReplaceAll(body, "<p>", `<p class="content-text">`)
+	body = strings.ReplaceAll(body, "<h1>", `<h1 class="category-title">`)
 	body = strings.ReplaceAll(body, "<h2>", `<h2 class="category-subtitle">`)
 	body = strings.ReplaceAll(body, "<li>", `<li class="content-text">`)
 
-	if bodyField.CanSet() {
-		bodyField.SetString(body)
-	} else {
-		return errors.New("body field cannot be set in the document struct")
-	}
-
-	return nil
+	return body, nil
 }
 
 // GetTags extracts tags from a struct value, checking embedded Document if needed.

@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"reflect"
 	"timterests/internal/auth"
+	"timterests/internal/model"
 	"timterests/internal/service"
 	"timterests/internal/storage"
 
@@ -40,7 +41,6 @@ func LettersPageHandler(
 	}
 
 	for i := range letters {
-		letters[i].Body = storage.RemoveHTMLTags(letters[i].Body)
 		v := reflect.ValueOf(letters[i])
 		tags = storage.GetTags(v, tags)
 	}
@@ -76,14 +76,28 @@ func GetLetterHandler(w http.ResponseWriter, r *http.Request, s storage.Storage,
 		return
 	}
 
+	var component templ.Component
+
 	for _, letter := range letters {
 		if letter.ID == letterID {
-			var component templ.Component
+			body, err := s.GetDocumentBody(r.Context(), letter.S3Key)
+			if err != nil {
+				log.Printf("GetLetterHandler: failed to load body for %s: %v", letter.S3Key, err)
+				http.Error(w, "Not Found", http.StatusNotFound)
+
+				return
+			}
+
+			dc := model.DisplayContent{
+				ID:    letter.ID,
+				S3Key: letter.S3Key,
+				Body:  body,
+			}
 
 			if r.Header.Get("Hx-Request") == "true" {
-				component = LetterDisplay(letter, authenticated)
+				component = LetterDisplay(dc, authenticated)
 			} else {
-				component = LetterPage(letter, authenticated)
+				component = LetterPage(dc, authenticated)
 			}
 
 			err = renderHTML(w, r, http.StatusOK, component)

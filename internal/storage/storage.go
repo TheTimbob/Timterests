@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -273,9 +274,8 @@ func (s *Storage) UploadFileToS3(ctx context.Context, objectKey string) error {
 	return nil
 }
 
-// GetPreparedFile retrieves a file, decodes it, and converts markdown to HTML.
+// GetPreparedFile retrieves a file and decodes it.
 func (s *Storage) GetPreparedFile(ctx context.Context, key string, document any) error {
-	// Retrieve file content (downloads to localFilePath if S3, or effectively checks existence if Local)
 	file, err := s.GetFile(ctx, key)
 	if err != nil {
 		return err
@@ -287,16 +287,11 @@ func (s *Storage) GetPreparedFile(ctx context.Context, key string, document any)
 		return fmt.Errorf("failed to decode %s: %w", key, err)
 	}
 
-	err = BodyToHTML(document)
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
 
-// GetRawFile retrieves a file and decodes it without converting markdown to HTML.
-// Use this when the raw markdown content is needed (e.g. for editing).
+// GetRawFile retrieves a YAML file and decodes it into the document struct.
+// Use this when you need the metadata from a YAML file (e.g. for editing forms).
 func (s *Storage) GetRawFile(ctx context.Context, key string, document any) error {
 	file, err := s.GetFile(ctx, key)
 	if err != nil {
@@ -450,6 +445,49 @@ func DecodeFile(file io.Reader, out any) error {
 	return nil
 }
 
+// GetDocumentBodyRaw reads the Markdown body file paired with yamlKey and returns raw markdown.
+// The body file is expected at the same path as yamlKey but with a .md extension.
+func (s *Storage) GetDocumentBodyRaw(ctx context.Context, yamlKey string) (string, error) {
+	mdKey := strings.TrimSuffix(yamlKey, ".yaml") + ".md"
+
+	file, err := s.GetFile(ctx, mdKey)
+	if err != nil {
+		return "", fmt.Errorf("failed to get body file %s: %w", mdKey, err)
+	}
+	defer file.Close()
+
+	content, err := io.ReadAll(file)
+	if err != nil {
+		return "", fmt.Errorf("failed to read body: %w", err)
+	}
+
+	return string(content), nil
+}
+
+// GetDocumentBody reads the Markdown body file paired with yamlKey, converts it to HTML, and returns it.
+// The body file is expected at the same path as yamlKey but with a .md extension.
+func (s *Storage) GetDocumentBody(ctx context.Context, yamlKey string) (string, error) {
+	mdKey := strings.TrimSuffix(yamlKey, ".yaml") + ".md"
+
+	file, err := s.GetFile(ctx, mdKey)
+	if err != nil {
+		return "", fmt.Errorf("failed to get body file %s: %w", mdKey, err)
+	}
+	defer file.Close()
+
+	content, err := io.ReadAll(file)
+	if err != nil {
+		return "", fmt.Errorf("failed to read body: %w", err)
+	}
+
+	html, err := MarkdownToHTML(content)
+	if err != nil {
+		return "", err
+	}
+
+	return html, nil
+}
+
 // FormatFileSize formats a byte count as a human-readable string.
 func FormatFileSize(size int64) string {
 	if size < 1024 {
@@ -459,32 +497,64 @@ func FormatFileSize(size int64) string {
 	return fmt.Sprintf("%.1f KB", float64(size)/1024)
 }
 
-// WriteYAMLDocument writes a YAML document to a file.
-func WriteYAMLDocument(filePath string, formData map[string]any) error {
-	err := os.MkdirAll(filepath.Dir(filePath), 0750)
+// WriteMarkdownDocument writes a document as two separate files:
+// - yamlPath: YAML metadata file containing title, subtitle, tags, author, etc.
+// - mdPath: Markdown body file containing the document content.
+// The "body" key in formData is written to mdPath; all other keys are written as YAML to yamlPath.
+func WriteMarkdownDocument(yamlPath, mdPath string, formData map[string]any) error {
+	err := os.MkdirAll(filepath.Dir(yamlPath), 0750)
 	if err != nil {
-		return fmt.Errorf("failed to create directories for %s: %w", filePath, err)
+		return fmt.Errorf("failed to create directories for %s: %w", yamlPath, err)
 	}
 
-	// #nosec G304 -- filePath comes from internal code paths, validated by callers using LocalPath
-	file, err := os.Create(filePath)
-	if err != nil {
-		return fmt.Errorf("failed to create file: %w", err)
-	}
-	defer file.Close()
+	var body string
 
-	enc := yaml.NewEncoder(file)
+	if bodyVal, exists := formData["body"]; exists {
+		var ok bool
 
-	defer func() {
-		err := enc.Close()
-		if err != nil {
-			log.Printf("Failed to close YAML encoder: %v", err)
+		body, ok = bodyVal.(string)
+		if !ok {
+			return fmt.Errorf("WriteMarkdownDocument: body must be a string, got %T", bodyVal)
 		}
-	}()
+	}
 
-	err = enc.Encode(formData)
+	metaData := make(map[string]any, len(formData))
+	for k, v := range formData {
+		if k != "body" {
+			metaData[k] = v
+		}
+	}
+
+	fm, err := yaml.Marshal(metaData)
 	if err != nil {
-		return fmt.Errorf("failed to encode YAML: %w", err)
+		return fmt.Errorf("failed to marshal metadata: %w", err)
+	}
+
+	// #nosec G304 -- yamlPath comes from internal code paths, validated by callers using LocalPath
+	yf, err := os.Create(yamlPath)
+	if err != nil {
+		return fmt.Errorf("failed to create yaml file: %w", err)
+	}
+	defer yf.Close()
+
+	_, err = yf.Write(fm)
+	if err != nil {
+		return fmt.Errorf("failed to write yaml file: %w", err)
+	}
+
+	// #nosec G304 -- mdPath comes from internal code paths, validated by callers using LocalPath
+	mf, err := os.Create(mdPath)
+	if err != nil {
+		return fmt.Errorf("failed to create markdown file: %w", err)
+	}
+	defer mf.Close()
+
+	title, _ := formData["title"].(string)
+	subtitle, _ := formData["subtitle"].(string)
+
+	_, err = fmt.Fprintf(mf, "# %s\n## %s\n\n%s", title, subtitle, body)
+	if err != nil {
+		return fmt.Errorf("failed to write markdown file: %w", err)
 	}
 
 	return nil

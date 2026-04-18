@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"reflect"
 	"timterests/internal/auth"
+	"timterests/internal/model"
 	"timterests/internal/service"
 	"timterests/internal/storage"
 
@@ -28,7 +29,6 @@ func ProjectsPageHandler(w http.ResponseWriter, r *http.Request, s storage.Stora
 	}
 
 	for i := range projects {
-		projects[i].Body = storage.RemoveHTMLTags(projects[i].Body)
 		v := reflect.ValueOf(projects[i])
 		tags = storage.GetTags(v, tags)
 	}
@@ -57,14 +57,28 @@ func GetProjectHandler(w http.ResponseWriter, r *http.Request, s storage.Storage
 
 	for _, project := range projects {
 		if project.ID == projectID {
+			body, err := s.GetDocumentBody(r.Context(), project.S3Key)
+			if err != nil {
+				log.Printf("GetProjectHandler: failed to load body for %s: %v", project.S3Key, err)
+				http.Error(w, "Not Found", http.StatusNotFound)
+
+				return
+			}
+
+			dc := model.DisplayContent{
+				ID:    project.ID,
+				S3Key: project.S3Key,
+				Body:  body,
+			}
+
 			var component templ.Component
 
 			authenticated := a.IsAuthenticated(r)
 
 			if r.Header.Get("Hx-Request") == "true" {
-				component = ProjectDisplay(project, authenticated)
+				component = ProjectDisplay(dc, project.Repository, authenticated)
 			} else {
-				component = ProjectPage(project, authenticated)
+				component = ProjectPage(dc, project.Repository, authenticated)
 			}
 
 			err = renderHTML(w, r, http.StatusOK, component)

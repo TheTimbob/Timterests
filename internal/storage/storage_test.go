@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"testing/fstest"
 
@@ -33,7 +34,7 @@ func TestStorage(t *testing.T) {
 		}
 	})
 
-	t.Run("decode YAML document", func(t *testing.T) {
+	t.Run("decode yaml document", func(t *testing.T) {
 		t.Parallel()
 
 		var (
@@ -55,33 +56,118 @@ func TestStorage(t *testing.T) {
 			t.Fatalf("Expected no error, got %v", err)
 		}
 
-		expectedBody := "Test Body"
-		if document.Body != expectedBody {
-			t.Errorf("Expected body '%s', got %v", expectedBody, document.Body)
+		expectedTitle := "Test Document"
+		if document.Title != expectedTitle {
+			t.Errorf("Expected title '%s', got %v", expectedTitle, document.Title)
+		}
+
+		expectedPreview := "A brief preview."
+		if document.Preview != expectedPreview {
+			t.Errorf("Expected preview %q, got %q", expectedPreview, document.Preview)
 		}
 	})
-	t.Run("write YAML document", func(t *testing.T) {
+
+	t.Run("write markdown document creates yaml and md files", func(t *testing.T) {
 		t.Parallel()
 
 		formData := map[string]any{
 			"title":    "Test Document",
 			"subtitle": "Test Subtitle",
-			"body":     "Test Body",
+			"preview":  "A brief preview.",
+			"body":     "Test Body content.",
 			"tags":     []string{"test", "document"},
 		}
 
 		tempDir := t.TempDir()
-		localFilePath := tempDir + "/test-document.yaml"
+		yamlPath := tempDir + "/test-document.yaml"
+		mdPath := tempDir + "/test-document.md"
 
-		err := storage.WriteYAMLDocument(localFilePath, formData)
+		err := storage.WriteMarkdownDocument(yamlPath, mdPath, formData)
 		if err != nil {
 			t.Fatalf("Expected no error, got %v", err)
 		}
 
-		// Verify the file was created
-		_, err = os.Stat(localFilePath)
+		_, err = os.Stat(yamlPath)
 		if os.IsNotExist(err) {
-			t.Fatalf("File was not created: %v", err)
+			t.Fatalf("YAML file was not created")
+		}
+
+		_, err = os.Stat(mdPath)
+		if os.IsNotExist(err) {
+			t.Fatalf("Markdown file was not created")
+		}
+	})
+
+	t.Run("write and re-read yaml metadata", func(t *testing.T) {
+		t.Parallel()
+
+		formData := map[string]any{
+			"title":    "Round Trip",
+			"subtitle": "Subtitle",
+			"preview":  "Preview text.",
+			"body":     "Body content here.",
+		}
+
+		tempDir := t.TempDir()
+		yamlPath := tempDir + "/round-trip.yaml"
+		mdPath := tempDir + "/round-trip.md"
+
+		err := storage.WriteMarkdownDocument(yamlPath, mdPath, formData)
+		if err != nil {
+			t.Fatalf("Expected no error writing, got %v", err)
+		}
+
+		file, err := os.Open(yamlPath)
+		if err != nil {
+			t.Fatalf("Expected no error opening yaml, got %v", err)
+		}
+		defer file.Close()
+
+		var doc model.Document
+
+		err = storage.DecodeFile(file, &doc)
+		if err != nil {
+			t.Fatalf("Expected no error decoding, got %v", err)
+		}
+
+		if doc.Title != "Round Trip" {
+			t.Errorf("Expected title 'Round Trip', got %q", doc.Title)
+		}
+
+		if doc.Preview != "Preview text." {
+			t.Errorf("Expected preview 'Preview text.', got %q", doc.Preview)
+		}
+	})
+
+	t.Run("write and re-read markdown body", func(t *testing.T) {
+		t.Parallel()
+
+		formData := map[string]any{
+			"title":    "Body Test",
+			"subtitle": "Sub",
+			"body":     "The actual body content.",
+		}
+
+		tempDir := t.TempDir()
+		yamlPath := tempDir + "/body-test.yaml"
+		mdPath := tempDir + "/body-test.md"
+
+		err := storage.WriteMarkdownDocument(yamlPath, mdPath, formData)
+		if err != nil {
+			t.Fatalf("Expected no error writing, got %v", err)
+		}
+
+		content, err := os.ReadFile(mdPath)
+		if err != nil {
+			t.Fatalf("Expected no error reading md file, got %v", err)
+		}
+
+		if !strings.Contains(string(content), "The actual body content.") {
+			t.Errorf("Markdown file does not contain expected body, got: %s", string(content))
+		}
+
+		if !strings.HasPrefix(string(content), "# Body Test") {
+			t.Errorf("Markdown file should start with title header, got: %s", string(content))
 		}
 	})
 }
@@ -179,12 +265,9 @@ func TestGetPromptContent(t *testing.T) {
 
 func getYAMLDocument() *fstest.MapFile {
 	return &fstest.MapFile{
-		Data: []byte(`title: Test Document
-subtitle: Test Subtitle
-body: Test Body
-tags:
-  - test
-  - document
-`),
+		Data: []byte(
+			"title: Test Document\nsubtitle: Test Subtitle\n" +
+				"preview: A brief preview.\ntags:\n  - test\n  - document\n",
+		),
 	}
 }

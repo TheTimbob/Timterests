@@ -18,6 +18,36 @@ import (
 	"github.com/a-h/templ"
 )
 
+// WriterFormData holds all data needed to render the writer form.
+type WriterFormData struct {
+	Doc     model.Document
+	Body    string
+	DocType string
+	Fields  templ.Component
+}
+
+// emptyFormData returns a zero-value WriterFormData for a new document of the given type.
+func emptyFormData(docType string) WriterFormData {
+	switch docType {
+	case "projects":
+		doc := model.Project{}
+
+		return WriterFormData{Doc: doc.Document, DocType: "projects", Fields: ProjectFormContent(&doc)}
+	case "reading-list":
+		doc := model.ReadingList{}
+
+		return WriterFormData{Doc: doc.Document, DocType: "reading-list", Fields: BookFormContent(&doc)}
+	case "letters":
+		doc := model.Letter{}
+
+		return WriterFormData{Doc: doc.Document, DocType: "letters", Fields: LetterFormContent(&doc)}
+	default: // "articles" and fallback
+		doc := model.Article{}
+
+		return WriterFormData{Doc: doc.Document, DocType: "articles", Fields: ArticleFormContent(&doc)}
+	}
+}
+
 // WriterPageHandler handles requests to the writer page, ensuring authentication and rendering the appropriate content.
 func WriterPageHandler(
 	w http.ResponseWriter,
@@ -27,7 +57,7 @@ func WriterPageHandler(
 	typeID int,
 	a *auth.Auth) {
 	var (
-		content   any
+		data      WriterFormData
 		err       error
 		component templ.Component
 	)
@@ -38,9 +68,8 @@ func WriterPageHandler(
 		return
 	}
 
-	// If key is provided, load the existing document with raw markdown (no HTML conversion)
 	if key != "" {
-		content, err = getTypeContentRaw(r.Context(), docType, key, typeID, s)
+		data, err = getTypeContentRaw(r.Context(), docType, key, typeID, s)
 		if err != nil {
 			log.Printf("WriterPageHandler: failed to load document: %v", err)
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -48,25 +77,13 @@ func WriterPageHandler(
 			return
 		}
 	} else {
-		// Create empty content based on docType
-		switch docType {
-		case "articles":
-			content = &model.Article{}
-		case "projects":
-			content = &model.Project{}
-		case "reading-list":
-			content = &model.ReadingList{}
-		case "letters":
-			content = &model.Letter{}
-		default:
-			content = &model.Article{} // default to Article
-		}
+		data = emptyFormData(docType)
 	}
 
 	if r.Header.Get("Hx-Request") == "true" && key == "" {
-		component = FormContentByType(content)
+		component = WriterFormContent(data)
 	} else {
-		component = WriterPage(content)
+		component = WriterPage(data)
 	}
 
 	err = renderHTML(w, r, http.StatusOK, component)
@@ -106,7 +123,7 @@ func WriteDocumentHandler(w http.ResponseWriter, r *http.Request, s storage.Stor
 		return
 	}
 
-	filename, err := generateFilename(formData, docType)
+	slug, err := generateSlug(formData, docType)
 	if err != nil {
 		log.Printf("WriteDocumentHandler: invalid filename data: %v", err)
 		http.Error(w, "Bad Request", http.StatusBadRequest)
@@ -114,15 +131,26 @@ func WriteDocumentHandler(w http.ResponseWriter, r *http.Request, s storage.Stor
 		return
 	}
 
-	localFilePath, err := storage.LocalPath(s.BaseDir, filename)
+	yamlFilename := docType + "/" + slug + ".yaml"
+	mdFilename := docType + "/" + slug + ".md"
+
+	yamlPath, err := storage.LocalPath(s.BaseDir, yamlFilename)
 	if err != nil {
 		http.Error(w, "Invalid file path", http.StatusBadRequest)
-		log.Printf("Invalid local file path: %v", err)
+		log.Printf("Invalid local yaml path: %v", err)
 
 		return
 	}
 
-	err = storage.WriteYAMLDocument(localFilePath, formData)
+	mdPath, err := storage.LocalPath(s.BaseDir, mdFilename)
+	if err != nil {
+		http.Error(w, "Invalid file path", http.StatusBadRequest)
+		log.Printf("Invalid local md path: %v", err)
+
+		return
+	}
+
+	err = storage.WriteMarkdownDocument(yamlPath, mdPath, formData)
 	if err != nil {
 		http.Error(w, "Failed to save document", http.StatusInternalServerError)
 		log.Printf("Error writing document: %v", err)
@@ -131,9 +159,14 @@ func WriteDocumentHandler(w http.ResponseWriter, r *http.Request, s storage.Stor
 	}
 
 	if s3Upload {
-		s3Path := docType + "/" + filename
+		err = s.UploadFileToS3(r.Context(), yamlFilename)
+		if err != nil {
+			http.Error(w, "Failed to upload document to storage", http.StatusInternalServerError)
 
-		err = s.UploadFileToS3(r.Context(), s3Path)
+			return
+		}
+
+		err = s.UploadFileToS3(r.Context(), mdFilename)
 		if err != nil {
 			http.Error(w, "Failed to upload document to storage", http.StatusInternalServerError)
 
@@ -225,37 +258,82 @@ type metaSetter interface {
 }
 
 // loadRawDoc initialises a zero-value T, sets its metadata, fetches the raw
-// (non-HTML-converted) file from storage, and returns a pointer to the result.
+// (non-HTML-converted) file from storage, and returns Content with the doc and raw markdown body.
 func loadRawDoc[T any, PT interface {
 	*T
 	metaSetter
-}](ctx context.Context, key, idStr string, s storage.Storage) (*T, error) {
+}](ctx context.Context, key, idStr string, s storage.Storage) (model.Content[T], error) {
 	var doc T
 	PT(&doc).SetMeta(idStr, key)
 
 	err := s.GetRawFile(ctx, key, PT(&doc))
 	if err != nil {
-		return nil, fmt.Errorf("failed to get raw file: %w", err)
+		return model.Content[T]{}, fmt.Errorf("failed to get raw file: %w", err)
 	}
 
-	return &doc, nil
+	body, err := s.GetDocumentBodyRaw(ctx, key)
+	if err != nil {
+		log.Printf("loadRawDoc: failed to get raw body, leaving empty: %v", err)
+
+		body = ""
+	}
+
+	return model.Content[T]{Doc: doc, Body: stripDocumentHeaders(body)}, nil
+}
+
+// stripDocumentHeaders removes the "# Title\n## Subtitle\n\n" prefix that
+// WriteMarkdownDocument prepends, so the writer textarea shows only body content.
+func stripDocumentHeaders(raw string) string {
+	lines := strings.SplitN(raw, "\n", 4)
+	if len(lines) >= 2 &&
+		strings.HasPrefix(lines[0], "# ") &&
+		strings.HasPrefix(lines[1], "## ") {
+		if len(lines) == 4 {
+			return lines[3]
+		}
+
+		return ""
+	}
+
+	return raw
 }
 
 // getTypeContentRaw retrieves content for editing, keeping the body as raw markdown.
-func getTypeContentRaw(ctx context.Context, docType, key string, id int, s storage.Storage) (any, error) {
+func getTypeContentRaw(ctx context.Context, docType, key string, id int, s storage.Storage) (WriterFormData, error) {
 	idStr := strconv.Itoa(id)
 
 	switch docType {
 	case "articles":
-		return loadRawDoc[model.Article](ctx, key, idStr, s)
+		c, err := loadRawDoc[model.Article](ctx, key, idStr, s)
+		if err != nil {
+			return WriterFormData{}, err
+		}
+
+		return WriterFormData{Doc: c.Doc.Document, Body: c.Body, DocType: "articles", Fields: ArticleFormContent(&c.Doc)}, nil
 	case "projects":
-		return loadRawDoc[model.Project](ctx, key, idStr, s)
+		c, err := loadRawDoc[model.Project](ctx, key, idStr, s)
+		if err != nil {
+			return WriterFormData{}, err
+		}
+
+		return WriterFormData{Doc: c.Doc.Document, Body: c.Body, DocType: "projects", Fields: ProjectFormContent(&c.Doc)}, nil
 	case "reading-list":
-		return loadRawDoc[model.ReadingList](ctx, key, idStr, s)
+		c, err := loadRawDoc[model.ReadingList](ctx, key, idStr, s)
+		if err != nil {
+			return WriterFormData{}, err
+		}
+
+		return WriterFormData{Doc: c.Doc.Document, Body: c.Body, DocType: "reading-list",
+			Fields: BookFormContent(&c.Doc)}, nil
 	case "letters":
-		return loadRawDoc[model.Letter](ctx, key, idStr, s)
+		c, err := loadRawDoc[model.Letter](ctx, key, idStr, s)
+		if err != nil {
+			return WriterFormData{}, err
+		}
+
+		return WriterFormData{Doc: c.Doc.Document, Body: c.Body, DocType: "letters", Fields: LetterFormContent(&c.Doc)}, nil
 	default:
-		return nil, fmt.Errorf("unsupported document type: %s", docType)
+		return WriterFormData{}, fmt.Errorf("unsupported document type: %s", docType)
 	}
 }
 
@@ -304,8 +382,8 @@ func extractDocType(formData map[string]any) (string, error) {
 	return docType, nil
 }
 
-// generateFilename creates a filename based on the document type and form data.
-func generateFilename(formData map[string]any, docType string) (string, error) {
+// generateSlug creates a base filename slug (without extension) from the document type and form data.
+func generateSlug(formData map[string]any, docType string) (string, error) {
 	title, ok := formData["title"].(string)
 	if !ok || strings.TrimSpace(title) == "" {
 		return "", errors.New("invalid or missing title in form data")
@@ -321,8 +399,8 @@ func generateFilename(formData map[string]any, docType string) (string, error) {
 
 		articleDate = service.FormatArticleDateForFilename(articleDate)
 
-		return fmt.Sprintf("%s-%s.yaml", sanitizedTitle, articleDate), nil
+		return fmt.Sprintf("%s-%s", sanitizedTitle, articleDate), nil
 	}
 
-	return sanitizedTitle + ".yaml", nil
+	return sanitizedTitle, nil
 }

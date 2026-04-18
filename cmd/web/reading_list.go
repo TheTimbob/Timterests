@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"reflect"
 	"timterests/internal/auth"
+	"timterests/internal/model"
 	"timterests/internal/service"
 	"timterests/internal/storage"
 
@@ -27,7 +28,6 @@ func ReadingListPageHandler(w http.ResponseWriter, r *http.Request, s storage.St
 	}
 
 	for i := range books {
-		books[i].Body = storage.RemoveHTMLTags(books[i].Body)
 		v := reflect.ValueOf(books[i])
 		tags = storage.GetTags(v, tags)
 	}
@@ -56,14 +56,28 @@ func GetReadingListBook(w http.ResponseWriter, r *http.Request, s storage.Storag
 
 	for _, book := range books {
 		if book.ID == bookID {
+			body, err := s.GetDocumentBody(r.Context(), book.S3Key)
+			if err != nil {
+				log.Printf("GetReadingListBook: failed to load body for %s: %v", book.S3Key, err)
+				http.Error(w, "Not Found", http.StatusNotFound)
+
+				return
+			}
+
+			dc := model.DisplayContent{
+				ID:    book.ID,
+				S3Key: book.S3Key,
+				Body:  body,
+			}
+
 			var component templ.Component
 
 			authenticated := a.IsAuthenticated(r)
 
 			if r.Header.Get("Hx-Request") == "true" {
-				component = BookDisplay(book, authenticated)
+				component = BookDisplay(book, dc, authenticated)
 			} else {
-				component = BookPage(book, authenticated)
+				component = BookPage(book, dc, authenticated)
 			}
 
 			err = renderHTML(w, r, http.StatusOK, component)

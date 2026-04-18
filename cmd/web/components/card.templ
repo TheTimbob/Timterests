@@ -6,7 +6,7 @@ type Card struct {
     Title       string
     Subtitle    string
     Date        string
-    Body        string
+    Preview     string
     ImagePath   string
     Get         string
     Tags        []string
@@ -23,7 +23,7 @@ templ (c Card) LargeCard() {
         <div class="card-content">
             @CardTitleContainer(c.Title, c.Subtitle)
             <div class="card-body">
-                @templ.Raw(c.Body)
+                { c.Preview }
             </div>
             @c.renderDate()
             @c.renderTags()
