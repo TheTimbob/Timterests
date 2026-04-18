@@ -291,8 +291,10 @@ func stripDocumentHeaders(raw string) string {
 		if len(lines) == 4 {
 			return lines[3]
 		}
+
 		return ""
 	}
+
 	return raw
 }
 

@@ -27,8 +27,8 @@ func DownloadDocumentHandler(w http.ResponseWriter, r *http.Request, s storage.S
 	}
 
 	// Document listings use .yaml keys; serve the paired .md body file instead.
-	if strings.HasSuffix(key, ".yaml") {
-		key = strings.TrimSuffix(key, ".yaml") + ".md"
+	if base, ok := strings.CutSuffix(key, ".yaml"); ok {
+		key = base + ".md"
 	}
 
 	// Ensure the key is within the storage directory (prevents path traversal)
