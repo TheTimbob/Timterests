@@ -23,7 +23,7 @@ templ (c Card) LargeCard() {
         <div class="card-content">
             @CardTitleContainer(c.Title, c.Subtitle)
             <div class="card-body">
-                @templ.Raw(c.Preview)
+                { c.Preview }
             </div>
             @c.renderDate()
             @c.renderTags()

@@ -38,6 +38,10 @@ templ WriterFormContent(data WriterFormData) {
             <label class="form-label" for="subtitle">Subtitle:</label>
             <input class="form-input" type="text" id="subtitle" name="subtitle" value={data.Doc.Subtitle} required>
         </div>
+        <div class="form-field">
+            <label class="form-label" for="preview">Preview:</label>
+            <input class="form-input" type="text" id="preview" name="preview" value={data.Doc.Preview}>
+        </div>
         <div id="document-form">
             @data.Fields
         </div>

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"timterests/internal/auth"
 	"timterests/internal/storage"
 )
@@ -23,6 +24,11 @@ func DownloadDocumentHandler(w http.ResponseWriter, r *http.Request, s storage.S
 		http.Error(w, "Missing document key", http.StatusBadRequest)
 
 		return
+	}
+
+	// Document listings use .yaml keys; serve the paired .md body file instead.
+	if strings.HasSuffix(key, ".yaml") {
+		key = strings.TrimSuffix(key, ".yaml") + ".md"
 	}
 
 	// Ensure the key is within the storage directory (prevents path traversal)

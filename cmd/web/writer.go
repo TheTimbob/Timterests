@@ -278,7 +278,22 @@ func loadRawDoc[T any, PT interface {
 		body = ""
 	}
 
-	return model.Content[T]{Doc: doc, Body: body}, nil
+	return model.Content[T]{Doc: doc, Body: stripDocumentHeaders(body)}, nil
+}
+
+// stripDocumentHeaders removes the "# Title\n## Subtitle\n\n" prefix that
+// WriteMarkdownDocument prepends, so the writer textarea shows only body content.
+func stripDocumentHeaders(raw string) string {
+	lines := strings.SplitN(raw, "\n", 4)
+	if len(lines) >= 2 &&
+		strings.HasPrefix(lines[0], "# ") &&
+		strings.HasPrefix(lines[1], "## ") {
+		if len(lines) == 4 {
+			return lines[3]
+		}
+		return ""
+	}
+	return raw
 }
 
 // getTypeContentRaw retrieves content for editing, keeping the body as raw markdown.
