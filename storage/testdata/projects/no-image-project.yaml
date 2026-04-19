@@ -1,0 +1,6 @@
+title: No Image Project
+subtitle: A project without an image path.
+preview: Testing that projects without images load correctly.
+repository: https://github.com/test/no-image-repo
+tags:
+  - Golang

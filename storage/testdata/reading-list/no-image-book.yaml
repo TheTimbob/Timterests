@@ -1,0 +1,10 @@
+title: No Image Book
+subtitle: A book without a cover image.
+preview: Testing that books without images load correctly.
+author: Test Author
+published: "2024"
+isbn: ""
+website: ""
+status: interested
+tags:
+  - Testing
