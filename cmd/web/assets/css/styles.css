@@ -158,9 +158,25 @@ a:hover {
   color: var(--green-accent);
 }
 
+.banner-title-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.banner-logo {
+  height: 36px;
+  width: auto;
+}
+
 @media (min-width: 768px) {
   .banner-title {
     font-size: 2.5rem;
+  }
+
+  .banner-logo {
+    height: 44px;
   }
 }
 
