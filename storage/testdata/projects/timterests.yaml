@@ -1,0 +1,8 @@
+title: Timterests
+subtitle: A personal blog and content management system.
+preview: My personal site built with Go, Templ, and HTMX.
+imagePath: testdata/images/test.png
+repository: https://github.com/TheTimbob/Timterests
+tags:
+  - Golang
+  - HTMX
