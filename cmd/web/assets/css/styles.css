@@ -951,3 +951,165 @@ a:hover {
 .dark .error-code {
   color: var(--green-accent);
 }
+
+/* Mobile Navigation Toggle */
+.nav-toggle-input {
+  display: none;
+}
+
+.nav-toggle-label {
+  display: none;
+  cursor: pointer;
+  font-size: 1.5rem;
+  padding: 0.5rem;
+  color: var(--text-muted);
+  min-width: 44px;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+}
+
+.dark .nav-toggle-label {
+  color: var(--text-dark);
+}
+
+.nav-links {
+  display: contents;
+}
+
+/* Mobile Responsive */
+@media (max-width: 767px) {
+  html,
+  body {
+    overflow-x: hidden;
+  }
+
+  .nav-header {
+    flex-wrap: nowrap;
+    justify-content: flex-end;
+    position: relative;
+  }
+
+  .nav-toggle-label {
+    display: flex;
+  }
+
+  .nav-links {
+    display: none;
+    flex-direction: column;
+    width: 100%;
+    padding: 0.5rem 0;
+  }
+
+  .nav-toggle-input:checked ~ .nav-links {
+    display: flex;
+  }
+
+  .nav-link {
+    padding: 0.75rem 1rem;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+
+  .banner-title {
+    font-size: 1.5rem;
+  }
+
+  .main-content {
+    padding: 1rem 0.75rem;
+  }
+
+  .category-title,
+  .home-title {
+    font-size: 1.5rem;
+  }
+
+  .home-title {
+    font-size: 1.75rem;
+  }
+
+  .section-grid-2,
+  .section-grid-3 {
+    grid-template-columns: 1fr;
+  }
+
+  .card-container,
+  .card-container-static {
+    flex-direction: column;
+  }
+
+  .card-image {
+    width: 100%;
+    height: auto;
+    max-height: 12rem;
+    margin-right: 0;
+    margin-bottom: 0.75rem;
+  }
+
+  .card-subtitle {
+    white-space: normal;
+  }
+
+  .card-body {
+    white-space: normal;
+  }
+
+  .header-controls {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  #login-container label {
+    display: block;
+    width: auto;
+    text-align: left;
+    margin-right: 0;
+    margin-bottom: 0.25rem;
+  }
+
+  .login-input {
+    max-width: 100%;
+  }
+
+  .admin-search-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .admin-search-input {
+    max-width: 100%;
+  }
+
+  .button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .error-code {
+    font-size: 4rem;
+  }
+
+  .banner-footer {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .footer-nav {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  .nav-footer-link {
+    margin-left: 0;
+    padding: 0.25rem 0.5rem;
+  }
+
+  .filter-select {
+    width: 100%;
+    margin-left: 0;
+    margin-top: 0.5rem;
+  }
+}
