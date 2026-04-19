@@ -73,14 +73,16 @@ func GetProject(ctx context.Context, s storage.Storage, key string, id int) (*mo
 		return nil, err
 	}
 
-	imagePath, err := s.GetImage(ctx, project.Image)
-	if err != nil {
-		log.Printf("Failed to download image: %v", err)
+	if project.Image != "" {
+		imagePath, err := s.GetImage(ctx, project.Image)
+		if err != nil {
+			log.Printf("Failed to download image: %v", err)
 
-		return nil, fmt.Errorf("failed to resolve image %q: %w", project.Image, err)
+			return nil, fmt.Errorf("failed to resolve image %q: %w", project.Image, err)
+		}
+
+		project.Image = imagePath
 	}
-
-	project.Image = imagePath
 
 	return project, nil
 }

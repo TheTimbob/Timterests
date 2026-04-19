@@ -70,14 +70,16 @@ func GetBook(ctx context.Context, s storage.Storage, key string, id int) (*model
 		return nil, err
 	}
 
-	imagePath, err := s.GetImage(ctx, book.Image)
-	if err != nil {
-		log.Printf("Failed to download image: %v", err)
+	if book.Image != "" {
+		imagePath, err := s.GetImage(ctx, book.Image)
+		if err != nil {
+			log.Printf("Failed to download image: %v", err)
 
-		return nil, fmt.Errorf("failed to resolve image %q: %w", book.Image, err)
+			return nil, fmt.Errorf("failed to resolve image %q: %w", book.Image, err)
+		}
+
+		book.Image = imagePath
 	}
-
-	book.Image = imagePath
 
 	return book, nil
 }
