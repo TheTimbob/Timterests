@@ -2,6 +2,7 @@ package web
 
 import (
 	"net/http"
+	"strings"
 
 	apperrors "timterests/internal/errors"
 	"timterests/internal/storage"
@@ -51,6 +52,9 @@ func AboutHandler(w http.ResponseWriter, r *http.Request, s storage.Storage) {
 
 		return
 	}
+
+	about.GitHub = strings.TrimSpace(about.GitHub)
+	about.Email = strings.TrimSpace(about.Email)
 
 	component := AboutForm(about)
 

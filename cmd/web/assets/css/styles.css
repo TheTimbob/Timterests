@@ -202,7 +202,7 @@ a:hover {
 
 .dark .about-profile {
   background-color: var(--bg-dark-accent);
-  border-color: var(--border);
+  border-color: var(--bg-dark-accent);
 }
 
 .about-profile-row {
