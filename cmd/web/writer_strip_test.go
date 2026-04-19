@@ -1,6 +1,9 @@
-package web
+package web_test
 
-import "testing"
+import (
+	"testing"
+	"timterests/cmd/web"
+)
 
 func TestStripDocumentHeaders(t *testing.T) {
 	tests := []struct {
@@ -47,9 +50,9 @@ func TestStripDocumentHeaders(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			got := stripDocumentHeaders(tc.input)
+			got := web.StripDocumentHeaders(tc.input)
 			if got != tc.expected {
-				t.Errorf("stripDocumentHeaders(%q) = %q, want %q", tc.input, got, tc.expected)
+				t.Errorf("StripDocumentHeaders(%q) = %q, want %q", tc.input, got, tc.expected)
 			}
 		})
 	}

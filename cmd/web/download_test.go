@@ -19,11 +19,13 @@ func TestDownloadDocumentHandler(t *testing.T) {
 		mdContent := "# Test\n\nbody content"
 		mdPath := filepath.Join(dir, "articles", "test.md")
 
-		if err := os.MkdirAll(filepath.Dir(mdPath), 0750); err != nil {
+		err := os.MkdirAll(filepath.Dir(mdPath), 0750)
+		if err != nil {
 			t.Fatalf("failed to create dir: %v", err)
 		}
 
-		if err := os.WriteFile(mdPath, []byte(mdContent), 0600); err != nil {
+		err = os.WriteFile(mdPath, []byte(mdContent), 0600)
+		if err != nil {
 			t.Fatalf("failed to write md file: %v", err)
 		}
 
@@ -31,6 +33,7 @@ func TestDownloadDocumentHandler(t *testing.T) {
 
 		req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/download?key=articles/test.yaml", nil)
 		addAuthCookie(req)
+
 		rec := httptest.NewRecorder()
 
 		web.DownloadDocumentHandler(rec, req, s, "articles/test.yaml", a)
@@ -53,6 +56,7 @@ func TestDownloadDocumentHandler(t *testing.T) {
 
 		req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/download", nil)
 		addAuthCookie(req)
+
 		rec := httptest.NewRecorder()
 
 		web.DownloadDocumentHandler(rec, req, s, "", a)
