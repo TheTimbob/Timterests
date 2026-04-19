@@ -56,7 +56,7 @@ templ ProjectDisplay(dc model.DisplayContent, repository string, userIsAdmin boo
     @EditProjectButton(dc, userIsAdmin)
     @components.DownloadDocumentButton(dc.S3Key, userIsAdmin)
     <div id="project-container">
-		if repository != "Private" {
+		if repository != "" && repository != "Private" {
 			<p class="content-text"><i class="fa-brands fa-github"></i> Repository: <a href={ templ.SafeURL(repository) } class="content-text" target="_blank">{ repository }</a></p>
 		}
         @templ.Raw(dc.Body)
