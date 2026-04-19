@@ -87,6 +87,21 @@ func TestGetProject(t *testing.T) {
 			t.Error("expected error for non-existent file, got nil")
 		}
 	})
+
+	t.Run("succeeds when project has no image path", func(t *testing.T) {
+		project, err := service.GetProject(ctx, *s, "projects/no-image-project.yaml", 0)
+		if err != nil {
+			t.Fatalf("expected no error for project without image, got: %v", err)
+		}
+
+		if project.Image != "" {
+			t.Errorf("expected empty image, got %q", project.Image)
+		}
+
+		if project.Title != "No Image Project" {
+			t.Errorf("expected title 'No Image Project', got %q", project.Title)
+		}
+	})
 }
 
 func TestGetFeaturedProject(t *testing.T) {

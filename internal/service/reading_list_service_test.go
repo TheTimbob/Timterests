@@ -95,4 +95,19 @@ func TestGetBook(t *testing.T) {
 			t.Error("expected error for non-existent file, got nil")
 		}
 	})
+
+	t.Run("succeeds when book has no image path", func(t *testing.T) {
+		book, err := service.GetBook(ctx, *s, "reading-list/no-image-book.yaml", 0)
+		if err != nil {
+			t.Fatalf("expected no error for book without image, got: %v", err)
+		}
+
+		if book.Image != "" {
+			t.Errorf("expected empty image, got %q", book.Image)
+		}
+
+		if book.Title != "No Image Book" {
+			t.Errorf("expected title 'No Image Book', got %q", book.Title)
+		}
+	})
 }

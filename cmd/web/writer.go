@@ -278,12 +278,12 @@ func loadRawDoc[T any, PT interface {
 		body = ""
 	}
 
-	return model.Content[T]{Doc: doc, Body: stripDocumentHeaders(body)}, nil
+	return model.Content[T]{Doc: doc, Body: StripDocumentHeaders(body)}, nil
 }
 
-// stripDocumentHeaders removes the "# Title\n## Subtitle\n\n" prefix that
+// StripDocumentHeaders removes the "# Title\n## Subtitle\n\n" prefix that
 // WriteMarkdownDocument prepends, so the writer textarea shows only body content.
-func stripDocumentHeaders(raw string) string {
+func StripDocumentHeaders(raw string) string {
 	lines := strings.SplitN(raw, "\n", 4)
 	if len(lines) >= 2 &&
 		strings.HasPrefix(lines[0], "# ") &&

@@ -1,12 +1,15 @@
 package web_test
 
 import (
+	"bytes"
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"timterests/cmd/web"
 	"timterests/internal/auth"
+	"timterests/internal/model"
 	"timterests/internal/service"
 
 	"github.com/PuerkitoBio/goquery"
@@ -254,6 +257,58 @@ func TestProjectCardConversion(t *testing.T) {
 
 		if card.ImagePath != project.Image {
 			t.Errorf("expected card image path %q, got %q", project.Image, card.ImagePath)
+		}
+	})
+}
+
+func TestProjectRepositoryRendering(t *testing.T) {
+	dc := model.DisplayContent{ID: "0", S3Key: "projects/test.yaml", Body: ""}
+
+	renderDisplay := func(t *testing.T, repository string) *goquery.Document {
+		t.Helper()
+
+		var buf bytes.Buffer
+
+		err := web.ProjectDisplay(dc, repository, false).Render(context.Background(), &buf)
+		if err != nil {
+			t.Fatalf("failed to render ProjectDisplay: %v", err)
+		}
+
+		doc, err := goquery.NewDocumentFromReader(strings.NewReader(buf.String()))
+		if err != nil {
+			t.Fatalf("failed to parse rendered HTML: %v", err)
+		}
+
+		return doc
+	}
+
+	t.Run("hides repository link when empty", func(t *testing.T) {
+		doc := renderDisplay(t, "")
+
+		if doc.Find("#project-container a").Length() > 0 {
+			t.Error("expected no repository link when repository is empty, but one was rendered")
+		}
+	})
+
+	t.Run("hides repository link when Private", func(t *testing.T) {
+		doc := renderDisplay(t, "Private")
+
+		if doc.Find("#project-container a").Length() > 0 {
+			t.Error("expected no repository link when repository is 'Private', but one was rendered")
+		}
+	})
+
+	t.Run("renders repository link when URL is set", func(t *testing.T) {
+		repo := "https://github.com/test/repo"
+		doc := renderDisplay(t, repo)
+
+		link := doc.Find("#project-container a")
+		if link.Length() == 0 {
+			t.Error("expected repository link to be rendered, but it was not")
+		}
+
+		if href, _ := link.Attr("href"); href != repo {
+			t.Errorf("expected href %q, got %q", repo, href)
 		}
 	})
 }
