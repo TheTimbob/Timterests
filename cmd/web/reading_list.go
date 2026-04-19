@@ -1,9 +1,11 @@
 package web
 
 import (
-	"log"
 	"net/http"
 	"reflect"
+
+	apperrors "timterests/internal/errors"
+
 	"timterests/internal/auth"
 	"timterests/internal/model"
 	"timterests/internal/service"
@@ -12,7 +14,6 @@ import (
 	"github.com/a-h/templ"
 )
 
-// ReadingListPageHandler handles requests to the reading list page and renders book collections.
 func ReadingListPageHandler(w http.ResponseWriter, r *http.Request, s storage.Storage, currentTag, design string) {
 	var (
 		component templ.Component
@@ -21,8 +22,7 @@ func ReadingListPageHandler(w http.ResponseWriter, r *http.Request, s storage.St
 
 	books, err := service.ListBooks(r.Context(), s, currentTag)
 	if err != nil {
-		log.Printf("ReadingListPageHandler: failed to fetch reading list: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		HandleError(w, r, apperrors.StorageFailed(err), "ReadingListPageHandler", "listBooks")
 
 		return
 	}
@@ -40,16 +40,14 @@ func ReadingListPageHandler(w http.ResponseWriter, r *http.Request, s storage.St
 
 	err = renderHTML(w, r, http.StatusOK, component)
 	if err != nil {
-		log.Printf("ReadingListPageHandler: failed to render: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		HandleError(w, r, apperrors.RenderFailed(err), "ReadingListPageHandler", "render")
 	}
 }
 
-// GetReadingListBook retrieves and renders a specific book by ID.
 func GetReadingListBook(w http.ResponseWriter, r *http.Request, s storage.Storage, bookID string, a *auth.Auth) {
 	books, err := service.ListBooks(r.Context(), s, "all")
 	if err != nil {
-		http.Error(w, "Failed to fetch books", http.StatusInternalServerError)
+		HandleError(w, r, apperrors.StorageFailed(err), "GetReadingListBook", "listBooks")
 
 		return
 	}
@@ -58,8 +56,7 @@ func GetReadingListBook(w http.ResponseWriter, r *http.Request, s storage.Storag
 		if book.ID == bookID {
 			body, err := s.GetDocumentBody(r.Context(), book.S3Key)
 			if err != nil {
-				log.Printf("GetReadingListBook: failed to load body for %s: %v", book.S3Key, err)
-				http.Error(w, "Not Found", http.StatusNotFound)
+				HandleError(w, r, apperrors.NotFound(err), "GetReadingListBook", "getBody")
 
 				return
 			}
@@ -82,8 +79,7 @@ func GetReadingListBook(w http.ResponseWriter, r *http.Request, s storage.Storag
 
 			err = renderHTML(w, r, http.StatusOK, component)
 			if err != nil {
-				log.Printf("GetReadingListBook: failed to render: %v", err)
-				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+				HandleError(w, r, apperrors.RenderFailed(err), "GetReadingListBook", "render")
 
 				return
 			}
@@ -92,5 +88,5 @@ func GetReadingListBook(w http.ResponseWriter, r *http.Request, s storage.Storag
 		}
 	}
 
-	http.Error(w, "Not Found", http.StatusNotFound)
+	HandleError(w, r, apperrors.NotFound(nil), "GetReadingListBook", "findBook")
 }

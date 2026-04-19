@@ -921,3 +921,33 @@ a:hover {
 .fa-brands {
   margin-right: 0.25rem;
 }
+
+/* Error Page */
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 4rem 1rem;
+  min-height: 40vh;
+}
+
+.error-code {
+  font-size: 6rem;
+  font-weight: 800;
+  color: var(--green);
+  margin: 0;
+  line-height: 1;
+}
+
+.error-message {
+  font-size: 1.25rem;
+  color: var(--text-muted);
+  margin: 1rem 0 2rem;
+  max-width: 28rem;
+}
+
+.dark .error-code {
+  color: var(--green-accent);
+}

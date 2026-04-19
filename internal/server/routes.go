@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"runtime/debug"
 	"strconv"
 
 	"timterests/cmd/web"
+	apperrors "timterests/internal/errors"
 	"timterests/internal/service"
 )
 
@@ -56,8 +56,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 		err := r.ParseForm()
 		if err != nil {
-			log.Printf("writer: failed to parse form: %v", err)
-			http.Error(w, "Bad Request", http.StatusBadRequest)
+			web.HandleError(w, r, apperrors.ParseFormFailed(err), "writer", "parseForm")
 
 			return
 		}
@@ -73,8 +72,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 			typeID, err = strconv.Atoi(typeIDString)
 			if err != nil {
-				log.Printf("writer: invalid type-id %q: %v", typeIDString, err)
-				http.Error(w, fmt.Sprintf("type-id must be an integer, got %q", typeIDString), http.StatusBadRequest)
+				web.HandleError(w, r, apperrors.BadRequest(err), "writer", "parseTypeID")
 
 				return
 			}
@@ -128,8 +126,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	mux.Handle("/articles/list", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, err := service.ListArticles(r.Context(), *s.storage, "all")
 		if err != nil {
-			log.Printf("articles/list: %v", err)
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			web.HandleError(w, r, apperrors.StorageFailed(err), "articles/list", "listArticles")
 
 			return
 		}
@@ -148,8 +145,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	mux.Handle("/projects/list", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, err := service.ListProjects(r.Context(), *s.storage, "all")
 		if err != nil {
-			log.Printf("projects/list: %v", err)
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			web.HandleError(w, r, apperrors.StorageFailed(err), "projects/list", "listProjects")
 
 			return
 		}
@@ -168,8 +164,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	mux.Handle("/reading-list/list", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, err := service.ListBooks(r.Context(), *s.storage, "all")
 		if err != nil {
-			log.Printf("reading-list/list: %v", err)
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			web.HandleError(w, r, apperrors.StorageFailed(err), "reading-list/list", "listBooks")
 
 			return
 		}
@@ -188,8 +183,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	mux.Handle("/letters/list", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, err := service.ListLetters(r.Context(), *s.storage, "all")
 		if err != nil {
-			log.Printf("letters/list: %v", err)
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			web.HandleError(w, r, apperrors.StorageFailed(err), "letters/list", "listLetters")
 
 			return
 		}
@@ -199,16 +193,12 @@ func (s *Server) RegisterRoutes() http.Handler {
 	return recoveryMiddleware(s.corsMiddleware(s.maxBytesMiddleware(mux)))
 }
 
-// recoveryMiddleware catches panics and returns a 500 rather than crashing the server.
-// It logs the panic value, stack trace, and request context for debugging.
 func recoveryMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if rec := recover(); rec != nil {
-				stack := debug.Stack()
-				log.Printf("panic recovered: %v\nrequest: %s %s\nstack:\n%s",
-					rec, r.Method, r.URL.Path, stack)
-				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+				err := apperrors.PanicRecovered(fmt.Errorf("panic: %v", rec))
+				web.HandleError(w, r, err, r.URL.Path, r.Method)
 			}
 		}()
 

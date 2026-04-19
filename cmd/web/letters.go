@@ -1,9 +1,11 @@
 package web
 
 import (
-	"log"
 	"net/http"
 	"reflect"
+
+	apperrors "timterests/internal/errors"
+
 	"timterests/internal/auth"
 	"timterests/internal/model"
 	"timterests/internal/service"
@@ -12,8 +14,6 @@ import (
 	"github.com/a-h/templ"
 )
 
-// LettersPageHandler handles requests to the letters page,
-// ensuring authentication and rendering the appropriate content.
 func LettersPageHandler(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -25,7 +25,6 @@ func LettersPageHandler(
 		tags      []string
 	)
 
-	// Check if user is authenticated
 	if !a.IsAuthenticated(r) {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 
@@ -34,8 +33,7 @@ func LettersPageHandler(
 
 	letters, err := service.ListLetters(r.Context(), s, currentTag)
 	if err != nil {
-		log.Printf("LettersPageHandler: failed to fetch letters: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		HandleError(w, r, apperrors.StorageFailed(err), "LettersPageHandler", "listLetters")
 
 		return
 	}
@@ -53,17 +51,13 @@ func LettersPageHandler(
 
 	err = renderHTML(w, r, http.StatusOK, component)
 	if err != nil {
-		log.Printf("LettersPageHandler: failed to render: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		HandleError(w, r, apperrors.RenderFailed(err), "LettersPageHandler", "render")
 	}
 }
 
-// GetLetterHandler retrieves a specific letter by its ID and renders it.
 func GetLetterHandler(w http.ResponseWriter, r *http.Request, s storage.Storage, letterID string, a *auth.Auth) {
-	// Check if user is authenticated
 	authenticated := a.IsAuthenticated(r)
 	if !authenticated {
-		log.Printf("User not authenticated, redirecting to login")
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 
 		return
@@ -71,7 +65,7 @@ func GetLetterHandler(w http.ResponseWriter, r *http.Request, s storage.Storage,
 
 	letters, err := service.ListLetters(r.Context(), s, "all")
 	if err != nil {
-		http.Error(w, "Failed to fetch letters", http.StatusInternalServerError)
+		HandleError(w, r, apperrors.StorageFailed(err), "GetLetterHandler", "listLetters")
 
 		return
 	}
@@ -82,8 +76,7 @@ func GetLetterHandler(w http.ResponseWriter, r *http.Request, s storage.Storage,
 		if letter.ID == letterID {
 			body, err := s.GetDocumentBody(r.Context(), letter.S3Key)
 			if err != nil {
-				log.Printf("GetLetterHandler: failed to load body for %s: %v", letter.S3Key, err)
-				http.Error(w, "Not Found", http.StatusNotFound)
+				HandleError(w, r, apperrors.NotFound(err), "GetLetterHandler", "getBody")
 
 				return
 			}
@@ -102,8 +95,7 @@ func GetLetterHandler(w http.ResponseWriter, r *http.Request, s storage.Storage,
 
 			err = renderHTML(w, r, http.StatusOK, component)
 			if err != nil {
-				log.Printf("GetLetterHandler: failed to render: %v", err)
-				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+				HandleError(w, r, apperrors.RenderFailed(err), "GetLetterHandler", "render")
 
 				return
 			}
@@ -112,5 +104,5 @@ func GetLetterHandler(w http.ResponseWriter, r *http.Request, s storage.Storage,
 		}
 	}
 
-	http.Error(w, "Not Found", http.StatusNotFound)
+	HandleError(w, r, apperrors.NotFound(nil), "GetLetterHandler", "findLetter")
 }
