@@ -2,14 +2,19 @@ package storage_test
 
 import (
 	"context"
+	"database/sql"
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 	"testing/fstest"
+	"time"
 
 	"timterests/internal/model"
 	"timterests/internal/storage"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
 func TestStorage(t *testing.T) {
@@ -261,6 +266,150 @@ func TestGetPromptContent(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestHealthOK(t *testing.T) {
+	setupHealthDB(t)
+
+	s := &storage.Storage{
+		UseS3:   false,
+		BaseDir: t.TempDir(),
+	}
+
+	result := s.Health()
+
+	if result.Status != "ok" {
+		t.Errorf("expected status 'ok', got %q", result.Status)
+	}
+
+	if result.Timestamp == "" {
+		t.Error("expected timestamp to be set")
+	}
+
+	_, parseErr := time.Parse(time.RFC3339, result.Timestamp)
+	if parseErr != nil {
+		t.Errorf("timestamp is not valid RFC3339: %q", result.Timestamp)
+	}
+
+	if result.Checks["storage"] != "ok" {
+		t.Errorf("expected storage check 'ok', got %q", result.Checks["storage"])
+	}
+
+	if result.Checks["database"] != "ok" {
+		t.Errorf("expected database check 'ok', got %q", result.Checks["database"])
+	}
+
+	if !result.Healthy() {
+		t.Error("expected Healthy() to return true")
+	}
+
+	data, err := json.Marshal(result)
+	if err != nil {
+		t.Fatalf("failed to marshal health result: %v", err)
+	}
+
+	var parsed map[string]any
+
+	err = json.Unmarshal(data, &parsed)
+	if err != nil {
+		t.Fatalf("failed to unmarshal health JSON: %v", err)
+	}
+
+	for _, key := range []string{"status", "ts", "checks"} {
+		if _, ok := parsed[key]; !ok {
+			t.Errorf("expected key %q in JSON response", key)
+		}
+	}
+}
+
+func TestHealthDegradedDBDown(t *testing.T) {
+	// No database directory → GetDB will fail → database check returns error
+	t.Chdir(t.TempDir())
+
+	s := &storage.Storage{
+		UseS3:   false,
+		BaseDir: t.TempDir(),
+	}
+
+	result := s.Health()
+
+	if result.Status != "degraded" {
+		t.Errorf("expected status 'degraded', got %q", result.Status)
+	}
+
+	if result.Checks["storage"] != "ok" {
+		t.Errorf("expected storage 'ok', got %q", result.Checks["storage"])
+	}
+
+	if result.Checks["database"] == "ok" {
+		t.Error("expected database check to report error, got 'ok'")
+	}
+
+	if result.Healthy() {
+		t.Error("expected Healthy() to return false for degraded status")
+	}
+}
+
+func TestHealthDegradedStorageDown(t *testing.T) {
+	setupHealthDB(t)
+
+	s := &storage.Storage{
+		UseS3:   false,
+		BaseDir: "/nonexistent/path/that/does/not/exist",
+	}
+
+	result := s.Health()
+
+	if result.Status != "degraded" {
+		t.Errorf("expected status 'degraded', got %q", result.Status)
+	}
+
+	if result.Checks["storage"] == "ok" {
+		t.Error("expected storage check to report error, got 'ok'")
+	}
+
+	if result.Checks["database"] != "ok" {
+		t.Errorf("expected database 'ok', got %q", result.Checks["database"])
+	}
+
+	if result.Healthy() {
+		t.Error("expected Healthy() to return false for degraded status")
+	}
+}
+
+func setupHealthDB(t *testing.T) {
+	t.Helper()
+
+	dbDir := filepath.Join(t.TempDir(), "database")
+
+	err := os.MkdirAll(dbDir, 0750)
+	if err != nil {
+		t.Fatalf("failed to create database dir: %v", err)
+	}
+
+	dbPath := filepath.Join(dbDir, "timterests.db")
+
+	db, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		t.Fatalf("failed to open test db: %v", err)
+	}
+
+	defer func() {
+		_ = db.Close()
+	}()
+
+	_, err = db.ExecContext(context.Background(), `CREATE TABLE IF NOT EXISTS users (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		first_name TEXT NOT NULL,
+		last_name TEXT NOT NULL,
+		email TEXT UNIQUE NOT NULL,
+		password TEXT NOT NULL
+	)`)
+	if err != nil {
+		t.Fatalf("failed to create users table: %v", err)
+	}
+
+	t.Chdir(filepath.Dir(dbDir))
 }
 
 func getYAMLDocument() *fstest.MapFile {

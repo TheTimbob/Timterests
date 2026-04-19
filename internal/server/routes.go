@@ -28,16 +28,16 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	// Home Routes
 	mux.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		web.HomeHandler(w, r, *s.storage)
+		web.HomeHandler(w, r, *s.Storage)
 	}))
 	mux.Handle("/home", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		web.HomeHandler(w, r, *s.storage)
+		web.HomeHandler(w, r, *s.Storage)
 	}))
 	mux.Handle("/web", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		web.HomeHandler(w, r, *s.storage)
+		web.HomeHandler(w, r, *s.Storage)
 	}))
 	mux.Handle("/web/home", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		web.HomeHandler(w, r, *s.storage)
+		web.HomeHandler(w, r, *s.Storage)
 	}))
 
 	mux.Handle("/admin", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -45,7 +45,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	}))
 
 	mux.Handle("/admin/documents", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		web.AdminDocumentsPageHandler(w, r, *s.storage, s.auth)
+		web.AdminDocumentsPageHandler(w, r, *s.Storage, s.auth)
 	}))
 
 	mux.Handle("/writer", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -80,20 +80,20 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 		key = r.FormValue("document-key")
 
-		web.WriterPageHandler(w, r, *s.storage, docType, key, typeID, s.auth)
+		web.WriterPageHandler(w, r, *s.Storage, docType, key, typeID, s.auth)
 	}))
 
 	mux.Handle("/write", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		web.WriteDocumentHandler(w, r, *s.storage, s.auth)
+		web.WriteDocumentHandler(w, r, *s.Storage, s.auth)
 	}))
 
 	mux.Handle("/write/suggest", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		web.WriterSuggestionHandler(w, r, *s.storage, s.auth)
+		web.WriterSuggestionHandler(w, r, *s.Storage, s.auth)
 	}))
 
 	mux.Handle("/download", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		documentKey := r.URL.Query().Get("key")
-		web.DownloadDocumentHandler(w, r, *s.storage, documentKey, s.auth)
+		web.DownloadDocumentHandler(w, r, *s.Storage, documentKey, s.auth)
 	}))
 
 	mux.Handle("/download/new", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -101,11 +101,11 @@ func (s *Server) RegisterRoutes() http.Handler {
 	}))
 
 	// Health check
-	mux.HandleFunc("/health", s.healthHandler)
+	mux.HandleFunc("/health", s.HealthHandler)
 
 	// About Routes
 	mux.Handle("/about", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		web.AboutHandler(w, r, *s.storage)
+		web.AboutHandler(w, r, *s.Storage)
 	}))
 
 	// Login Routes
@@ -117,14 +117,14 @@ func (s *Server) RegisterRoutes() http.Handler {
 	mux.Handle("/articles", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		design := r.URL.Query().Get("design")
 		tag := r.URL.Query().Get("tag")
-		web.ArticlesPageHandler(w, r, *s.storage, tag, design)
+		web.ArticlesPageHandler(w, r, *s.Storage, tag, design)
 	}))
 	mux.Handle("/article", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		articleID := r.URL.Query().Get("id")
-		web.GetArticleHandler(w, r, *s.storage, articleID, s.auth)
+		web.GetArticleHandler(w, r, *s.Storage, articleID, s.auth)
 	}))
 	mux.Handle("/articles/list", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, err := service.ListArticles(r.Context(), *s.storage, "all")
+		_, err := service.ListArticles(r.Context(), *s.Storage, "all")
 		if err != nil {
 			web.HandleError(w, r, apperrors.StorageFailed(err), "articles/list", "listArticles")
 
@@ -136,14 +136,14 @@ func (s *Server) RegisterRoutes() http.Handler {
 	mux.Handle("/projects", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		design := r.URL.Query().Get("design")
 		tag := r.URL.Query().Get("tag")
-		web.ProjectsPageHandler(w, r, *s.storage, tag, design)
+		web.ProjectsPageHandler(w, r, *s.Storage, tag, design)
 	}))
 	mux.Handle("/project", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		projectID := r.URL.Query().Get("id")
-		web.GetProjectHandler(w, r, *s.storage, projectID, s.auth)
+		web.GetProjectHandler(w, r, *s.Storage, projectID, s.auth)
 	}))
 	mux.Handle("/projects/list", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, err := service.ListProjects(r.Context(), *s.storage, "all")
+		_, err := service.ListProjects(r.Context(), *s.Storage, "all")
 		if err != nil {
 			web.HandleError(w, r, apperrors.StorageFailed(err), "projects/list", "listProjects")
 
@@ -155,14 +155,14 @@ func (s *Server) RegisterRoutes() http.Handler {
 	mux.Handle("/reading-list", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		design := r.URL.Query().Get("design")
 		tag := r.URL.Query().Get("tag")
-		web.ReadingListPageHandler(w, r, *s.storage, tag, design)
+		web.ReadingListPageHandler(w, r, *s.Storage, tag, design)
 	}))
 	mux.Handle("/book", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		articleID := r.URL.Query().Get("id")
-		web.GetReadingListBook(w, r, *s.storage, articleID, s.auth)
+		web.GetReadingListBook(w, r, *s.Storage, articleID, s.auth)
 	}))
 	mux.Handle("/reading-list/list", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, err := service.ListBooks(r.Context(), *s.storage, "all")
+		_, err := service.ListBooks(r.Context(), *s.Storage, "all")
 		if err != nil {
 			web.HandleError(w, r, apperrors.StorageFailed(err), "reading-list/list", "listBooks")
 
@@ -174,14 +174,14 @@ func (s *Server) RegisterRoutes() http.Handler {
 	mux.Handle("/letters", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		design := r.URL.Query().Get("design")
 		tag := r.URL.Query().Get("tag")
-		web.LettersPageHandler(w, r, *s.storage, tag, design, s.auth)
+		web.LettersPageHandler(w, r, *s.Storage, tag, design, s.auth)
 	}))
 	mux.Handle("/letter", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		letterID := r.URL.Query().Get("id")
-		web.GetLetterHandler(w, r, *s.storage, letterID, s.auth)
+		web.GetLetterHandler(w, r, *s.Storage, letterID, s.auth)
 	}))
 	mux.Handle("/letters/list", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, err := service.ListLetters(r.Context(), *s.storage, "all")
+		_, err := service.ListLetters(r.Context(), *s.Storage, "all")
 		if err != nil {
 			web.HandleError(w, r, apperrors.StorageFailed(err), "letters/list", "listLetters")
 
@@ -254,8 +254,11 @@ func (s *Server) HelloWorldHandler(w http.ResponseWriter, _ *http.Request) {
 	}
 }
 
-func (s *Server) healthHandler(w http.ResponseWriter, _ *http.Request) {
-	resp, err := json.Marshal(s.storage.Health())
+// HealthHandler responds with the current health status of the application.
+func (s *Server) HealthHandler(w http.ResponseWriter, _ *http.Request) {
+	result := s.Storage.Health()
+
+	resp, err := json.Marshal(result)
 	if err != nil {
 		http.Error(w, "Failed to marshal health check response", http.StatusInternalServerError)
 
@@ -263,6 +266,10 @@ func (s *Server) healthHandler(w http.ResponseWriter, _ *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+
+	if !result.Healthy() {
+		w.WriteHeader(http.StatusServiceUnavailable)
+	}
 
 	_, err = w.Write(resp)
 	if err != nil {

@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -358,34 +359,85 @@ func (s *Storage) GetImage(ctx context.Context, imageName string) (string, error
 	return webPath, nil
 }
 
-// Health checks the storage connection status.
-func (s *Storage) Health() map[string]string {
-	health := make(map[string]string)
+// HealthResult holds the structured health check response.
+type HealthResult struct {
+	Status    string            `json:"status"`
+	Timestamp string            `json:"ts"`
+	Checks    map[string]string `json:"checks"`
+}
 
+// Healthy returns true when overall status is "ok".
+func (h HealthResult) Healthy() bool {
+	return h.Status == "ok"
+}
+
+// Health checks storage and database connectivity.
+func (s *Storage) Health() HealthResult {
+	checks := make(map[string]string)
+	healthy := true
+
+	checks["storage"] = s.checkStorage()
+	if checks["storage"] != "ok" {
+		healthy = false
+	}
+
+	checks["database"] = checkDatabase()
+
+	if checks["database"] != "ok" {
+		healthy = false
+	}
+
+	status := "ok"
+	if !healthy {
+		status = "degraded"
+	}
+
+	return HealthResult{
+		Status:    status,
+		Timestamp: time.Now().UTC().Format(time.RFC3339),
+		Checks:    checks,
+	}
+}
+
+func (s *Storage) checkStorage() string {
 	if s.UseS3 {
 		_, err := s.S3Client.ListBuckets(context.Background(), &s3.ListBucketsInput{})
 		if err != nil {
-			health["status"] = "down"
-			health["message"] = fmt.Sprintf("Failed to list buckets: %v", err)
-			log.Printf("S3 connection down: %v", err) // Changed from Fatalf to allow app to survive
+			log.Printf("health: S3 connection down: %v", err)
 
-			return health
+			return fmt.Sprintf("error: %v", err)
 		}
 
-		health["status"] = "up"
-		health["message"] = "S3 storage is up and running."
-	} else {
-		_, err := os.Stat(s.BaseDir)
-		if os.IsNotExist(err) {
-			health["status"] = "down"
-			health["message"] = "Local storage directory missing"
-		} else {
-			health["status"] = "up"
-			health["message"] = "Local storage is ready."
-		}
+		return "ok"
 	}
 
-	return health
+	_, err := os.Stat(s.BaseDir)
+	if os.IsNotExist(err) {
+		return "error: local storage directory missing"
+	}
+
+	return "ok"
+}
+
+func checkDatabase() string {
+	db, err := GetDB(context.Background())
+	if err != nil {
+		return fmt.Sprintf("error: %v", err)
+	}
+
+	defer func() {
+		closeErr := db.Close()
+		if closeErr != nil {
+			log.Printf("health: failed to close database: %v", closeErr)
+		}
+	}()
+
+	err = db.PingContext(context.Background())
+	if err != nil {
+		return fmt.Sprintf("error: %v", err)
+	}
+
+	return "ok"
 }
 
 // findProjectRoot walks up the directory tree to find the project root based on go.mod.
