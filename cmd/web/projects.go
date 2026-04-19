@@ -1,9 +1,11 @@
 package web
 
 import (
-	"log"
 	"net/http"
 	"reflect"
+
+	apperrors "timterests/internal/errors"
+
 	"timterests/internal/auth"
 	"timterests/internal/model"
 	"timterests/internal/service"
@@ -12,8 +14,6 @@ import (
 	"github.com/a-h/templ"
 )
 
-// ProjectsPageHandler handles requests to the projects page,
-// ensuring authentication and rendering the appropriate content.
 func ProjectsPageHandler(w http.ResponseWriter, r *http.Request, s storage.Storage, currentTag, design string) {
 	var (
 		component templ.Component
@@ -22,8 +22,7 @@ func ProjectsPageHandler(w http.ResponseWriter, r *http.Request, s storage.Stora
 
 	projects, err := service.ListProjects(r.Context(), s, currentTag)
 	if err != nil {
-		log.Printf("ProjectsPageHandler: failed to fetch projects: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		HandleError(w, r, apperrors.StorageFailed(err), "ProjectsPageHandler", "listProjects")
 
 		return
 	}
@@ -41,16 +40,14 @@ func ProjectsPageHandler(w http.ResponseWriter, r *http.Request, s storage.Stora
 
 	err = renderHTML(w, r, http.StatusOK, component)
 	if err != nil {
-		log.Printf("ProjectsPageHandler: failed to render: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		HandleError(w, r, apperrors.RenderFailed(err), "ProjectsPageHandler", "render")
 	}
 }
 
-// GetProjectHandler handles requests to get a specific project by its ID.
 func GetProjectHandler(w http.ResponseWriter, r *http.Request, s storage.Storage, projectID string, a *auth.Auth) {
 	projects, err := service.ListProjects(r.Context(), s, "all")
 	if err != nil {
-		http.Error(w, "Failed to fetch projects", http.StatusInternalServerError)
+		HandleError(w, r, apperrors.StorageFailed(err), "GetProjectHandler", "listProjects")
 
 		return
 	}
@@ -59,8 +56,7 @@ func GetProjectHandler(w http.ResponseWriter, r *http.Request, s storage.Storage
 		if project.ID == projectID {
 			body, err := s.GetDocumentBody(r.Context(), project.S3Key)
 			if err != nil {
-				log.Printf("GetProjectHandler: failed to load body for %s: %v", project.S3Key, err)
-				http.Error(w, "Not Found", http.StatusNotFound)
+				HandleError(w, r, apperrors.NotFound(err), "GetProjectHandler", "getBody")
 
 				return
 			}
@@ -83,8 +79,7 @@ func GetProjectHandler(w http.ResponseWriter, r *http.Request, s storage.Storage
 
 			err = renderHTML(w, r, http.StatusOK, component)
 			if err != nil {
-				log.Printf("GetProjectHandler: failed to render: %v", err)
-				http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+				HandleError(w, r, apperrors.RenderFailed(err), "GetProjectHandler", "render")
 
 				return
 			}
@@ -93,5 +88,5 @@ func GetProjectHandler(w http.ResponseWriter, r *http.Request, s storage.Storage
 		}
 	}
 
-	http.Error(w, "Not Found", http.StatusNotFound)
+	HandleError(w, r, apperrors.NotFound(nil), "GetProjectHandler", "findProject")
 }

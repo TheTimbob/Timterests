@@ -11,6 +11,7 @@ import (
 
 	"timterests/internal/ai"
 	"timterests/internal/auth"
+	apperrors "timterests/internal/errors"
 	"timterests/internal/model"
 	"timterests/internal/service"
 	"timterests/internal/storage"
@@ -18,7 +19,6 @@ import (
 	"github.com/a-h/templ"
 )
 
-// WriterFormData holds all data needed to render the writer form.
 type WriterFormData struct {
 	Doc     model.Document
 	Body    string
@@ -26,7 +26,6 @@ type WriterFormData struct {
 	Fields  templ.Component
 }
 
-// emptyFormData returns a zero-value WriterFormData for a new document of the given type.
 func emptyFormData(docType string) WriterFormData {
 	switch docType {
 	case "projects":
@@ -41,14 +40,13 @@ func emptyFormData(docType string) WriterFormData {
 		doc := model.Letter{}
 
 		return WriterFormData{Doc: doc.Document, DocType: "letters", Fields: LetterFormContent(&doc)}
-	default: // "articles" and fallback
+	default:
 		doc := model.Article{}
 
 		return WriterFormData{Doc: doc.Document, DocType: "articles", Fields: ArticleFormContent(&doc)}
 	}
 }
 
-// WriterPageHandler handles requests to the writer page, ensuring authentication and rendering the appropriate content.
 func WriterPageHandler(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -71,8 +69,7 @@ func WriterPageHandler(
 	if key != "" {
 		data, err = getTypeContentRaw(r.Context(), docType, key, typeID, s)
 		if err != nil {
-			log.Printf("WriterPageHandler: failed to load document: %v", err)
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			HandleError(w, r, apperrors.StorageFailed(err), "WriterPageHandler", "loadDocument")
 
 			return
 		}
@@ -88,12 +85,10 @@ func WriterPageHandler(
 
 	err = renderHTML(w, r, http.StatusOK, component)
 	if err != nil {
-		log.Printf("WriterPageHandler: failed to render: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		HandleError(w, r, apperrors.RenderFailed(err), "WriterPageHandler", "render")
 	}
 }
 
-// WriteDocumentHandler handles the submission of the writer form to create or update documents.
 func WriteDocumentHandler(w http.ResponseWriter, r *http.Request, s storage.Storage, a *auth.Auth) {
 	if !a.IsAuthenticated(r) {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
@@ -102,31 +97,28 @@ func WriteDocumentHandler(w http.ResponseWriter, r *http.Request, s storage.Stor
 	}
 
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		HandleError(w, r, apperrors.MethodNotAllowed(), "WriteDocumentHandler", "checkMethod")
 
 		return
 	}
 
 	formData, s3Upload, err := extractFormData(r)
 	if err != nil {
-		http.Error(w, "Failed to parse form data", http.StatusBadRequest)
-		log.Printf("Error parsing form: %v", err)
+		HandleError(w, r, apperrors.ParseFormFailed(err), "WriteDocumentHandler", "extractForm")
 
 		return
 	}
 
 	docType, err := extractDocType(formData)
 	if err != nil {
-		log.Printf("WriteDocumentHandler: invalid document type: %v", err)
-		http.Error(w, "Bad Request", http.StatusBadRequest)
+		HandleError(w, r, apperrors.BadRequest(err), "WriteDocumentHandler", "extractDocType")
 
 		return
 	}
 
 	slug, err := generateSlug(formData, docType)
 	if err != nil {
-		log.Printf("WriteDocumentHandler: invalid filename data: %v", err)
-		http.Error(w, "Bad Request", http.StatusBadRequest)
+		HandleError(w, r, apperrors.BadRequest(err), "WriteDocumentHandler", "generateSlug")
 
 		return
 	}
@@ -136,24 +128,21 @@ func WriteDocumentHandler(w http.ResponseWriter, r *http.Request, s storage.Stor
 
 	yamlPath, err := storage.LocalPath(s.BaseDir, yamlFilename)
 	if err != nil {
-		http.Error(w, "Invalid file path", http.StatusBadRequest)
-		log.Printf("Invalid local yaml path: %v", err)
+		HandleError(w, r, apperrors.BadRequest(err), "WriteDocumentHandler", "yamlPath")
 
 		return
 	}
 
 	mdPath, err := storage.LocalPath(s.BaseDir, mdFilename)
 	if err != nil {
-		http.Error(w, "Invalid file path", http.StatusBadRequest)
-		log.Printf("Invalid local md path: %v", err)
+		HandleError(w, r, apperrors.BadRequest(err), "WriteDocumentHandler", "mdPath")
 
 		return
 	}
 
 	err = storage.WriteMarkdownDocument(yamlPath, mdPath, formData)
 	if err != nil {
-		http.Error(w, "Failed to save document", http.StatusInternalServerError)
-		log.Printf("Error writing document: %v", err)
+		HandleError(w, r, apperrors.StorageFailed(err), "WriteDocumentHandler", "writeDocument")
 
 		return
 	}
@@ -161,14 +150,14 @@ func WriteDocumentHandler(w http.ResponseWriter, r *http.Request, s storage.Stor
 	if s3Upload {
 		err = s.UploadFileToS3(r.Context(), yamlFilename)
 		if err != nil {
-			http.Error(w, "Failed to upload document to storage", http.StatusInternalServerError)
+			HandleError(w, r, apperrors.StorageFailed(err), "WriteDocumentHandler", "uploadYaml")
 
 			return
 		}
 
 		err = s.UploadFileToS3(r.Context(), mdFilename)
 		if err != nil {
-			http.Error(w, "Failed to upload document to storage", http.StatusInternalServerError)
+			HandleError(w, r, apperrors.StorageFailed(err), "WriteDocumentHandler", "uploadMd")
 
 			return
 		}
@@ -177,7 +166,6 @@ func WriteDocumentHandler(w http.ResponseWriter, r *http.Request, s storage.Stor
 	http.Redirect(w, r, "/writer", http.StatusSeeOther)
 }
 
-// WriterSuggestionHandler handles AI-powered content suggestions for the writer.
 func WriterSuggestionHandler(w http.ResponseWriter, r *http.Request, s storage.Storage, a *auth.Auth) {
 	if !a.IsAuthenticated(r) {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
@@ -187,8 +175,7 @@ func WriterSuggestionHandler(w http.ResponseWriter, r *http.Request, s storage.S
 
 	err := r.ParseForm()
 	if err != nil {
-		http.Error(w, "Failed to parse form", http.StatusBadRequest)
-		log.Printf("Error parsing form in WriterSuggestionHandler: %v", err)
+		HandleError(w, r, apperrors.ParseFormFailed(err), "WriterSuggestionHandler", "parseForm")
 
 		return
 	}
@@ -197,10 +184,9 @@ func WriterSuggestionHandler(w http.ResponseWriter, r *http.Request, s storage.S
 	if strings.TrimSpace(bodyContent) == "" {
 		component := AISuggestionError("Please enter some content in the body field first.")
 
-		err := renderHTML(w, r, http.StatusOK, component)
-		if err != nil {
-			log.Printf("Error rendering in WriterSuggestionHandler: %v", err)
-			http.Error(w, "Service temporarily unavailable", http.StatusInternalServerError)
+		renderErr := renderHTML(w, r, http.StatusOK, component)
+		if renderErr != nil {
+			HandleError(w, r, apperrors.RenderFailed(renderErr), "WriterSuggestionHandler", "renderEmpty")
 		}
 
 		return
@@ -208,19 +194,18 @@ func WriterSuggestionHandler(w http.ResponseWriter, r *http.Request, s storage.S
 
 	docType := r.FormValue("document-type")
 	if strings.TrimSpace(docType) == "" {
-		docType = "articles" // default
+		docType = "articles"
 	}
 
 	systemInstruction, err := s.GetPromptContent(r.Context(), docType)
 	if err != nil {
-		log.Printf("Failed to load system prompt for docType %q: %v", docType, err) // #nosec G706
+		log.Printf("Failed to load system prompt for docType %q: %v", docType, err)
 
 		component := AISuggestionError("AI suggestions are temporarily unavailable. Please try again later.")
 
-		err = component.Render(r.Context(), w)
-		if err != nil {
-			http.Error(w, "Service temporarily unavailable", http.StatusInternalServerError)
-			log.Printf("Error rendering in WriterSuggestionHandler: %v", err)
+		renderErr := renderHTML(w, r, http.StatusOK, component)
+		if renderErr != nil {
+			HandleError(w, r, apperrors.RenderFailed(renderErr), "WriterSuggestionHandler", "renderPromptError")
 		}
 
 		return
@@ -232,10 +217,9 @@ func WriterSuggestionHandler(w http.ResponseWriter, r *http.Request, s storage.S
 
 		component := AISuggestionError("Failed to get AI suggestion. Please try again later.")
 
-		err := renderHTML(w, r, http.StatusOK, component)
-		if err != nil {
-			log.Printf("Error rendering in WriterSuggestionHandler: %v", err)
-			http.Error(w, "Service temporarily unavailable", http.StatusInternalServerError)
+		renderErr := renderHTML(w, r, http.StatusOK, component)
+		if renderErr != nil {
+			HandleError(w, r, apperrors.RenderFailed(renderErr), "WriterSuggestionHandler", "renderAIError")
 		}
 
 		return
@@ -245,20 +229,14 @@ func WriterSuggestionHandler(w http.ResponseWriter, r *http.Request, s storage.S
 
 	err = renderHTML(w, r, http.StatusOK, component)
 	if err != nil {
-		log.Printf("Error rendering AISuggestionResponse in WriterSuggestionHandler: %v", err)
-		http.Error(w, "Service temporarily unavailable", http.StatusInternalServerError)
-
-		return
+		HandleError(w, r, apperrors.RenderFailed(err), "WriterSuggestionHandler", "renderSuggestion")
 	}
 }
 
-// metaSetter is satisfied by any type whose pointer embeds *model.Document.
 type metaSetter interface {
 	SetMeta(id, key string)
 }
 
-// loadRawDoc initialises a zero-value T, sets its metadata, fetches the raw
-// (non-HTML-converted) file from storage, and returns Content with the doc and raw markdown body.
 func loadRawDoc[T any, PT interface {
 	*T
 	metaSetter
@@ -298,7 +276,6 @@ func StripDocumentHeaders(raw string) string {
 	return raw
 }
 
-// getTypeContentRaw retrieves content for editing, keeping the body as raw markdown.
 func getTypeContentRaw(ctx context.Context, docType, key string, id int, s storage.Storage) (WriterFormData, error) {
 	idStr := strconv.Itoa(id)
 
@@ -337,7 +314,6 @@ func getTypeContentRaw(ctx context.Context, docType, key string, id int, s stora
 	}
 }
 
-// extractFormData parses form data and returns the processed data, S3 upload flag, and any error.
 func extractFormData(r *http.Request) (map[string]any, bool, error) {
 	err := r.ParseForm()
 	if err != nil {
@@ -365,7 +341,6 @@ func extractFormData(r *http.Request) (map[string]any, bool, error) {
 	return formData, s3Upload, nil
 }
 
-// extractDocType validates and extracts the document type from form data.
 func extractDocType(formData map[string]any) (string, error) {
 	docTypeAny, ok := formData["document-type"]
 	if !ok {
@@ -382,7 +357,6 @@ func extractDocType(formData map[string]any) (string, error) {
 	return docType, nil
 }
 
-// generateSlug creates a base filename slug (without extension) from the document type and form data.
 func generateSlug(formData map[string]any, docType string) (string, error) {
 	title, ok := formData["title"].(string)
 	if !ok || strings.TrimSpace(title) == "" {

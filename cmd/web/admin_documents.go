@@ -3,7 +3,6 @@ package web
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"net/url"
 	"path/filepath"
@@ -16,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 
 	"timterests/internal/auth"
+	apperrors "timterests/internal/errors"
 	"timterests/internal/storage"
 )
 
@@ -71,8 +71,7 @@ func AdminDocumentsPageHandler(w http.ResponseWriter, r *http.Request, s storage
 
 	docs, err := ListAllDocuments(r.Context(), s)
 	if err != nil {
-		http.Error(w, "Failed to list documents", http.StatusInternalServerError)
-		log.Printf("Error listing documents: %v", err)
+		HandleError(w, r, apperrors.StorageFailed(err), "AdminDocumentsPageHandler", "listDocuments")
 
 		return
 	}
@@ -111,8 +110,7 @@ func AdminDocumentsPageHandler(w http.ResponseWriter, r *http.Request, s storage
 
 	err = renderHTML(w, r, http.StatusOK, component)
 	if err != nil {
-		log.Printf("AdminDocumentsPageHandler: failed to render: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		HandleError(w, r, apperrors.RenderFailed(err), "AdminDocumentsPageHandler", "render")
 	}
 }
 

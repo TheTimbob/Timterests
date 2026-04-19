@@ -1,13 +1,14 @@
 package web
 
 import (
-	"errors"
 	"log"
 	"net/http"
+
+	apperrors "timterests/internal/errors"
+
 	"timterests/internal/auth"
 )
 
-// LoginHandler handles user authentication and login requests.
 func LoginHandler(w http.ResponseWriter, r *http.Request, a *auth.Auth) {
 	if r.Method == http.MethodPost {
 		email := r.FormValue("email")
@@ -22,14 +23,12 @@ func LoginHandler(w http.ResponseWriter, r *http.Request, a *auth.Auth) {
 
 		log.Printf("login: authentication failed: %v", err)
 
-		// Distinguish invalid credentials (401) from unexpected server errors (500).
-		if err != nil && !errors.Is(err, auth.ErrInvalidCredentials) {
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		if err != nil && !apperrors.Is(err, auth.ErrInvalidCredentials) {
+			HandleError(w, r, apperrors.InternalServerError(err), "LoginHandler", "authenticate")
 
 			return
 		}
 
-		// Re-render the login page with an inline error rather than navigating away.
 		component := LoginPage("Incorrect email or password.")
 		if r.Header.Get("Hx-Request") == "true" {
 			component = LoginContainer("Incorrect email or password.")
@@ -37,14 +36,12 @@ func LoginHandler(w http.ResponseWriter, r *http.Request, a *auth.Auth) {
 
 		renderErr := renderHTML(w, r, http.StatusUnauthorized, component)
 		if renderErr != nil {
-			log.Printf("login: failed to render error page: %v", renderErr)
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			HandleError(w, r, apperrors.RenderFailed(renderErr), "LoginHandler", "renderError")
 		}
 
 		return
 	}
 
-	// Render the login page for the initial load.
 	component := LoginPage("")
 	if r.Header.Get("Hx-Request") == "true" {
 		component = LoginContainer("")
@@ -52,7 +49,6 @@ func LoginHandler(w http.ResponseWriter, r *http.Request, a *auth.Auth) {
 
 	err := renderHTML(w, r, http.StatusOK, component)
 	if err != nil {
-		log.Printf("login: failed to render page: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		HandleError(w, r, apperrors.RenderFailed(err), "LoginHandler", "render")
 	}
 }
