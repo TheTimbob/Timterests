@@ -18,7 +18,7 @@ import (
 // Server provides HTTP server configuration with storage backend.
 type Server struct {
 	port    int
-	storage *storage.Storage
+	Storage *storage.Storage
 	auth    *auth.Auth
 }
 
@@ -40,7 +40,7 @@ func NewServer() *http.Server {
 
 	NewServer := &Server{
 		port:    port,
-		storage: store,
+		Storage: store,
 		auth:    authInstance,
 	}
 
