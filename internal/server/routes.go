@@ -255,7 +255,9 @@ func (s *Server) HelloWorldHandler(w http.ResponseWriter, _ *http.Request) {
 }
 
 func (s *Server) healthHandler(w http.ResponseWriter, _ *http.Request) {
-	resp, err := json.Marshal(s.storage.Health())
+	result := s.storage.Health()
+
+	resp, err := json.Marshal(result)
 	if err != nil {
 		http.Error(w, "Failed to marshal health check response", http.StatusInternalServerError)
 
@@ -263,6 +265,10 @@ func (s *Server) healthHandler(w http.ResponseWriter, _ *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+
+	if !result.Healthy() {
+		w.WriteHeader(http.StatusServiceUnavailable)
+	}
 
 	_, err = w.Write(resp)
 	if err != nil {

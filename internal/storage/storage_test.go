@@ -263,6 +263,60 @@ func TestGetPromptContent(t *testing.T) {
 	}
 }
 
+func TestHealth(t *testing.T) {
+	t.Run("local storage ok", func(t *testing.T) {
+		dir := t.TempDir()
+
+		s := &storage.Storage{
+			UseS3:   false,
+			BaseDir: dir,
+		}
+
+		result := s.Health()
+
+		if result.Checks["storage"] != "ok" {
+			t.Errorf("expected storage ok, got %q", result.Checks["storage"])
+		}
+
+		if result.Timestamp == "" {
+			t.Error("expected timestamp to be set")
+		}
+	})
+
+	t.Run("local storage missing directory", func(t *testing.T) {
+		s := &storage.Storage{
+			UseS3:   false,
+			BaseDir: "/nonexistent/path/that/does/not/exist",
+		}
+
+		result := s.Health()
+
+		if result.Checks["storage"] == "ok" {
+			t.Error("expected storage check to report error for missing directory")
+		}
+
+		if !result.Healthy() && result.Status != "degraded" {
+			t.Errorf("expected status 'degraded', got %q", result.Status)
+		}
+	})
+
+	t.Run("healthy result reports true", func(t *testing.T) {
+		r := storage.HealthResult{Status: "ok"}
+
+		if !r.Healthy() {
+			t.Error("expected Healthy() to return true for status ok")
+		}
+	})
+
+	t.Run("degraded result reports false", func(t *testing.T) {
+		r := storage.HealthResult{Status: "degraded"}
+
+		if r.Healthy() {
+			t.Error("expected Healthy() to return false for status degraded")
+		}
+	})
+}
+
 func getYAMLDocument() *fstest.MapFile {
 	return &fstest.MapFile{
 		Data: []byte(
