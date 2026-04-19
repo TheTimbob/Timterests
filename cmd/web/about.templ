@@ -3,9 +3,43 @@ package web
 templ AboutForm(about About) {
 	@Base("about") {
 		<div id="about-container">
-            <h1 class="category-title">{ about.Title }</h1>
-            <h2 class="category-subtitle">{ about.Subtitle }</h2>
-            @templ.Raw(about.Body)
-        </div>
+			<h1 class="category-title">{ about.Title }</h1>
+			<h2 class="category-subtitle">{ about.Subtitle }</h2>
+			if about.Name != "" || about.Specialty != "" || about.Location != "" || about.GitHub != "" || about.Email != "" {
+				<div class="about-profile">
+					if about.Name != "" {
+						<div class="about-profile-row">
+							<span class="about-profile-label"><i class="fa-solid fa-user"></i> Name</span>
+							<span class="about-profile-value">{ about.Name }</span>
+						</div>
+					}
+					if about.Specialty != "" {
+						<div class="about-profile-row">
+							<span class="about-profile-label"><i class="fa-solid fa-code"></i> Specialty</span>
+							<span class="about-profile-value">{ about.Specialty }</span>
+						</div>
+					}
+					if about.Location != "" {
+						<div class="about-profile-row">
+							<span class="about-profile-label"><i class="fa-solid fa-location-dot"></i> Location</span>
+							<span class="about-profile-value">{ about.Location }</span>
+						</div>
+					}
+					if about.GitHub != "" {
+						<div class="about-profile-row">
+							<span class="about-profile-label"><i class="fa-brands fa-github"></i> GitHub</span>
+							<a href={ templ.SafeURL("https://github.com/" + about.GitHub) } class="about-profile-link" target="_blank" rel="noopener noreferrer">{ about.GitHub }</a>
+						</div>
+					}
+					if about.Email != "" {
+						<div class="about-profile-row">
+							<span class="about-profile-label"><i class="fa-solid fa-envelope"></i> Email</span>
+							<a href={ templ.SafeURL("mailto:" + about.Email) } class="about-profile-link">{ about.Email }</a>
+						</div>
+					}
+				</div>
+			}
+			@templ.Raw(about.Body)
+		</div>
 	}
 }
