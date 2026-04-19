@@ -10,9 +10,14 @@ import (
 )
 
 type About struct {
-	Title    string `yaml:"title"`
-	Subtitle string `yaml:"subtitle"`
-	Body     string `yaml:"body"`
+	Title      string `yaml:"title"`
+	Subtitle   string `yaml:"subtitle"`
+	Body       string `yaml:"body"`
+	Name       string `yaml:"name"`
+	Specialty  string `yaml:"specialty"`
+	Location   string `yaml:"location"`
+	GitHub     string `yaml:"github"`
+	Email      string `yaml:"email"`
 }
 
 func AboutHandler(w http.ResponseWriter, r *http.Request, s storage.Storage) {
