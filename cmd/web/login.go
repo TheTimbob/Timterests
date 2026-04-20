@@ -30,6 +30,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request, a *auth.Auth) {
 		}
 
 		component := LoginPage("Incorrect email or password.")
+
 		if IsHTMXRequest(r) {
 			SetPartialResponseHeaders(w)
 
