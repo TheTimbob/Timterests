@@ -1,3 +1,10 @@
 title: About Timterests
 subtitle: A personal blog
-body: This is the about page content.
+name: Test User
+specialty: Software Engineering
+location: United States
+github: testuser
+email: test@example.com
+experience: []
+education: []
+skills: []
