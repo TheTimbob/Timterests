@@ -6,9 +6,9 @@ templ AboutForm(about About) {
 			<h1 class="category-title">{ about.Title }</h1>
 			<div class="about-tabs">
 				<button class="tab-btn active" hx-get="/about?tab=bio" hx-target=".tab-content" hx-swap="innerHTML" onclick="setActiveTab(this)">Bio</button>
-				<button class="tab-btn" hx-get="/about?tab=education" hx-target=".tab-content" hx-swap="innerHTML" onclick="setActiveTab(this)">Education</button>
-				<button class="tab-btn" hx-get="/about?tab=work" hx-target=".tab-content" hx-swap="innerHTML" onclick="setActiveTab(this)">Experience</button>
 				<button class="tab-btn" hx-get="/about?tab=skills" hx-target=".tab-content" hx-swap="innerHTML" onclick="setActiveTab(this)">Skills</button>
+				<button class="tab-btn" hx-get="/about?tab=work" hx-target=".tab-content" hx-swap="innerHTML" onclick="setActiveTab(this)">Experience</button>
+				<button class="tab-btn" hx-get="/about?tab=education" hx-target=".tab-content" hx-swap="innerHTML" onclick="setActiveTab(this)">Education</button>
 			</div>
 			<div class="tab-content">
 				@BioTab(about)
@@ -54,6 +54,29 @@ templ BioTab(about About) {
 	@templ.Raw(about.Body)
 }
 
+templ SkillsTab(skills []Skill) {
+	<div id="skills" class="skills-container">
+		for i, skill := range skills {
+			<div class="skill-section">
+				<h3 class="skill-section-title">{ skill.Name }</h3>
+				if len(skill.Items) > 0 {
+					<div class="skill-tags">
+						for _, item := range skill.Items {
+							<span class="skill-tag">{ item }</span>
+						}
+					</div>
+				}
+				if skill.Description != "" {
+					<p class="skill-description">{ skill.Description }</p>
+				}
+			</div>
+			if i < len(skills)-1 {
+				<hr class="skill-divider"/>
+			}
+		}
+	</div>
+}
+
 templ ExperienceTab(jobs []Experience) {
 	<div id="work" class="timeline-container">
 		for _, job := range jobs {
@@ -65,9 +88,11 @@ templ ExperienceTab(jobs []Experience) {
 				if job.Location != "" {
 					<div class="timeline-location">{ job.Location }</div>
 				}
-				<div class="timeline-description">
-					@templ.Raw(job.Description)
-				</div>
+				if job.Description != "" {
+					<div class="timeline-description">
+						@templ.Raw(job.Description)
+					</div>
+				}
 			</div>
 		}
 	</div>
@@ -84,29 +109,11 @@ templ EducationTab(education []Education) {
 				if edu.Location != "" {
 					<div class="timeline-location">{ edu.Location }</div>
 				}
-				<div class="timeline-description">
-					@templ.Raw(edu.Description)
-				</div>
-			</div>
-		}
-	</div>
-}
-
-templ SkillsTab(skills []Skill) {
-	<div id="skills" class="skills-container">
-		for _, skill := range skills {
-			<div class="skill-item">
-				<div class="skill-header" onclick="toggleSkill(this)">
-					<span>{ skill.Name }</span>
-					<i class="fas fa-chevron-down"></i>
-				</div>
-				<div class="skill-content">
-					<div class="skill-list">
-						for _, item := range skill.Items {
-							<span class="skill-tag">{ item }</span>
-						}
+				if edu.Description != "" {
+					<div class="timeline-description">
+						@templ.Raw(edu.Description)
 					</div>
-				</div>
+				}
 			</div>
 		}
 	</div>

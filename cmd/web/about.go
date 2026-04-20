@@ -30,8 +30,9 @@ type Education struct {
 }
 
 type Skill struct {
-	Name  string   `yaml:"name"`
-	Items []string `yaml:"items"`
+	Name        string   `yaml:"name"`
+	Items       []string `yaml:"items"`
+	Description string   `yaml:"description"`
 }
 
 type About struct {
