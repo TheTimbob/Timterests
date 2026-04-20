@@ -40,10 +40,12 @@ func AboutHandler(w http.ResponseWriter, r *http.Request, s storage.Storage) {
 	}
 
 	var key string
+
 	for _, obj := range aboutFile {
 		k := aws.ToString(obj.Key)
 		if strings.HasSuffix(k, ".yaml") {
 			key = k
+
 			break
 		}
 	}
