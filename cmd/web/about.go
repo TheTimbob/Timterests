@@ -2,6 +2,7 @@ package web
 
 import (
 	"net/http"
+	"strings"
 
 	apperrors "timterests/internal/errors"
 	"timterests/internal/storage"
@@ -10,9 +11,14 @@ import (
 )
 
 type About struct {
-	Title    string `yaml:"title"`
-	Subtitle string `yaml:"subtitle"`
-	Body     string `yaml:"body"`
+	Title      string `yaml:"title"`
+	Subtitle   string `yaml:"subtitle"`
+	Body       string `yaml:"body"`
+	Name       string `yaml:"name"`
+	Specialty  string `yaml:"specialty"`
+	Location   string `yaml:"location"`
+	GitHub     string `yaml:"github"`
+	Email      string `yaml:"email"`
 }
 
 func AboutHandler(w http.ResponseWriter, r *http.Request, s storage.Storage) {
@@ -46,6 +52,9 @@ func AboutHandler(w http.ResponseWriter, r *http.Request, s storage.Storage) {
 
 		return
 	}
+
+	about.GitHub = strings.TrimSpace(about.GitHub)
+	about.Email = strings.TrimSpace(about.Email)
 
 	component := AboutForm(about)
 
