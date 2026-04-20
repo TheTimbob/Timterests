@@ -144,11 +144,15 @@ func TestAboutForm(t *testing.T) {
 		}
 	})
 
-	t.Run("skills tab renders skill tags", func(t *testing.T) {
+	t.Run("skills tab renders sections with tags and description", func(t *testing.T) {
 		t.Parallel()
 
 		skills := []web.Skill{
-			{Name: "Backend", Items: []string{"Go", "Python", "SQL"}},
+			{
+				Name:        "Backend",
+				Items:       []string{"Go", "Python", "SQL"},
+				Description: "Five years building backend systems.",
+			},
 		}
 
 		var buf bytes.Buffer
@@ -160,7 +164,7 @@ func TestAboutForm(t *testing.T) {
 
 		html := buf.String()
 
-		for _, want := range []string{"Backend", "Go", "Python", "SQL", "skill-tag"} {
+		for _, want := range []string{"Backend", "Go", "Python", "SQL", "skill-section-title", "Five years"} {
 			if !strings.Contains(html, want) {
 				t.Errorf("expected skills tab to contain %q", want)
 			}
