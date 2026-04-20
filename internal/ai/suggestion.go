@@ -59,7 +59,67 @@ func GenerateSuggestion(ctx context.Context, prompt, systemInstruction string) (
 		return "", errors.New("no choices returned from OpenAI API")
 	}
 
-	return chatCompletion.Choices[0].Message.Content, nil
+	return CleanSuggestion(chatCompletion.Choices[0].Message.Content), nil
+}
+
+// CleanSuggestion strips markdown and YAML formatting from AI-generated text
+// so it renders as plain prose in the suggestion display.
+func CleanSuggestion(text string) string {
+	lines := strings.Split(text, "\n")
+	out := make([]string, 0, len(lines))
+
+	inFrontmatter := false
+	inCodeBlock := false
+	frontmatterDone := false
+
+	for i, line := range lines {
+		// Strip YAML frontmatter (--- ... ---) at the top of the document.
+		if !frontmatterDone && i == 0 && strings.TrimSpace(line) == "---" {
+			inFrontmatter = true
+
+			continue
+		}
+
+		if inFrontmatter {
+			if strings.TrimSpace(line) == "---" {
+				inFrontmatter = false
+				frontmatterDone = true
+			}
+
+			continue
+		}
+
+		// Remove fenced code block delimiters; keep the content as plain text.
+		if strings.HasPrefix(strings.TrimSpace(line), "```") {
+			inCodeBlock = !inCodeBlock
+
+			continue
+		}
+
+		if inCodeBlock {
+			out = append(out, line)
+
+			continue
+		}
+
+		// Strip ATX headings (# Heading).
+		stripped := strings.TrimLeft(line, "#")
+		if len(stripped) < len(line) {
+			line = strings.TrimSpace(stripped)
+		}
+
+		// Strip bold/italic markers.
+		line = strings.ReplaceAll(line, "**", "")
+		line = strings.ReplaceAll(line, "__", "")
+		line = strings.ReplaceAll(line, "*", "")
+
+		// Strip inline backticks.
+		line = strings.ReplaceAll(line, "`", "")
+
+		out = append(out, line)
+	}
+
+	return strings.TrimSpace(strings.Join(out, "\n"))
 }
 
 // GetInstruction reads and returns the content of a prompt instruction file.

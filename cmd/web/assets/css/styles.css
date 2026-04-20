@@ -911,6 +911,7 @@ a:hover {
 .form-textarea {
   height: 16rem;
   resize: vertical;
+  overflow-y: auto;
 }
 
 .login-input {

@@ -9,6 +9,73 @@ import (
 	"timterests/internal/ai"
 )
 
+func TestCleanSuggestion(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		name  string
+		input string
+		want  string
+	}{
+		{
+			name:  "plain text passthrough",
+			input: "This is a plain sentence.",
+			want:  "This is a plain sentence.",
+		},
+		{
+			name:  "strips YAML frontmatter",
+			input: "---\ntitle: Test\n---\nActual content here.",
+			want:  "Actual content here.",
+		},
+		{
+			name:  "strips ATX headings",
+			input: "# Big Heading\n## Sub\nBody text.",
+			want:  "Big Heading\nSub\nBody text.",
+		},
+		{
+			name:  "strips bold and italic markers",
+			input: "This is **bold** and *italic* and __also bold__.",
+			want:  "This is bold and italic and also bold.",
+		},
+		{
+			name:  "strips inline backticks",
+			input: "Call `fmt.Println` to print.",
+			want:  "Call fmt.Println to print.",
+		},
+		{
+			name:  "removes code fence delimiters, keeps content",
+			input: "Before.\n```go\nfmt.Println(\"hi\")\n```\nAfter.",
+			want:  "Before.\nfmt.Println(\"hi\")\nAfter.",
+		},
+		{
+			name:  "frontmatter only at document start",
+			input: "Some text.\n---\nnot: frontmatter\n---\nMore text.",
+			want:  "Some text.\n---\nnot: frontmatter\n---\nMore text.",
+		},
+		{
+			name:  "empty string",
+			input: "",
+			want:  "",
+		},
+		{
+			name:  "trims surrounding whitespace",
+			input: "\n\nHello world.\n\n",
+			want:  "Hello world.",
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			got := ai.CleanSuggestion(tc.input)
+			if got != tc.want {
+				t.Fatalf("CleanSuggestion(%q)\ngot:  %q\nwant: %q", tc.input, got, tc.want)
+			}
+		})
+	}
+}
+
 // Not parallel: changes working directory.
 func TestLoadAPIKey(t *testing.T) {
 	t.Run("load API key from .env file", func(t *testing.T) {
