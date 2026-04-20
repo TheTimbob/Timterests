@@ -14,8 +14,8 @@ import (
 type Experience struct {
 	Company     string `yaml:"company"`
 	Role        string `yaml:"role"`
-	StartDate   string `yaml:"start_date"`
-	EndDate     string `yaml:"end_date"`
+	StartDate   string `yaml:"startDate"`
+	EndDate     string `yaml:"endDate"`
 	Description string `yaml:"description"`
 	Location    string `yaml:"location"`
 }
@@ -23,8 +23,8 @@ type Experience struct {
 type Education struct {
 	Institution string `yaml:"institution"`
 	Degree      string `yaml:"degree"`
-	StartDate   string `yaml:"start_date"`
-	EndDate     string `yaml:"end_date"`
+	StartDate   string `yaml:"startDate"`
+	EndDate     string `yaml:"endDate"`
 	Description string `yaml:"description"`
 	Location    string `yaml:"location"`
 }
