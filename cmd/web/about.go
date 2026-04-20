@@ -39,7 +39,15 @@ func AboutHandler(w http.ResponseWriter, r *http.Request, s storage.Storage) {
 		return
 	}
 
-	key := aws.ToString(aboutFile[0].Key)
+	var key string
+	for _, obj := range aboutFile {
+		k := aws.ToString(obj.Key)
+		if strings.HasSuffix(k, ".yaml") {
+			key = k
+			break
+		}
+	}
+
 	if key == "" {
 		HandleError(w, r, apperrors.NotFound(nil), "AboutHandler", "getKey")
 
@@ -53,6 +61,14 @@ func AboutHandler(w http.ResponseWriter, r *http.Request, s storage.Storage) {
 		return
 	}
 
+	body, err := s.GetDocumentBody(r.Context(), key)
+	if err != nil {
+		HandleError(w, r, apperrors.StorageFailed(err), "AboutHandler", "getDocumentBody")
+
+		return
+	}
+
+	about.Body = body
 	about.GitHub = strings.TrimSpace(about.GitHub)
 	about.Email = strings.TrimSpace(about.Email)
 
