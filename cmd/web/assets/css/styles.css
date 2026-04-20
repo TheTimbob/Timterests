@@ -151,10 +151,17 @@ a:hover {
   font-weight: 800;
   margin: 0;
   letter-spacing: -0.05em;
-  background: linear-gradient(160deg, #86efac 0%, #22c55e 50%, #166534 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #166534;
+}
+
+@supports ((background-clip: text) or (-webkit-background-clip: text)) {
+  .banner-title {
+    background: linear-gradient(160deg, #86efac 0%, #22c55e 50%, #166534 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+  }
 }
 
 .banner-title-link {
