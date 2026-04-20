@@ -11,7 +11,6 @@ type ReadingList struct {
 	Published string `yaml:"published"`
 	ISBN      string `yaml:"isbn"`
 	Website   string `yaml:"website"`
-	Status    string `yaml:"status"`
 }
 
 // Validate checks that the ReadingList entry has the required fields populated.
