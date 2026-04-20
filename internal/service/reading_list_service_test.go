@@ -83,10 +83,6 @@ func TestGetBook(t *testing.T) {
 		if book.Author != "Test Author" {
 			t.Errorf("expected author 'Test Author', got %q", book.Author)
 		}
-
-		if book.Status != "read" {
-			t.Errorf("expected status 'read', got %q", book.Status)
-		}
 	})
 
 	t.Run("returns error for non-existent key", func(t *testing.T) {

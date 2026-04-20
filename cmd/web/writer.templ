@@ -102,16 +102,6 @@ templ BookFormContent(book *model.ReadingList) {
         <input class="form-input" type="url" id="website" name="website" placeholder="https://example.com" value={book.Website}>
     </div>
     <div class="form-field">
-        <label class="form-label" for="status">Status:</label>
-        <select class="form-select" id="status" name="status">
-            <option value="interested" selected?={book.Status == "interested"}>Interested</option>
-            <option value="purchased" selected?={book.Status == "purchased"}>Purchased</option>
-            <option value="reading" selected?={book.Status == "reading"}>Reading</option>
-            <option value="read" selected?={book.Status == "read"}>Read</option>
-            <option value="abandoned" selected?={book.Status == "abandoned"}>Abandoned</option>
-        </select>
-    </div>
-    <div class="form-field">
         <label class="form-label" for="tags">Tags:</label>
         <input class="form-input" type="text" id="tags" name="tags" placeholder="comma-separated" value={strings.Join(book.Tags, ",")} required>
     </div>
