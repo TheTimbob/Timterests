@@ -109,6 +109,47 @@ func TestSetPartialResponseHeaders(t *testing.T) {
 	})
 }
 
+// TestSetVaryHeader verifies the standalone Vary-header helper used for all responses.
+func TestSetVaryHeader(t *testing.T) {
+	t.Parallel()
+
+	t.Run("sets Vary: HX-Request when header is absent", func(t *testing.T) {
+		t.Parallel()
+
+		rec := httptest.NewRecorder()
+		web.SetVaryHeader(rec)
+
+		if vary := rec.Header().Get("Vary"); !strings.Contains(vary, "HX-Request") {
+			t.Errorf("expected Vary to contain 'HX-Request', got %q", vary)
+		}
+	})
+
+	t.Run("does not duplicate HX-Request when already present", func(t *testing.T) {
+		t.Parallel()
+
+		rec := httptest.NewRecorder()
+		rec.Header().Set("Vary", "Accept-Encoding, HX-Request")
+		web.SetVaryHeader(rec)
+
+		vary := rec.Header().Get("Vary")
+		if count := strings.Count(vary, "HX-Request"); count != 1 {
+			t.Errorf("expected exactly one HX-Request in Vary, got %d in %q", count, vary)
+		}
+	})
+
+	t.Run("does not append to Vary: * (RFC 7231 terminal value)", func(t *testing.T) {
+		t.Parallel()
+
+		rec := httptest.NewRecorder()
+		rec.Header().Set("Vary", "*")
+		web.SetVaryHeader(rec)
+
+		if vary := rec.Header().Get("Vary"); vary != "*" {
+			t.Errorf("expected Vary to remain '*', got %q", vary)
+		}
+	})
+}
+
 func TestFallbackFullPageBehavior(t *testing.T) {
 	s := testSetup(t, context.Background())
 	a, addAuthCookie := testAuthentication(t)
@@ -181,6 +222,10 @@ func TestFallbackFullPageBehavior(t *testing.T) {
 
 			if !strings.Contains(body, "<html") {
 				t.Errorf("%s: expected full page with <html> when HX-Request is absent, got partial", route.name)
+			}
+
+			if vary := rec.Header().Get("Vary"); !strings.Contains(vary, "HX-Request") {
+				t.Errorf("%s: expected Vary to contain HX-Request on full-page response, got %q", route.name, vary)
 			}
 		})
 	}

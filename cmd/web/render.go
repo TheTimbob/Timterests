@@ -22,6 +22,7 @@ func renderHTML(w http.ResponseWriter, r *http.Request, status int, component te
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	SetVaryHeader(w)
 	w.WriteHeader(status)
 
 	_, err = buf.WriteTo(w)
