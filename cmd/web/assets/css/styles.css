@@ -151,11 +151,10 @@ a:hover {
   font-weight: 800;
   margin: 0;
   letter-spacing: -0.05em;
-  color: var(--text-light);
-}
-
-.dark .banner-title {
-  color: var(--green-accent);
+  background: linear-gradient(160deg, #86efac 0%, #22c55e 50%, #166534 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .banner-title-link {
@@ -166,7 +165,7 @@ a:hover {
 }
 
 .banner-logo {
-  height: 36px;
+  height: 40px;
   width: auto;
 }
 
@@ -176,7 +175,7 @@ a:hover {
   }
 
   .banner-logo {
-    height: 44px;
+    height: 52px;
   }
 }
 
