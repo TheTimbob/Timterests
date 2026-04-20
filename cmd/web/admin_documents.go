@@ -102,7 +102,9 @@ func AdminDocumentsPageHandler(w http.ResponseWriter, r *http.Request, s storage
 
 	var component templ.Component
 
-	if r.Header.Get("Hx-Request") == "true" {
+	if IsHTMXRequest(r) {
+		SetPartialResponseHeaders(w)
+
 		component = AdminDocumentsTable(params)
 	} else {
 		component = AdminDocumentsPage(params)

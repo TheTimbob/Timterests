@@ -32,7 +32,9 @@ func ProjectsPageHandler(w http.ResponseWriter, r *http.Request, s storage.Stora
 		tags = storage.GetTags(v, tags)
 	}
 
-	if r.Header.Get("Hx-Request") == "true" {
+	if IsHTMXRequest(r) {
+		SetPartialResponseHeaders(w)
+
 		component = ProjectsList(projects, design)
 	} else {
 		component = ProjectsListPage(projects, tags, design)
@@ -71,7 +73,9 @@ func GetProjectHandler(w http.ResponseWriter, r *http.Request, s storage.Storage
 
 			authenticated := a.IsAuthenticated(r)
 
-			if r.Header.Get("Hx-Request") == "true" {
+			if IsHTMXRequest(r) {
+				SetPartialResponseHeaders(w)
+
 				component = ProjectDisplay(dc, project.Repository, authenticated)
 			} else {
 				component = ProjectPage(dc, project.Repository, authenticated)
