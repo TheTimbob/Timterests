@@ -106,6 +106,14 @@ func TestLoginHandler(t *testing.T) {
 		if doc.Find("form").Length() == 0 {
 			t.Error("expected login form to be rendered in partial")
 		}
+
+		if cc := rec.Header().Get("Cache-Control"); !strings.Contains(cc, "no-store") {
+			t.Errorf("expected Cache-Control to contain no-store, got %q", cc)
+		}
+
+		if vary := rec.Header().Get("Vary"); !strings.Contains(vary, "HX-Request") {
+			t.Errorf("expected Vary to contain HX-Request, got %q", vary)
+		}
 	})
 
 	t.Run("returns 401 with error message on invalid credentials", func(t *testing.T) {
@@ -163,6 +171,14 @@ func TestLoginHandler(t *testing.T) {
 
 		if doc.Find("title").Length() > 0 {
 			t.Error("expected no title element for HTMX partial")
+		}
+
+		if cc := rec.Header().Get("Cache-Control"); !strings.Contains(cc, "no-store") {
+			t.Errorf("expected Cache-Control to contain no-store, got %q", cc)
+		}
+
+		if vary := rec.Header().Get("Vary"); !strings.Contains(vary, "HX-Request") {
+			t.Errorf("expected Vary to contain HX-Request, got %q", vary)
 		}
 	})
 }

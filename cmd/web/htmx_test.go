@@ -111,8 +111,7 @@ func TestSetPartialResponseHeaders(t *testing.T) {
 
 func TestFallbackFullPageBehavior(t *testing.T) {
 	s := testSetup(t, context.Background())
-	a := auth.NewAuth("test-session-key-minimum-32-bytes")
-	_, addAuthCookie := testAuthentication(t)
+	a, addAuthCookie := testAuthentication(t)
 
 	routes := []struct {
 		name    string
@@ -164,6 +163,7 @@ func TestFallbackFullPageBehavior(t *testing.T) {
 	}
 
 	for _, route := range routes {
+		route := route
 		t.Run(route.name+" - no HX-Request returns full page", func(t *testing.T) {
 			t.Parallel()
 
