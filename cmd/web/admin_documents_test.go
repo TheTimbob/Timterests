@@ -89,6 +89,14 @@ func TestAdminDocumentsPageHandler(t *testing.T) {
 		if doc.Find(`[id="documents-table-wrapper"]`).Length() == 0 {
 			t.Error("expected documents-table-wrapper, but it wasn't found")
 		}
+
+		if cc := rec.Header().Get("Cache-Control"); !strings.Contains(cc, "no-store") {
+			t.Errorf("expected Cache-Control to contain no-store, got %q", cc)
+		}
+
+		if vary := rec.Header().Get("Vary"); !strings.Contains(vary, "HX-Request") {
+			t.Errorf("expected Vary to contain HX-Request, got %q", vary)
+		}
 	})
 
 	t.Run("lists documents from all content types", func(t *testing.T) {

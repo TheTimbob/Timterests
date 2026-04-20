@@ -32,7 +32,9 @@ func ArticlesPageHandler(w http.ResponseWriter, r *http.Request, s storage.Stora
 		tags = storage.GetTags(v, tags)
 	}
 
-	if r.Header.Get("Hx-Request") == "true" {
+	if IsHTMXRequest(r) {
+		SetPartialResponseHeaders(w)
+
 		component = ArticlesList(articles, design)
 	} else {
 		component = ArticlesListPage(articles, tags, design)
@@ -71,7 +73,9 @@ func GetArticleHandler(w http.ResponseWriter, r *http.Request, s storage.Storage
 
 			authenticated := a.IsAuthenticated(r)
 
-			if r.Header.Get("Hx-Request") == "true" {
+			if IsHTMXRequest(r) {
+				SetPartialResponseHeaders(w)
+
 				component = ArticleDisplay(dc, authenticated)
 			} else {
 				component = ArticlePage(dc, authenticated)

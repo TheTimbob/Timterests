@@ -90,6 +90,14 @@ func TestWriterPageHandler(t *testing.T) {
 		if doc.Find("#writer-form").Length() == 0 {
 			t.Error("expected writer-form element in partial")
 		}
+
+		if cc := rec.Header().Get("Cache-Control"); !strings.Contains(cc, "no-store") {
+			t.Errorf("expected Cache-Control to contain no-store, got %q", cc)
+		}
+
+		if vary := rec.Header().Get("Vary"); !strings.Contains(vary, "HX-Request") {
+			t.Errorf("expected Vary to contain HX-Request, got %q", vary)
+		}
 	})
 
 	t.Run("renders different doc type fields", func(t *testing.T) {

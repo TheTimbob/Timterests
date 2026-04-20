@@ -77,7 +77,9 @@ func WriterPageHandler(
 		data = emptyFormData(docType)
 	}
 
-	if r.Header.Get("Hx-Request") == "true" && key == "" {
+	if IsHTMXRequest(r) && key == "" {
+		SetPartialResponseHeaders(w)
+
 		component = WriterFormContent(data)
 	} else {
 		component = WriterPage(data)
