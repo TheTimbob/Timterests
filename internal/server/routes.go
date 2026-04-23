@@ -9,7 +9,6 @@ import (
 
 	"timterests/cmd/web"
 	apperrors "timterests/internal/errors"
-	"timterests/internal/service"
 )
 
 // RegisterRoutes configures all HTTP routes and returns the handler.
@@ -123,15 +122,6 @@ func (s *Server) RegisterRoutes() http.Handler {
 		articleID := r.URL.Query().Get("id")
 		web.GetArticleHandler(w, r, *s.Storage, articleID, s.auth)
 	}))
-	mux.Handle("/articles/list", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, err := service.ListArticles(r.Context(), *s.Storage, "all")
-		if err != nil {
-			web.HandleError(w, r, apperrors.StorageFailed(err), "articles/list", "listArticles")
-
-			return
-		}
-	}))
-
 	// Projects Routes
 	mux.Handle("/projects", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		design := r.URL.Query().Get("design")
@@ -142,15 +132,6 @@ func (s *Server) RegisterRoutes() http.Handler {
 		projectID := r.URL.Query().Get("id")
 		web.GetProjectHandler(w, r, *s.Storage, projectID, s.auth)
 	}))
-	mux.Handle("/projects/list", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, err := service.ListProjects(r.Context(), *s.Storage, "all")
-		if err != nil {
-			web.HandleError(w, r, apperrors.StorageFailed(err), "projects/list", "listProjects")
-
-			return
-		}
-	}))
-
 	// Reading List Routes
 	mux.Handle("/reading-list", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		design := r.URL.Query().Get("design")
@@ -161,15 +142,6 @@ func (s *Server) RegisterRoutes() http.Handler {
 		articleID := r.URL.Query().Get("id")
 		web.GetReadingListBook(w, r, *s.Storage, articleID, s.auth)
 	}))
-	mux.Handle("/reading-list/list", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, err := service.ListBooks(r.Context(), *s.Storage, "all")
-		if err != nil {
-			web.HandleError(w, r, apperrors.StorageFailed(err), "reading-list/list", "listBooks")
-
-			return
-		}
-	}))
-
 	// Letter Routes
 	mux.Handle("/letters", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		design := r.URL.Query().Get("design")
@@ -180,15 +152,6 @@ func (s *Server) RegisterRoutes() http.Handler {
 		letterID := r.URL.Query().Get("id")
 		web.GetLetterHandler(w, r, *s.Storage, letterID, s.auth)
 	}))
-	mux.Handle("/letters/list", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, err := service.ListLetters(r.Context(), *s.Storage, "all")
-		if err != nil {
-			web.HandleError(w, r, apperrors.StorageFailed(err), "letters/list", "listLetters")
-
-			return
-		}
-	}))
-
 	// Wrap: recovery is outermost so it catches panics from all inner middleware.
 	return recoveryMiddleware(s.corsMiddleware(s.maxBytesMiddleware(mux)))
 }
