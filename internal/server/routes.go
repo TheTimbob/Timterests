@@ -48,6 +48,13 @@ func (s *Server) RegisterRoutes() http.Handler {
 		web.AdminDocumentsPageHandler(w, r, *s.Storage, s.auth)
 	}))
 
+	mux.Handle("/admin/users", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		web.AdminUsersPageHandler(w, r, s.auth)
+	}))
+	mux.Handle("/admin/users/create", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		web.CreateUserHandler(w, r, s.auth)
+	}))
+
 	mux.Handle("/writer", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var (
 			docType, key string
