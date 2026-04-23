@@ -377,6 +377,35 @@ func TestHealthDegradedStorageDown(t *testing.T) {
 	}
 }
 
+func TestFormatFileSize(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name     string
+		size     int64
+		expected string
+	}{
+		{"zero bytes", 0, "0 B"},
+		{"small file", 512, "512 B"},
+		{"exactly 1KB boundary", 1024, "1.0 KB"},
+		{"kilobytes", 2048, "2.0 KB"},
+		{"fractional KB", 1536, "1.5 KB"},
+		{"large file", 1048576, "1024.0 KB"},
+		{"just under 1KB", 1023, "1023 B"},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			result := storage.FormatFileSize(tc.size)
+			if result != tc.expected {
+				t.Errorf("FormatFileSize(%d) = %q, want %q", tc.size, result, tc.expected)
+			}
+		})
+	}
+}
+
 func setupHealthDB(t *testing.T) {
 	t.Helper()
 
