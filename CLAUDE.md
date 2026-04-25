@@ -11,6 +11,7 @@ make test       # Run all tests with verbose output (go test ./... -v)
 make watch      # Live reload with air
 make coverage   # Coverage report excluding generated _templ.go files
 make clean      # Remove binary and tmp files
+export DB_PASSWORD=<your-password> && make create-user FIRST=John LAST=Doe EMAIL=john@example.com  # Bootstrap a user
 ```
 
 Run a single test:

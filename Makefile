@@ -73,6 +73,15 @@ complexity:
 		fi; \
 	fi
 
+# Create a new user (for bootstrapping the first admin before the web UI is available)
+create-user:
+	@if [ -z "$(FIRST)" ] || [ -z "$(LAST)" ] || [ -z "$(EMAIL)" ] || [ -z "$(DB_PASSWORD)" ]; then \
+		echo "Usage: export DB_PASSWORD=secret && make create-user FIRST=John LAST=Doe EMAIL=john@example.com"; \
+		exit 1; \
+	fi
+	@go run internal/utils/main.go create-user "$(FIRST)" "$(LAST)" "$(EMAIL)" "$(DB_PASSWORD)"
+	@echo "User created successfully."
+
 # Clean the binary and temp files
 clean:
 	@echo "Cleaning..."
@@ -108,4 +117,4 @@ deploy:
 	fi
 
 
-.PHONY: all build run test coverage clean watch templ-install
+.PHONY: all build run test coverage clean watch templ-install create-user deploy complexity docker-run docker-down
