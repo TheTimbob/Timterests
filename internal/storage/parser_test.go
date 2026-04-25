@@ -124,8 +124,8 @@ func TestGetTags(t *testing.T) {
 		v := reflect.ValueOf(document)
 		tags := storage.GetTags(v, existing)
 
-		if len(tags) != 2 {
-			t.Errorf("Expected 2 unique tags, got %d: %v", len(tags), tags)
+		if len(tags) != 2 || tags[0] != "go" || tags[1] != "web" {
+			t.Errorf("Expected [go web], got %v", tags)
 		}
 	})
 
