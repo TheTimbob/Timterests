@@ -108,6 +108,7 @@ func TestCreateUserHandler(t *testing.T) {
 			strings.NewReader(form.Encode()),
 		)
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
 		rec := httptest.NewRecorder()
 
 		web.CreateUserHandler(rec, req, a)
@@ -143,6 +144,7 @@ func TestCreateUserHandler(t *testing.T) {
 			strings.NewReader(form.Encode()),
 		)
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
 		rec := httptest.NewRecorder()
 
 		addAuthCookie(req)
