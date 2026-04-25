@@ -42,7 +42,7 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request, a *auth.Auth) {
 	}
 
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		HandleError(w, r, apperrors.MethodNotAllowed(), "CreateUserHandler", "method")
 
 		return
 	}
@@ -60,7 +60,7 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request, a *auth.Auth) {
 
 	err := a.CreateUser(r.Context(), firstName, lastName, email, password)
 	if err != nil {
-		renderUserResult(w, r, "Failed to create user: "+err.Error(), true)
+		HandleError(w, r, apperrors.InternalServerError(err), "CreateUserHandler", "createUser")
 
 		return
 	}
