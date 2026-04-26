@@ -42,21 +42,14 @@ func MarkdownToHTML(content []byte) (string, error) {
 	return body, nil
 }
 
-// GetTags extracts tags from a struct value, checking embedded Document if needed.
+// GetTags extracts tags from a struct value.
 func GetTags(v reflect.Value, tags []string) []string {
 	field := v.FieldByName("Tags")
 
-	// If the Tags field is not directly on the struct, check the embedded Document
 	if !field.IsValid() {
-		embeddedDoc := v.FieldByName("Document")
-		if embeddedDoc.IsValid() {
-			field = embeddedDoc.FieldByName("Tags")
-		} else {
-			return tags
-		}
+		return tags
 	}
 
-	// Create a list of tags
 	for i := range field.Len() {
 		tag := field.Index(i).String()
 		if !slices.Contains(tags, tag) {
