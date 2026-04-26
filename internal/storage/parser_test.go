@@ -91,6 +91,59 @@ func TestGetTags(t *testing.T) {
 			}
 		}
 	})
+
+	t.Run("get tags from embedded document struct", func(t *testing.T) {
+		t.Parallel()
+
+		article := model.Article{
+			Document: model.Document{
+				Tags: []string{"go", "web"},
+			},
+			Date: "2026-01-01",
+		}
+
+		var tags []string
+
+		v := reflect.ValueOf(article)
+		tags = storage.GetTags(v, tags)
+
+		if len(tags) != 2 || tags[0] != "go" || tags[1] != "web" {
+			t.Errorf("Expected [go web], got %v", tags)
+		}
+	})
+
+	t.Run("deduplicates tags", func(t *testing.T) {
+		t.Parallel()
+
+		document := model.Document{
+			Tags: []string{"go", "web"},
+		}
+
+		existing := []string{"go"}
+
+		v := reflect.ValueOf(document)
+		tags := storage.GetTags(v, existing)
+
+		if len(tags) != 2 || tags[0] != "go" || tags[1] != "web" {
+			t.Errorf("Expected [go web], got %v", tags)
+		}
+	})
+
+	t.Run("returns existing tags for struct without tags field", func(t *testing.T) {
+		t.Parallel()
+
+		type NoTags struct {
+			Name string
+		}
+
+		v := reflect.ValueOf(NoTags{Name: "test"})
+		existing := []string{"existing"}
+		tags := storage.GetTags(v, existing)
+
+		if len(tags) != 1 || tags[0] != "existing" {
+			t.Errorf("Expected [existing], got %v", tags)
+		}
+	})
 }
 
 func TestHTMLParsing(t *testing.T) {
