@@ -60,7 +60,7 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request, a *auth.Auth) {
 
 	err := a.CreateUser(r.Context(), firstName, lastName, email, password)
 	if err != nil {
-		HandleError(w, r, apperrors.InternalServerError(err), "CreateUserHandler", "createUser")
+		renderUserResult(w, r, "Failed to create user. Please try again.", true)
 
 		return
 	}

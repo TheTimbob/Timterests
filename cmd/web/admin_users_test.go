@@ -87,8 +87,16 @@ func TestAdminUsersPageHandler(t *testing.T) {
 			t.Error("expected no title element for partial render, but found one")
 		}
 
+		if doc.Find(`[id="admin-users-container"]`).Length() == 0 {
+			t.Error("expected admin-users-container, but it wasn't found")
+		}
+
 		if cc := rec.Header().Get("Cache-Control"); !strings.Contains(cc, "no-store") {
 			t.Errorf("expected Cache-Control to contain no-store, got %q", cc)
+		}
+
+		if vary := rec.Header().Get("Vary"); !strings.Contains(vary, "HX-Request") {
+			t.Errorf("expected Vary to contain HX-Request, got %q", vary)
 		}
 	})
 }
