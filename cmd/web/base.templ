@@ -6,6 +6,26 @@ import (
 	"strconv"
 )
 
+var pageTitles = map[string]string{
+	"home":         "Timterests",
+	"articles":     "Articles | Timterests",
+	"projects":     "Projects | Timterests",
+	"reading-list": "Reading List | Timterests",
+	"about":        "About | Timterests",
+	"admin":        "Admin | Timterests",
+	"writer":       "Writer | Timterests",
+	"letters":      "Letters | Timterests",
+	"login":        "Login | Timterests",
+}
+
+func pageTitle(activePage string) string {
+	if title, ok := pageTitles[activePage]; ok {
+		return title
+	}
+
+	return "Timterests"
+}
+
 templ Base(activePage string) {
 	<!DOCTYPE html>
 	<html lang="en" class="dark">
@@ -13,7 +33,7 @@ templ Base(activePage string) {
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width,initial-scale=1" />
-		<title>Timterests</title>
+		<title>{ pageTitle(activePage) }</title>
 		<script src="/assets/js/htmx.min.js"></script>
 		<script src="/assets/js/dark-mode.js"></script>
         <script src="/assets/js/buttons.js"></script>
