@@ -76,9 +76,9 @@ func GetProjectHandler(w http.ResponseWriter, r *http.Request, s storage.Storage
 			if IsHTMXRequest(r) {
 				SetPartialResponseHeaders(w)
 
-				component = ProjectDisplay(dc, project.Repository, authenticated)
+				component = ProjectDisplay(dc, project.Repository, project.Timespan(), authenticated)
 			} else {
-				component = ProjectPage(dc, project.Repository, authenticated)
+				component = ProjectPage(dc, project.Repository, project.Timespan(), authenticated)
 			}
 
 			err = renderHTML(w, r, http.StatusOK, component)

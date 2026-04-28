@@ -24,7 +24,7 @@ func ProjectCard(p model.Project, i int) components.Card {
 	return components.Card{
 		Title:     p.Title,
 		Subtitle:  p.Subtitle,
-		Date:      "",
+		Date:      p.Timespan(),
 		Preview:   p.Preview,
 		ImagePath: p.Image,
 		Get:       "/project?id=" + p.ID,

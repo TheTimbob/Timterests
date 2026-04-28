@@ -3,6 +3,8 @@ subtitle: This is a test project.
 preview: A brief preview of the test project.
 imagePath: testdata/images/test.png
 repository: Private
+startDate: Jan 2024
+endDate: ""
 tags:
   - Golang
   - HTMX
