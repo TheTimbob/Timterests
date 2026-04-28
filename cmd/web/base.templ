@@ -22,35 +22,36 @@ templ Base(activePage string) {
 		<link rel="icon" type="image/png" href="/assets/images/favicon.png" />
 	</head>
 		<body>
+			<a href="#main-content" class="skip-link">Skip to content</a>
 			<header class="banner-header">
 				<a href="/" class="no-underline banner-title-link">
 					<img src="/assets/images/logo.png" alt="" aria-hidden="true" class="banner-logo" />
 					<h1 class="banner-title">Timterests</h1>
 				</a>
 				<div class="dark-mode-switch">
-					<input type="checkbox" class="dark-mode-switch-input" id="dark-mode-switch">
+					<input type="checkbox" class="dark-mode-switch-input" id="dark-mode-switch" aria-label="Toggle dark mode">
 					<label class="dark-mode-switch-label" for="dark-mode-switch">
 						<span class="dark-mode-switch-indicator"></span>
 					</label>
 				</div>
 				<p class="banner-subtitle">Tim's interests</p>
 			</header>
-			<nav class="nav-header">
-				<input type="checkbox" id="nav-toggle" class="nav-toggle-input" />
-				<label for="nav-toggle" class="nav-toggle-label"><i class="fa-solid fa-bars"></i></label>
+			<nav class="nav-header" aria-label="Main navigation">
+				<input type="checkbox" id="nav-toggle" class="nav-toggle-input" aria-label="Toggle navigation menu" />
+				<label for="nav-toggle" class="nav-toggle-label" aria-hidden="true"><i class="fa-solid fa-bars"></i></label>
 				<div class="nav-links">
-					<a href="/home" class={ "nav-link", templ.KV("active", activePage == "home") }><i class="fa-solid fa-house"></i> Home</a>
-					<a href="/articles" class={ "nav-link", templ.KV("active", activePage == "articles") }><i class="fa-solid fa-newspaper"></i> Articles</a>
-					<a href="/projects" class={ "nav-link", templ.KV("active", activePage == "projects") }><i class="fa-brands fa-github"></i> Projects</a>
-					<a href="/reading-list" class={ "nav-link", templ.KV("active", activePage == "reading-list") }><i class="fa-solid fa-book"></i> Reading List</a>
-					<a href="/about" class={ "nav-link", templ.KV("active", activePage == "about") }><i class="fa-solid fa-question"></i> About</a>
+					<a href="/home" class={ "nav-link", templ.KV("active", activePage == "home") }><i class="fa-solid fa-house" aria-hidden="true"></i> Home</a>
+					<a href="/articles" class={ "nav-link", templ.KV("active", activePage == "articles") }><i class="fa-solid fa-newspaper" aria-hidden="true"></i> Articles</a>
+					<a href="/projects" class={ "nav-link", templ.KV("active", activePage == "projects") }><i class="fa-brands fa-github" aria-hidden="true"></i> Projects</a>
+					<a href="/reading-list" class={ "nav-link", templ.KV("active", activePage == "reading-list") }><i class="fa-solid fa-book" aria-hidden="true"></i> Reading List</a>
+					<a href="/about" class={ "nav-link", templ.KV("active", activePage == "about") }><i class="fa-solid fa-question" aria-hidden="true"></i> About</a>
 				</div>
 			</nav>
-			<main id="main-content" class="main-content animate-fade-in">
+			<main id="main-content" class="main-content animate-fade-in" aria-live="polite">
 				{ children... }
 			</main>
 			<footer class="banner-footer">
-				<nav class="footer-nav">
+				<nav class="footer-nav" aria-label="Footer navigation">
 					<a href="/home" class="nav-footer-link">Home</a>
 					<a href="/articles" class="nav-footer-link">Articles</a>
 					<a href="/projects" class="nav-footer-link">Projects</a>
