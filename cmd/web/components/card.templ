@@ -18,7 +18,7 @@ func (c Card) animationDelay() string {
 }
 
 templ (c Card) LargeCard() {
-	<div class="card-container animate-slide-up" style={ c.animationDelay() } hx-get={ c.Get } hx-target="#main-content" hx-swap="innerHTML" hx-push-url="true" tabindex="0" role="link" aria-label={ c.Title }>
+	<a class="card-container animate-slide-up" href={ templ.SafeURL(c.Get) } style={ c.animationDelay() } hx-get={ c.Get } hx-target="#main-content" hx-swap="innerHTML" hx-push-url="true">
         @c.renderImage(c.Title)
         <div class="card-content">
             @CardTitleContainer(c.Title, c.Subtitle)
@@ -28,11 +28,11 @@ templ (c Card) LargeCard() {
             @c.renderDate()
             @c.renderTags()
         </div>
-	</div>
+	</a>
 }
 
 templ (c Card) MiniCard() {
-	<div class="mini-card-container animate-slide-up" style={ c.animationDelay() } hx-get={ c.Get } hx-target="#main-content" hx-swap="innerHTML" hx-push-url="true" tabindex="0" role="link" aria-label={ c.Title }>
+	<a class="mini-card-container animate-slide-up" href={ templ.SafeURL(c.Get) } style={ c.animationDelay() } hx-get={ c.Get } hx-target="#main-content" hx-swap="innerHTML" hx-push-url="true">
         @c.renderImage(c.Title)
         <div class="card-content">
 			<div class="card-title-container">
@@ -41,17 +41,17 @@ templ (c Card) MiniCard() {
             @c.renderDate()
             @c.renderTags()
 		</div>
-	</div>
+	</a>
 }
 
 templ (c Card) LinkCard() {
-    <div class="link-item animate-slide-up" style={ c.animationDelay() } hx-get={ c.Get } hx-target="#main-content" hx-swap="innerHTML" hx-push-url="true" tabindex="0" role="link" aria-label={ c.Title }>
+    <a class="link-item animate-slide-up" href={ templ.SafeURL(c.Get) } style={ c.animationDelay() } hx-get={ c.Get } hx-target="#main-content" hx-swap="innerHTML" hx-push-url="true">
         if c.Date != "" {
             <p>{ c.Date } - { c.Title } </p>
         } else {
             <p>{ c.Title }</p>
         }
-    </div>
+    </a>
 }
 
 templ (c Card) renderImage(altText string) {

@@ -648,6 +648,7 @@ a:hover {
   transform: translateY(-4px);
   box-shadow: var(--shadow-lg);
   border-color: var(--green-accent);
+  color: inherit;
 }
 
 .dark .card-container,
