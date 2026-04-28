@@ -18,8 +18,8 @@ func (c Card) animationDelay() string {
 }
 
 templ (c Card) LargeCard() {
-	<div class="card-container animate-slide-up" style={ c.animationDelay() } hx-get={ c.Get } hx-target="#main-content" hx-swap="innerHTML" hx-push-url="true" tabindex="0">
-        @c.renderImage("Card image")
+	<div class="card-container animate-slide-up" style={ c.animationDelay() } hx-get={ c.Get } hx-target="#main-content" hx-swap="innerHTML" hx-push-url="true" tabindex="0" role="link" aria-label={ c.Title }>
+        @c.renderImage(c.Title)
         <div class="card-content">
             @CardTitleContainer(c.Title, c.Subtitle)
             <div class="card-body">
@@ -32,8 +32,8 @@ templ (c Card) LargeCard() {
 }
 
 templ (c Card) MiniCard() {
-	<div class="mini-card-container animate-slide-up" style={ c.animationDelay() } hx-get={ c.Get } hx-target="#main-content" hx-swap="innerHTML" hx-push-url="true" tabindex="0">
-        @c.renderImage("Mini card image")
+	<div class="mini-card-container animate-slide-up" style={ c.animationDelay() } hx-get={ c.Get } hx-target="#main-content" hx-swap="innerHTML" hx-push-url="true" tabindex="0" role="link" aria-label={ c.Title }>
+        @c.renderImage(c.Title)
         <div class="card-content">
 			<div class="card-title-container">
 				<h2 class="card-subtitle">{ c.Title }</h2>
@@ -45,7 +45,7 @@ templ (c Card) MiniCard() {
 }
 
 templ (c Card) LinkCard() {
-    <div class="link-item animate-slide-up" style={ c.animationDelay() } hx-get={ c.Get } hx-target="#main-content" hx-swap="innerHTML" hx-push-url="true" tabindex="0">
+    <div class="link-item animate-slide-up" style={ c.animationDelay() } hx-get={ c.Get } hx-target="#main-content" hx-swap="innerHTML" hx-push-url="true" tabindex="0" role="link" aria-label={ c.Title }>
         if c.Date != "" {
             <p>{ c.Date } - { c.Title } </p>
         } else {
