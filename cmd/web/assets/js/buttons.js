@@ -7,3 +7,10 @@ function setActiveTab(button) {
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
     button.classList.add('active');
 }
+
+document.body.addEventListener('htmx:afterSwap', function () {
+    var toggle = document.getElementById('nav-toggle');
+    if (toggle) {
+        toggle.checked = false;
+    }
+});

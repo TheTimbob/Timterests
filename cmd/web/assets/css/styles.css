@@ -1383,4 +1383,66 @@ a:hover {
     margin-left: 0;
     margin-top: 0.5rem;
   }
+
+  .about-tabs {
+    flex-wrap: wrap;
+    gap: 0;
+  }
+
+  .tab-btn {
+    flex: 1 1 auto;
+    text-align: center;
+    padding: 0.5rem 0.5rem;
+    font-size: 0.8125rem;
+    min-height: 44px;
+  }
+
+  .admin-table th:nth-child(n + 3),
+  .admin-table td:nth-child(n + 3) {
+    display: none;
+  }
+
+  .about-profile {
+    padding: 1rem;
+  }
+
+  .timeline-container {
+    padding-left: 1rem;
+    margin-left: 0;
+  }
+}
+
+/* Code block overflow */
+pre {
+  overflow-x: auto;
+  max-width: 100%;
+  padding: 1rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+code {
+  font-size: 0.875em;
+}
+
+pre code {
+  white-space: pre;
+}
+
+/* Tablet breakpoint */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .card-container,
+  .card-container-static {
+    flex-direction: row;
+  }
+
+  .card-image {
+    width: 200px;
+    flex-shrink: 0;
+  }
+
+  .section-grid-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
