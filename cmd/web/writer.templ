@@ -132,6 +132,14 @@ templ ProjectFormContent(project *model.Project) {
         <input class="form-input" type="text" id="repository" name="repository" placeholder="GitHub repository URL" value={project.Repository} required>
     </div>
     <div class="form-field">
+        <label class="form-label" for="startDate">Start Date:</label>
+        <input class="form-input" type="text" id="startDate" name="startDate" placeholder="e.g. Jan 2023" value={project.StartDate}>
+    </div>
+    <div class="form-field">
+        <label class="form-label" for="endDate">End Date:</label>
+        <input class="form-input" type="text" id="endDate" name="endDate" placeholder="Leave blank for ongoing" value={project.EndDate}>
+    </div>
+    <div class="form-field">
         <label class="form-label" for="tags">Tags:</label>
         <input class="form-input" type="text" id="tags" name="tags" placeholder="Comma Separated" value={strings.Join(project.Tags, ",")} required>
     </div>

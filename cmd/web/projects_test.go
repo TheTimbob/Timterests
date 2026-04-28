@@ -246,17 +246,17 @@ func TestProjectCardConversion(t *testing.T) {
 			t.Errorf("expected card get URL '/project?id=1', got %q", card.Get)
 		}
 
-		// Projects should have ImagePath but no Date
 		if card.ImagePath == "" {
 			t.Error("expected card image path to be set, but it was empty")
 		}
 
-		if card.Date != "" {
-			t.Errorf("expected card date to be empty for projects, got %q", card.Date)
-		}
-
 		if card.ImagePath != project.Image {
 			t.Errorf("expected card image path %q, got %q", project.Image, card.ImagePath)
+		}
+
+		expectedDate := project.Timespan()
+		if card.Date != expectedDate {
+			t.Errorf("expected card date %q, got %q", expectedDate, card.Date)
 		}
 	})
 }
@@ -269,7 +269,7 @@ func TestProjectRepositoryRendering(t *testing.T) {
 
 		var buf bytes.Buffer
 
-		err := web.ProjectDisplay(dc, repository, false).Render(context.Background(), &buf)
+		err := web.ProjectDisplay(dc, repository, "", false).Render(context.Background(), &buf)
 		if err != nil {
 			t.Fatalf("failed to render ProjectDisplay: %v", err)
 		}

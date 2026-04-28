@@ -46,16 +46,19 @@ templ ProjectsList(projects []model.Project, design string) {
 	</ul>
 }
 
-templ ProjectPage(dc model.DisplayContent, repository string, userIsAdmin bool) {
+templ ProjectPage(dc model.DisplayContent, repository string, timespan string, userIsAdmin bool) {
     @Base("projects") {
-        @ProjectDisplay(dc, repository, userIsAdmin)
+        @ProjectDisplay(dc, repository, timespan, userIsAdmin)
     }
 }
 
-templ ProjectDisplay(dc model.DisplayContent, repository string, userIsAdmin bool) {
+templ ProjectDisplay(dc model.DisplayContent, repository string, timespan string, userIsAdmin bool) {
     @EditProjectButton(dc, userIsAdmin)
     @components.DownloadDocumentButton(dc.S3Key, userIsAdmin)
     <div id="project-container">
+		if timespan != "" {
+			<p class="card-date">{ timespan }</p>
+		}
 		if repository != "" && repository != "Private" {
 			<p class="content-text"><i class="fa-brands fa-github"></i> Repository: <a href={ templ.SafeURL(repository) } class="content-text" target="_blank">{ repository }</a></p>
 		}

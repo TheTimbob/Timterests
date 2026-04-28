@@ -59,6 +59,35 @@ func TestProjectValidate(t *testing.T) {
 	})
 }
 
+func TestProjectTimespan(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name      string
+		start     string
+		end       string
+		expected  string
+	}{
+		{"both dates", "Jan 2023", "Dec 2024", "Jan 2023 — Dec 2024"},
+		{"ongoing project", "Mar 2024", "", "Mar 2024 — Present"},
+		{"no dates", "", "", ""},
+		{"no start ignores end", "", "Dec 2024", ""},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			p := model.Project{StartDate: tc.start, EndDate: tc.end}
+
+			result := p.Timespan()
+			if result != tc.expected {
+				t.Errorf("expected %q, got %q", tc.expected, result)
+			}
+		})
+	}
+}
+
 func TestLetterValidate(t *testing.T) {
 	t.Run("valid letter passes validation", func(t *testing.T) {
 		l := model.Letter{

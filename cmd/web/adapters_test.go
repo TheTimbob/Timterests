@@ -128,8 +128,9 @@ func TestProjectAdapters(t *testing.T) {
 			t.Errorf("card ImagePath: got %q, want %q", card.ImagePath, mp.Image)
 		}
 
-		if card.Date != "" {
-			t.Errorf("project card should have no Date, got %q", card.Date)
+		expectedDate := mp.Timespan()
+		if card.Date != expectedDate {
+			t.Errorf("card Date: got %q, want %q", card.Date, expectedDate)
 		}
 	})
 }
