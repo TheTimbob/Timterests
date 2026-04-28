@@ -64,7 +64,8 @@ func TestSitemapHandler(t *testing.T) {
 		} `xml:"url"`
 	}
 
-	if err := xml.Unmarshal(rec.Body.Bytes(), &result); err != nil {
+	err := xml.Unmarshal(rec.Body.Bytes(), &result)
+	if err != nil {
 		t.Fatalf("failed to parse sitemap XML: %v", err)
 	}
 
@@ -73,6 +74,7 @@ func TestSitemapHandler(t *testing.T) {
 	}
 
 	hasRoot := false
+
 	for _, u := range result.URLs {
 		if u.Loc == "https://example.com/" {
 			hasRoot = true
@@ -81,5 +83,33 @@ func TestSitemapHandler(t *testing.T) {
 
 	if !hasRoot {
 		t.Error("sitemap missing root URL")
+	}
+}
+
+func TestMetaTagsRendered(t *testing.T) {
+	s := testSetup(t, context.Background())
+	t.Setenv("SITE_URL", "https://example.com")
+
+	req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/about", nil)
+	rec := httptest.NewRecorder()
+
+	web.AboutHandler(rec, req, *s)
+
+	body := rec.Body.String()
+
+	for _, want := range []string{
+		`name="description"`,
+		`property="og:title"`,
+		`property="og:description"`,
+		`property="og:type"`,
+		`property="og:image"`,
+		`name="twitter:card"`,
+		`name="twitter:title"`,
+		`rel="canonical"`,
+		`href="https://example.com/about"`,
+	} {
+		if !strings.Contains(body, want) {
+			t.Errorf("about page missing meta tag containing %q", want)
+		}
 	}
 }

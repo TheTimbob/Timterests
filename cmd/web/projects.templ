@@ -5,6 +5,14 @@ import (
     "timterests/internal/model"
 )
 
+func projectDescription(p model.Project) string {
+	if p.Subtitle != "" {
+		return p.Subtitle
+	}
+
+	return p.Preview
+}
+
 templ ProjectsListPage(projects []model.Project, tags []string, design string) {
 	@Base("projects") {
 		<div id="projects-container">
@@ -46,10 +54,14 @@ templ ProjectsList(projects []model.Project, design string) {
 	</ul>
 }
 
-templ ProjectPage(dc model.DisplayContent, repository string, timespan string, userIsAdmin bool) {
-    @Base("projects") {
-        @ProjectDisplay(dc, repository, timespan, userIsAdmin)
-    }
+templ ProjectPage(project model.Project, dc model.DisplayContent, repository string, timespan string, userIsAdmin bool) {
+	@Base("projects", MetaProps{
+		Description: projectDescription(project),
+		Title:       project.Title + " | Timterests",
+		URL:         "/project?id=" + project.ID,
+	}) {
+		@ProjectDisplay(dc, repository, timespan, userIsAdmin)
+	}
 }
 
 templ ProjectDisplay(dc model.DisplayContent, repository string, timespan string, userIsAdmin bool) {

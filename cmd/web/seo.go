@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
-	"strings"
 	"time"
 
 	"timterests/internal/service"
@@ -14,48 +12,41 @@ import (
 )
 
 type urlSet struct {
-	XMLName xml.Name  `xml:"urlset"`
-	XMLNS   string    `xml:"xmlns,attr"`
-	URLs    []siteURL `xml:"url"`
+	XMLName xml.Name     `xml:"urlset"`
+	XMLNS   string       `xml:"xmlns,attr"`
+	URLs    []sitemapURL `xml:"url"`
 }
 
-type siteURL struct {
+type sitemapURL struct {
 	Loc        string `xml:"loc"`
 	LastMod    string `xml:"lastmod,omitempty"`
 	ChangeFreq string `xml:"changefreq,omitempty"`
 	Priority   string `xml:"priority,omitempty"`
 }
 
-func siteBaseURL() string {
-	if u := os.Getenv("SITE_URL"); u != "" {
-		return strings.TrimRight(u, "/")
-	}
-
-	return "https://timterests.com"
-}
-
 // RobotsHandler serves robots.txt.
 func RobotsHandler(w http.ResponseWriter, _ *http.Request) {
-	baseURL := siteBaseURL()
+	baseURL := siteURL()
 
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 
-	fmt.Fprintf(w, "User-agent: *\n")
-	fmt.Fprintf(w, "Allow: /\n")
-	fmt.Fprintf(w, "Disallow: /admin\n")
-	fmt.Fprintf(w, "Disallow: /writer\n")
-	fmt.Fprintf(w, "Disallow: /login\n")
-	fmt.Fprintf(w, "Disallow: /download\n")
-	fmt.Fprintf(w, "\n")
-	fmt.Fprintf(w, "Sitemap: %s/sitemap.xml\n", baseURL)
+	body := fmt.Sprintf(
+		"User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /writer\nDisallow: /login\nDisallow: /download\n\nSitemap: %s/sitemap.xml\n",
+		baseURL,
+	)
+
+	_, err := w.Write([]byte(body))
+	if err != nil {
+		log.Printf("RobotsHandler: failed to write response: %v", err)
+	}
 }
 
 // SitemapHandler generates and serves sitemap.xml.
 func SitemapHandler(w http.ResponseWriter, r *http.Request, s storage.Storage) {
-	baseURL := siteBaseURL()
+	baseURL := siteURL()
 	now := time.Now().Format("2006-01-02")
 
-	urls := []siteURL{
+	staticPages := []sitemapURL{
 		{Loc: baseURL + "/", Priority: "1.0", ChangeFreq: "weekly", LastMod: now},
 		{Loc: baseURL + "/articles", Priority: "0.9", ChangeFreq: "weekly", LastMod: now},
 		{Loc: baseURL + "/projects", Priority: "0.9", ChangeFreq: "monthly", LastMod: now},
@@ -68,26 +59,9 @@ func SitemapHandler(w http.ResponseWriter, r *http.Request, s storage.Storage) {
 		log.Printf("SitemapHandler: failed to list articles: %v", err)
 	}
 
-	for _, a := range articles {
-		urls = append(urls, siteURL{
-			Loc:        baseURL + "/article?id=" + a.ID,
-			LastMod:    a.Date,
-			ChangeFreq: "yearly",
-			Priority:   "0.8",
-		})
-	}
-
 	projects, err := service.ListProjects(r.Context(), s, "all")
 	if err != nil {
 		log.Printf("SitemapHandler: failed to list projects: %v", err)
-	}
-
-	for _, p := range projects {
-		urls = append(urls, siteURL{
-			Loc:        baseURL + "/project?id=" + p.ID,
-			ChangeFreq: "monthly",
-			Priority:   "0.7",
-		})
 	}
 
 	books, err := service.ListBooks(r.Context(), s, "all")
@@ -95,8 +69,28 @@ func SitemapHandler(w http.ResponseWriter, r *http.Request, s storage.Storage) {
 		log.Printf("SitemapHandler: failed to list books: %v", err)
 	}
 
+	urls := make([]sitemapURL, 0, len(staticPages)+len(articles)+len(projects)+len(books))
+	urls = append(urls, staticPages...)
+
+	for _, a := range articles {
+		urls = append(urls, sitemapURL{
+			Loc:        baseURL + "/article?id=" + a.ID,
+			LastMod:    a.Date,
+			ChangeFreq: "yearly",
+			Priority:   "0.8",
+		})
+	}
+
+	for _, p := range projects {
+		urls = append(urls, sitemapURL{
+			Loc:        baseURL + "/project?id=" + p.ID,
+			ChangeFreq: "monthly",
+			Priority:   "0.7",
+		})
+	}
+
 	for _, b := range books {
-		urls = append(urls, siteURL{
+		urls = append(urls, sitemapURL{
 			Loc:        baseURL + "/book?id=" + b.ID,
 			ChangeFreq: "yearly",
 			Priority:   "0.5",
@@ -110,7 +104,8 @@ func SitemapHandler(w http.ResponseWriter, r *http.Request, s storage.Storage) {
 
 	w.Header().Set("Content-Type", "application/xml; charset=utf-8")
 
-	if _, err := w.Write([]byte(xml.Header)); err != nil {
+	_, err = w.Write([]byte(xml.Header))
+	if err != nil {
 		log.Printf("SitemapHandler: failed to write XML header: %v", err)
 
 		return
@@ -119,7 +114,8 @@ func SitemapHandler(w http.ResponseWriter, r *http.Request, s storage.Storage) {
 	enc := xml.NewEncoder(w)
 	enc.Indent("", "  ")
 
-	if err := enc.Encode(sitemap); err != nil {
+	err = enc.Encode(sitemap)
+	if err != nil {
 		log.Printf("SitemapHandler: failed to encode sitemap: %v", err)
 	}
 }

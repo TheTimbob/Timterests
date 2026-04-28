@@ -78,7 +78,7 @@ func GetProjectHandler(w http.ResponseWriter, r *http.Request, s storage.Storage
 
 				component = ProjectDisplay(dc, project.Repository, project.Timespan(), authenticated)
 			} else {
-				component = ProjectPage(dc, project.Repository, project.Timespan(), authenticated)
+				component = ProjectPage(project, dc, project.Repository, project.Timespan(), authenticated)
 			}
 
 			err = renderHTML(w, r, http.StatusOK, component)
