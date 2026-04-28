@@ -30,10 +30,14 @@ func RobotsHandler(w http.ResponseWriter, _ *http.Request) {
 
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 
-	body := fmt.Sprintf(
-		"User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /writer\nDisallow: /login\nDisallow: /download\n\nSitemap: %s/sitemap.xml\n",
-		baseURL,
-	)
+	body := "User-agent: *\n" +
+		"Allow: /\n" +
+		"Disallow: /admin\n" +
+		"Disallow: /writer\n" +
+		"Disallow: /login\n" +
+		"Disallow: /download\n" +
+		"\n" +
+		fmt.Sprintf("Sitemap: %s/sitemap.xml\n", baseURL)
 
 	_, err := w.Write([]byte(body))
 	if err != nil {
