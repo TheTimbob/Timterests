@@ -8,9 +8,11 @@ function setActiveTab(button) {
     button.classList.add('active');
 }
 
-document.body.addEventListener('htmx:afterSwap', function () {
-    var toggle = document.getElementById('nav-toggle');
-    if (toggle) {
-        toggle.checked = false;
+document.body.addEventListener('htmx:afterSwap', function (evt) {
+    if (evt.detail.target.id === 'main-content') {
+        var toggle = document.getElementById('nav-toggle');
+        if (toggle) {
+            toggle.checked = false;
+        }
     }
 });

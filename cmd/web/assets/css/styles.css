@@ -1397,8 +1397,8 @@ a:hover {
     min-height: 44px;
   }
 
-  .admin-table th:nth-child(n + 3),
-  .admin-table td:nth-child(n + 3) {
+  .admin-table th:nth-child(n + 3):not(:last-child),
+  .admin-table td:nth-child(n + 3):not(:last-child) {
     display: none;
   }
 
