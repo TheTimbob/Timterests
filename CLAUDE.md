@@ -66,6 +66,7 @@ Controlled by the `USE_S3` env var. In local mode, files are read directly from 
 | `AWS_BUCKET_NAME`                | S3 bucket (required if `USE_S3=true`)             |
 | `AWS_REGION`                     | AWS region (required if `USE_S3=true`)            |
 | `OPENAI_API_KEY`                 | Required for AI writer suggestions                |
+| `GOATCOUNTER_URL`                | GoatCounter subdomain (e.g. `mysite.goatcounter.com`); omit to disable analytics |
 | `SSL_CERT_FILE` / `SSL_KEY_FILE` | Optional TLS; server falls back to HTTP if absent |
 
 Load via `.env` file — `godotenv/autoload` is imported in `internal/server/server.go`.

@@ -1,6 +1,7 @@
 package web
 
 import (
+	"os"
 	"time"
 	"strconv"
 )
@@ -62,6 +63,11 @@ templ Base(activePage string) {
 					<a href="https://github.com/TheTimbob/timterests" class="nav-footer-link">&copy; { strconv.Itoa(time.Now().Year()) } Tim Scott</a>
 				</p>
 			</footer>
+			if url := os.Getenv("GOATCOUNTER_URL"); url != "" {
+				<script data-goatcounter={ "https://" + url + "/count" }
+					async
+					src="//gc.zgo.at/count.js"></script>
+			}
 		</body>
 	</html>
 }
