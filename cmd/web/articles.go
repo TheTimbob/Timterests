@@ -78,7 +78,7 @@ func GetArticleHandler(w http.ResponseWriter, r *http.Request, s storage.Storage
 
 				component = ArticleDisplay(dc, authenticated)
 			} else {
-				component = ArticlePage(dc, authenticated)
+				component = ArticlePage(article, dc, authenticated)
 			}
 
 			err = renderHTML(w, r, http.StatusOK, component)

@@ -1,9 +1,39 @@
 package web
 
 import (
+	"encoding/json"
 	"timterests/cmd/web/components"
 	"timterests/internal/model"
 )
+
+func articleDescription(a model.Article) string {
+	if a.Subtitle != "" {
+		return a.Subtitle
+	}
+
+	return a.Preview
+}
+
+func buildArticleJSONLD(a model.Article) string {
+	data := map[string]any{
+		"@context":      "https://schema.org",
+		"@type":         "Article",
+		"headline":      a.Title,
+		"description":   articleDescription(a),
+		"datePublished": a.Date,
+		"author": map[string]any{
+			"@type": "Person",
+			"name":  "Tim Scott",
+		},
+	}
+
+	b, err := json.Marshal(data)
+	if err != nil {
+		return ""
+	}
+
+	return string(b)
+}
 
 templ ArticlesListPage(articles []model.Article, tags []string, design string) {
 	@Base("articles") {
@@ -46,10 +76,16 @@ templ ArticlesList(articles []model.Article, design string) {
     </ul>
 }
 
-templ ArticlePage(dc model.DisplayContent, userIsAdmin bool) {
-    @Base("articles") {
-        @ArticleDisplay(dc, userIsAdmin)
-    }
+templ ArticlePage(article model.Article, dc model.DisplayContent, userIsAdmin bool) {
+	@Base("articles", MetaProps{
+		Description: articleDescription(article),
+		PageType:    "article",
+		Title:       article.Title + " | Timterests",
+		URL:         "/article?id=" + article.ID,
+		JSONLD:      buildArticleJSONLD(article),
+	}) {
+		@ArticleDisplay(dc, userIsAdmin)
+	}
 }
 
 templ ArticleDisplay(dc model.DisplayContent, userIsAdmin bool) {

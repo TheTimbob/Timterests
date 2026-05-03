@@ -106,6 +106,12 @@ func (s *Server) RegisterRoutes() http.Handler {
 		web.DownloadNewDocumentHandler(w, r, s.auth)
 	}))
 
+	// SEO
+	mux.HandleFunc("/robots.txt", web.RobotsHandler)
+	mux.Handle("/sitemap.xml", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		web.SitemapHandler(w, r, *s.Storage)
+	}))
+
 	// Health check
 	mux.HandleFunc("/health", s.HealthHandler)
 
