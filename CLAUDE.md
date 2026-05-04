@@ -68,6 +68,12 @@ Controlled by the `USE_S3` env var. In local mode, files are read directly from 
 | `OPENAI_API_KEY`                 | Required for AI writer suggestions                |
 | `GOATCOUNTER_URL`                | GoatCounter subdomain (e.g. `mysite.goatcounter.com`); omit to disable analytics |
 | `SITE_URL`                       | Base URL for SEO (canonical, sitemap, OG tags)    |
+| `SITE_NAME`                      | Site name shown in titles, banner, JSON-LD (default: `Timterests`) |
+| `SITE_SUBTITLE`                  | Banner subtitle (default: `Tim's interests`)      |
+| `AUTHOR_NAME`                    | Author name for footer, JSON-LD, descriptions (default: `Tim Scott`) |
+| `SITE_DESCRIPTION`               | Fallback meta description                         |
+| `REPO_URL`                       | GitHub repo URL for footer link                   |
+| `FONTAWESOME_KIT_ID`             | FontAwesome kit ID; omit to disable icons         |
 | `SSL_CERT_FILE` / `SSL_KEY_FILE` | Optional TLS; server falls back to HTTP if absent |
 
-Load via `.env` file — `godotenv/autoload` is imported in `internal/server/server.go`.
+Load via `.env` file — `godotenv/autoload` is imported in `internal/server/server.go`. See `.env.example` for all available variables.

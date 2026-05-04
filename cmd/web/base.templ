@@ -18,24 +18,31 @@ type MetaProps struct {
 	JSONLD      string // pre-marshaled JSON-LD; empty = auto-derive from activePage
 }
 
-var pageTitles = map[string]string{
-	"home":         "Timterests",
-	"articles":     "Articles | Timterests",
-	"projects":     "Projects | Timterests",
-	"reading-list": "Reading List | Timterests",
-	"about":        "About | Timterests",
-	"admin":        "Admin | Timterests",
-	"writer":       "Writer | Timterests",
-	"letters":      "Letters | Timterests",
-	"login":        "Login | Timterests",
+var pageTitlePrefixes = map[string]string{
+	"articles":     "Articles",
+	"projects":     "Projects",
+	"reading-list": "Reading List",
+	"about":        "About",
+	"admin":        "Admin",
+	"writer":       "Writer",
+	"letters":      "Letters",
+	"login":        "Login",
 }
 
-var pageDescriptions = map[string]string{
-	"home":         "Tim Scott's personal site — articles on software engineering, project showcases, and a curated reading list.",
-	"articles":     "Articles on software engineering, Go, cloud infrastructure, and lessons from building real systems.",
-	"projects":     "Software projects built by Tim Scott — from web apps to developer tools.",
-	"reading-list": "Books that shaped how Tim thinks about software, leadership, and craft.",
-	"about":        "About Tim Scott — software engineer, builder, and lifelong learner.",
+func pageDescription(activePage string) string {
+	descriptions := map[string]string{
+		"home":         site().AuthorName + "'s personal site — articles on software engineering, project showcases, and a curated reading list.",
+		"articles":     "Articles on software engineering, Go, cloud infrastructure, and lessons from building real systems.",
+		"projects":     "Software projects built by " + site().AuthorName + " — from web apps to developer tools.",
+		"reading-list": "Books that shaped how " + site().AuthorName + " thinks about software, leadership, and craft.",
+		"about":        "About " + site().AuthorName + " — software engineer, builder, and lifelong learner.",
+	}
+
+	if desc, ok := descriptions[activePage]; ok {
+		return desc
+	}
+
+	return ""
 }
 
 var pagePathMap = map[string]string{
@@ -47,19 +54,11 @@ var pagePathMap = map[string]string{
 }
 
 func pageTitle(activePage string) string {
-	if title, ok := pageTitles[activePage]; ok {
-		return title
+	if prefix, ok := pageTitlePrefixes[activePage]; ok {
+		return prefix + " | " + site().Name
 	}
 
-	return "Timterests"
-}
-
-func siteURL() string {
-	if u := os.Getenv("SITE_URL"); u != "" {
-		return u
-	}
-
-	return "https://timterests.com"
+	return site().Name
 }
 
 func resolvedMeta(activePage string, metas []MetaProps) MetaProps {
@@ -70,10 +69,10 @@ func resolvedMeta(activePage string, metas []MetaProps) MetaProps {
 	}
 
 	if m.Description == "" {
-		if desc, ok := pageDescriptions[activePage]; ok {
+		if desc := pageDescription(activePage); desc != "" {
 			m.Description = desc
 		} else {
-			m.Description = "Tim Scott's personal site — articles, projects, and a curated reading list."
+			m.Description = site().Description
 		}
 	}
 
@@ -92,7 +91,7 @@ func resolvedMeta(activePage string, metas []MetaProps) MetaProps {
 	}
 
 	if m.ImageURL == "" {
-		m.ImageURL = siteURL() + "/assets/images/logo.png"
+		m.ImageURL = site().URL + "/assets/images/logo.png"
 	}
 
 	return m
@@ -110,17 +109,17 @@ func pageJSONLD(activePage string, m MetaProps) string {
 		data = map[string]any{
 			"@context":    "https://schema.org",
 			"@type":       "Organization",
-			"name":        "Timterests",
-			"url":         siteURL(),
-			"logo":        siteURL() + "/assets/images/logo.png",
-			"description": "Tim Scott's personal blog and portfolio",
+			"name":        site().Name,
+			"url":         site().URL,
+			"logo":        site().URL + "/assets/images/logo.png",
+			"description": site().Description,
 		}
 	case "about":
 		data = map[string]any{
 			"@context": "https://schema.org",
 			"@type":    "Person",
-			"name":     "Tim Scott",
-			"url":      siteURL() + "/about",
+			"name":     site().AuthorName,
+			"url":      site().URL + "/about",
 		}
 	default:
 		return ""
@@ -140,8 +139,8 @@ templ headMeta(activePage string, m MetaProps) {
 	<meta property="og:description" content={ m.Description }/>
 	<meta property="og:type" content={ m.PageType }/>
 	if m.URL != "" {
-		<meta property="og:url" content={ siteURL() + m.URL }/>
-		<link rel="canonical" href={ siteURL() + m.URL }/>
+		<meta property="og:url" content={ site().URL + m.URL }/>
+		<link rel="canonical" href={ site().URL + m.URL }/>
 	}
 	<meta property="og:image" content={ m.ImageURL }/>
 	<meta name="twitter:card" content="summary_large_image"/>
@@ -165,7 +164,9 @@ templ Base(activePage string, metas ...MetaProps) {
 			<script src="/assets/js/htmx.min.js"></script>
 			<script src="/assets/js/dark-mode.js"></script>
 			<script src="/assets/js/buttons.js"></script>
-			<script src="https://kit.fontawesome.com/3453ab8a44.js" crossorigin="anonymous"></script>
+			if kit := site().FontAwesomeKit; kit != "" {
+				<script src={ "https://kit.fontawesome.com/" + kit + ".js" } crossorigin="anonymous"></script>
+			}
 			<link href="/assets/css/dark-mode-switch.css" rel="stylesheet"/>
 			<link href="/assets/css/styles.css" rel="stylesheet"/>
 			<link rel="icon" type="image/png" href="/assets/images/favicon.png"/>
@@ -175,7 +176,7 @@ templ Base(activePage string, metas ...MetaProps) {
 			<header class="banner-header">
 				<a href="/" class="no-underline banner-title-link">
 					<img src="/assets/images/logo.png" alt="" aria-hidden="true" class="banner-logo"/>
-					<h1 class="banner-title">Timterests</h1>
+					<h1 class="banner-title">{ site().Name }</h1>
 				</a>
 				<div class="dark-mode-switch">
 					<input type="checkbox" class="dark-mode-switch-input" id="dark-mode-switch" aria-label="Toggle dark mode"/>
@@ -183,7 +184,7 @@ templ Base(activePage string, metas ...MetaProps) {
 						<span class="dark-mode-switch-indicator"></span>
 					</label>
 				</div>
-				<p class="banner-subtitle">Tim's interests</p>
+				<p class="banner-subtitle">{ site().Subtitle }</p>
 			</header>
 			<nav class="nav-header" aria-label="Main navigation">
 				<input type="checkbox" id="nav-toggle" class="nav-toggle-input" aria-label="Toggle navigation menu"/>
@@ -208,7 +209,7 @@ templ Base(activePage string, metas ...MetaProps) {
 					<a href="/about" class="nav-footer-link">About</a>
 				</nav>
 				<p class="copywrite-text">
-					<a href="https://github.com/TheTimbob/timterests" class="nav-footer-link">&copy; { strconv.Itoa(time.Now().Year()) } Tim Scott</a>
+					<a href={ templ.SafeURL(site().RepoURL) } class="nav-footer-link">&copy; { strconv.Itoa(time.Now().Year()) } { site().AuthorName }</a>
 				</p>
 			</footer>
 			if url := os.Getenv("GOATCOUNTER_URL"); url != "" {
