@@ -49,7 +49,7 @@ func GenerateSuggestion(ctx context.Context, prompt, systemInstruction string) (
 			openai.SystemMessage(systemInstruction),
 			openai.UserMessage(prompt),
 		},
-		Model: openai.ChatModelGPT4o,
+		Model: openai.ChatModelGPT4oMini,
 	})
 	if err != nil {
 		return "", fmt.Errorf("failed to call OpenAI API: %w", err)
