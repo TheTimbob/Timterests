@@ -26,7 +26,7 @@ type sitemapURL struct {
 
 // RobotsHandler serves robots.txt.
 func RobotsHandler(w http.ResponseWriter, _ *http.Request) {
-	baseURL := site().URL
+	baseURL := Site().URL
 
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 
@@ -47,7 +47,7 @@ func RobotsHandler(w http.ResponseWriter, _ *http.Request) {
 
 // SitemapHandler generates and serves sitemap.xml.
 func SitemapHandler(w http.ResponseWriter, r *http.Request, s storage.Storage) {
-	baseURL := site().URL
+	baseURL := Site().URL
 	now := time.Now().Format("2006-01-02")
 
 	staticPages := []sitemapURL{

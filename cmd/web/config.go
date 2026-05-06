@@ -14,13 +14,15 @@ type SiteConfig struct {
 	FontAwesomeKit string // FONTAWESOME_KIT_ID
 }
 
-func site() SiteConfig {
+// Site returns the current site configuration from environment variables.
+func Site() SiteConfig {
 	return SiteConfig{
 		Name:           envOr("SITE_NAME", "Timterests"),
 		Subtitle:       envOr("SITE_SUBTITLE", "Tim's interests"),
 		AuthorName:     envOr("AUTHOR_NAME", "Tim Scott"),
 		URL:            envOr("SITE_URL", "https://timterests.com"),
-		Description:    envOr("SITE_DESCRIPTION", "Tim Scott's personal site — articles, projects, and a curated reading list."),
+		Description: envOr("SITE_DESCRIPTION",
+			"Tim Scott's personal site — articles, projects, and a curated reading list."),
 		RepoURL:        envOr("REPO_URL", "https://github.com/TheTimbob/timterests"),
 		FontAwesomeKit: envOr("FONTAWESOME_KIT_ID", "3453ab8a44"),
 	}

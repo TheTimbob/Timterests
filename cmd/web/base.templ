@@ -31,11 +31,11 @@ var pageTitlePrefixes = map[string]string{
 
 func pageDescription(activePage string) string {
 	descriptions := map[string]string{
-		"home":         site().AuthorName + "'s personal site — articles on software engineering, project showcases, and a curated reading list.",
+		"home":         Site().AuthorName + "'s personal site — articles on software engineering, project showcases, and a curated reading list.",
 		"articles":     "Articles on software engineering, Go, cloud infrastructure, and lessons from building real systems.",
-		"projects":     "Software projects built by " + site().AuthorName + " — from web apps to developer tools.",
-		"reading-list": "Books that shaped how " + site().AuthorName + " thinks about software, leadership, and craft.",
-		"about":        "About " + site().AuthorName + " — software engineer, builder, and lifelong learner.",
+		"projects":     "Software projects built by " + Site().AuthorName + " — from web apps to developer tools.",
+		"reading-list": "Books that shaped how " + Site().AuthorName + " thinks about software, leadership, and craft.",
+		"about":        "About " + Site().AuthorName + " — software engineer, builder, and lifelong learner.",
 	}
 
 	if desc, ok := descriptions[activePage]; ok {
@@ -55,10 +55,10 @@ var pagePathMap = map[string]string{
 
 func pageTitle(activePage string) string {
 	if prefix, ok := pageTitlePrefixes[activePage]; ok {
-		return prefix + " | " + site().Name
+		return prefix + " | " + Site().Name
 	}
 
-	return site().Name
+	return Site().Name
 }
 
 func resolvedMeta(activePage string, metas []MetaProps) MetaProps {
@@ -72,7 +72,7 @@ func resolvedMeta(activePage string, metas []MetaProps) MetaProps {
 		if desc := pageDescription(activePage); desc != "" {
 			m.Description = desc
 		} else {
-			m.Description = site().Description
+			m.Description = Site().Description
 		}
 	}
 
@@ -91,7 +91,7 @@ func resolvedMeta(activePage string, metas []MetaProps) MetaProps {
 	}
 
 	if m.ImageURL == "" {
-		m.ImageURL = site().URL + "/assets/images/logo.png"
+		m.ImageURL = Site().URL + "/assets/images/logo.png"
 	}
 
 	return m
@@ -109,17 +109,17 @@ func pageJSONLD(activePage string, m MetaProps) string {
 		data = map[string]any{
 			"@context":    "https://schema.org",
 			"@type":       "Organization",
-			"name":        site().Name,
-			"url":         site().URL,
-			"logo":        site().URL + "/assets/images/logo.png",
-			"description": site().Description,
+			"name":        Site().Name,
+			"url":         Site().URL,
+			"logo":        Site().URL + "/assets/images/logo.png",
+			"description": Site().Description,
 		}
 	case "about":
 		data = map[string]any{
 			"@context": "https://schema.org",
 			"@type":    "Person",
-			"name":     site().AuthorName,
-			"url":      site().URL + "/about",
+			"name":     Site().AuthorName,
+			"url":      Site().URL + "/about",
 		}
 	default:
 		return ""
@@ -139,8 +139,8 @@ templ headMeta(activePage string, m MetaProps) {
 	<meta property="og:description" content={ m.Description }/>
 	<meta property="og:type" content={ m.PageType }/>
 	if m.URL != "" {
-		<meta property="og:url" content={ site().URL + m.URL }/>
-		<link rel="canonical" href={ site().URL + m.URL }/>
+		<meta property="og:url" content={ Site().URL + m.URL }/>
+		<link rel="canonical" href={ Site().URL + m.URL }/>
 	}
 	<meta property="og:image" content={ m.ImageURL }/>
 	<meta name="twitter:card" content="summary_large_image"/>
@@ -164,7 +164,7 @@ templ Base(activePage string, metas ...MetaProps) {
 			<script src="/assets/js/htmx.min.js"></script>
 			<script src="/assets/js/dark-mode.js"></script>
 			<script src="/assets/js/buttons.js"></script>
-			if kit := site().FontAwesomeKit; kit != "" {
+			if kit := Site().FontAwesomeKit; kit != "" {
 				<script src={ "https://kit.fontawesome.com/" + kit + ".js" } crossorigin="anonymous"></script>
 			}
 			<link href="/assets/css/dark-mode-switch.css" rel="stylesheet"/>
@@ -176,7 +176,7 @@ templ Base(activePage string, metas ...MetaProps) {
 			<header class="banner-header">
 				<a href="/" class="no-underline banner-title-link">
 					<img src="/assets/images/logo.png" alt="" aria-hidden="true" class="banner-logo"/>
-					<h1 class="banner-title">{ site().Name }</h1>
+					<h1 class="banner-title">{ Site().Name }</h1>
 				</a>
 				<div class="dark-mode-switch">
 					<input type="checkbox" class="dark-mode-switch-input" id="dark-mode-switch" aria-label="Toggle dark mode"/>
@@ -184,7 +184,7 @@ templ Base(activePage string, metas ...MetaProps) {
 						<span class="dark-mode-switch-indicator"></span>
 					</label>
 				</div>
-				<p class="banner-subtitle">{ site().Subtitle }</p>
+				<p class="banner-subtitle">{ Site().Subtitle }</p>
 			</header>
 			<nav class="nav-header" aria-label="Main navigation">
 				<input type="checkbox" id="nav-toggle" class="nav-toggle-input" aria-label="Toggle navigation menu"/>
@@ -209,7 +209,7 @@ templ Base(activePage string, metas ...MetaProps) {
 					<a href="/about" class="nav-footer-link">About</a>
 				</nav>
 				<p class="copywrite-text">
-					<a href={ templ.SafeURL(site().RepoURL) } class="nav-footer-link">&copy; { strconv.Itoa(time.Now().Year()) } { site().AuthorName }</a>
+					<a href={ templ.SafeURL(Site().RepoURL) } class="nav-footer-link">&copy; { strconv.Itoa(time.Now().Year()) } { Site().AuthorName }</a>
 				</p>
 			</footer>
 			if url := os.Getenv("GOATCOUNTER_URL"); url != "" {

@@ -1,7 +1,9 @@
-package web
+package web_test
 
 import (
 	"testing"
+
+	"timterests/cmd/web"
 )
 
 func TestSiteConfigDefaults(t *testing.T) {
@@ -9,7 +11,7 @@ func TestSiteConfigDefaults(t *testing.T) {
 	t.Setenv("AUTHOR_NAME", "")
 	t.Setenv("SITE_URL", "")
 
-	cfg := site()
+	cfg := web.Site()
 
 	if cfg.Name != "Timterests" {
 		t.Errorf("expected default Name %q, got %q", "Timterests", cfg.Name)
@@ -31,7 +33,7 @@ func TestSiteConfigFromEnv(t *testing.T) {
 	t.Setenv("SITE_SUBTITLE", "A test site")
 	t.Setenv("REPO_URL", "https://github.com/test/repo")
 
-	cfg := site()
+	cfg := web.Site()
 
 	if cfg.Name != "TestSite" {
 		t.Errorf("expected Name %q, got %q", "TestSite", cfg.Name)

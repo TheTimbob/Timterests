@@ -57,7 +57,7 @@ templ ProjectsList(projects []model.Project, design string) {
 templ ProjectPage(project model.Project, dc model.DisplayContent, repository string, timespan string, userIsAdmin bool) {
 	@Base("projects", MetaProps{
 		Description: projectDescription(project),
-		Title:       project.Title + " | " + site().Name,
+		Title:       project.Title + " | " + Site().Name,
 		URL:         "/project?id=" + project.ID,
 	}) {
 		@ProjectDisplay(dc, repository, timespan, userIsAdmin)
