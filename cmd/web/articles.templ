@@ -23,7 +23,7 @@ func buildArticleJSONLD(a model.Article) string {
 		"datePublished": a.Date,
 		"author": map[string]any{
 			"@type": "Person",
-			"name":  "Tim Scott",
+			"name":  Site().AuthorName,
 		},
 	}
 
@@ -80,7 +80,7 @@ templ ArticlePage(article model.Article, dc model.DisplayContent, userIsAdmin bo
 	@Base("articles", MetaProps{
 		Description: articleDescription(article),
 		PageType:    "article",
-		Title:       article.Title + " | Timterests",
+		Title:       article.Title + " | " + Site().Name,
 		URL:         "/article?id=" + article.ID,
 		JSONLD:      buildArticleJSONLD(article),
 	}) {
