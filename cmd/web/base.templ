@@ -31,11 +31,11 @@ var pageTitlePrefixes = map[string]string{
 
 func pageDescription(activePage string) string {
 	descriptions := map[string]string{
-		"home":         Site().AuthorName + "'s personal site — articles on software engineering, project showcases, and a curated reading list.",
+		"home":         Site().Name + " — articles on software engineering, project showcases, and a curated reading list.",
 		"articles":     "Articles on software engineering, Go, cloud infrastructure, and lessons from building real systems.",
-		"projects":     "Software projects built by " + Site().AuthorName + " — from web apps to developer tools.",
-		"reading-list": "Books that shaped how " + Site().AuthorName + " thinks about software, leadership, and craft.",
-		"about":        "About " + Site().AuthorName + " — software engineer, builder, and lifelong learner.",
+		"projects":     "Software projects and builds — from web apps to developer tools.",
+		"reading-list": "Books on software, leadership, and craft — a curated reading list.",
+		"about":        "About the author — software engineer, builder, and lifelong learner.",
 	}
 
 	if desc, ok := descriptions[activePage]; ok {
