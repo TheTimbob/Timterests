@@ -67,6 +67,19 @@ func RemoveHTMLTags(s string) string {
 	return re.ReplaceAllString(s, "")
 }
 
+// ReadingTime estimates the reading time for HTML content.
+// Returns a human-readable string like "3 min read".
+func ReadingTime(htmlBody string) string {
+	text := RemoveHTMLTags(htmlBody)
+	words := strings.Fields(text)
+
+	const wordsPerMinute = 200
+
+	minutes := max(len(words)/wordsPerMinute, 1)
+
+	return strconv.Itoa(minutes) + " min read"
+}
+
 // SanitizeFilename sanitizes a filename for safe file system use.
 func SanitizeFilename(filename string) string {
 	// Strip any directory components from the filename to prevent directory traversal attacks.
