@@ -146,6 +146,51 @@ func TestGetTags(t *testing.T) {
 	})
 }
 
+func TestReadingTime(t *testing.T) {
+	t.Parallel()
+
+	t.Run("short content returns 1 min", func(t *testing.T) {
+		t.Parallel()
+
+		result := storage.ReadingTime("<p>Hello world</p>")
+		if result != "1 min read" {
+			t.Errorf("expected %q, got %q", "1 min read", result)
+		}
+	})
+
+	t.Run("long content estimates correctly", func(t *testing.T) {
+		t.Parallel()
+
+		words := strings.Repeat("word ", 600)
+		html := "<p>" + words + "</p>"
+
+		result := storage.ReadingTime(html)
+		if result != "3 min read" {
+			t.Errorf("expected %q, got %q", "3 min read", result)
+		}
+	})
+
+	t.Run("strips HTML before counting", func(t *testing.T) {
+		t.Parallel()
+
+		html := "<h1>Title</h1><p>One <strong>two</strong> three</p>"
+
+		result := storage.ReadingTime(html)
+		if result != "1 min read" {
+			t.Errorf("expected %q, got %q", "1 min read", result)
+		}
+	})
+
+	t.Run("empty content returns 1 min", func(t *testing.T) {
+		t.Parallel()
+
+		result := storage.ReadingTime("")
+		if result != "1 min read" {
+			t.Errorf("expected %q, got %q", "1 min read", result)
+		}
+	})
+}
+
 func TestHTMLParsing(t *testing.T) {
 	t.Parallel()
 	t.Run("remove HTML tags from string", func(t *testing.T) {
