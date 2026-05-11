@@ -80,7 +80,8 @@ func TestRSSHandler(t *testing.T) {
 			t.Errorf("RSS item link missing base URL: %q", item.Link)
 		}
 
-		if _, err := time.Parse(time.RFC1123Z, item.PubDate); err != nil {
+		_, err := time.Parse(time.RFC1123Z, item.PubDate)
+		if err != nil {
 			t.Errorf("RSS item pubDate %q is not valid RFC 822: %v", item.PubDate, err)
 		}
 	}
