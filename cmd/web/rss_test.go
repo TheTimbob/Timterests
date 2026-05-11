@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"timterests/cmd/web"
 )
@@ -39,9 +40,10 @@ func TestRSSHandler(t *testing.T) {
 			Title string `xml:"title"`
 			Link  string `xml:"link"`
 			Items []struct {
-				Title string `xml:"title"`
-				Link  string `xml:"link"`
-				GUID  string `xml:"guid"`
+				Title   string `xml:"title"`
+				Link    string `xml:"link"`
+				GUID    string `xml:"guid"`
+				PubDate string `xml:"pubDate"`
 			} `xml:"item"`
 		} `xml:"channel"`
 	}
@@ -65,6 +67,10 @@ func TestRSSHandler(t *testing.T) {
 			"https://example.com", result.Channel.Link)
 	}
 
+	if len(result.Channel.Items) == 0 {
+		t.Fatal("expected at least one item, got none")
+	}
+
 	for _, item := range result.Channel.Items {
 		if item.Title == "" {
 			t.Error("RSS item has empty title")
@@ -72,6 +78,10 @@ func TestRSSHandler(t *testing.T) {
 
 		if !strings.HasPrefix(item.Link, "https://example.com/") {
 			t.Errorf("RSS item link missing base URL: %q", item.Link)
+		}
+
+		if _, err := time.Parse(time.RFC1123Z, item.PubDate); err != nil {
+			t.Errorf("RSS item pubDate %q is not valid RFC 822: %v", item.PubDate, err)
 		}
 	}
 }

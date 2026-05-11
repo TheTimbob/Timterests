@@ -4,6 +4,7 @@ import (
 	"encoding/xml"
 	"log"
 	"net/http"
+	"time"
 
 	"timterests/internal/service"
 	"timterests/internal/storage"
@@ -55,11 +56,16 @@ func RSSHandler(
 			desc = a.Preview
 		}
 
+		pubDate := a.Date
+		if t, err := time.Parse("2006-01-02", a.Date); err == nil {
+			pubDate = t.Format(time.RFC1123Z)
+		}
+
 		items = append(items, rssItem{
 			Title:       a.Title,
 			Link:        baseURL + "/article?id=" + a.ID,
 			Description: desc,
-			PubDate:     a.Date,
+			PubDate:     pubDate,
 			GUID:        baseURL + "/article?id=" + a.ID,
 		})
 	}
