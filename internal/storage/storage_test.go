@@ -502,6 +502,264 @@ func setupHealthDB(t *testing.T) {
 	t.Chdir(filepath.Dir(dbDir))
 }
 
+func TestListObjectsLocal(t *testing.T) {
+	t.Parallel()
+
+	t.Run("lists files sorted by modified date descending", func(t *testing.T) {
+		t.Parallel()
+
+		baseDir := t.TempDir()
+		subDir := filepath.Join(baseDir, "articles")
+
+		err := os.MkdirAll(subDir, 0750)
+		if err != nil {
+			t.Fatalf("failed to create subdir: %v", err)
+		}
+
+		for _, name := range []string{"alpha.yaml", "bravo.yaml"} {
+			err := os.WriteFile(filepath.Join(subDir, name), []byte("title: "+name), 0600)
+			if err != nil {
+				t.Fatalf("failed to write %s: %v", name, err)
+			}
+		}
+
+		s := &storage.Storage{UseS3: false, BaseDir: baseDir}
+
+		objects, err := s.ListObjects(context.Background(), "articles")
+		if err != nil {
+			t.Fatalf("ListObjects error: %v", err)
+		}
+
+		if len(objects) != 2 {
+			t.Fatalf("expected 2 objects, got %d", len(objects))
+		}
+	})
+
+	t.Run("skips subdirectories", func(t *testing.T) {
+		t.Parallel()
+
+		baseDir := t.TempDir()
+		subDir := filepath.Join(baseDir, "projects")
+
+		err := os.MkdirAll(filepath.Join(subDir, "nested"), 0750)
+		if err != nil {
+			t.Fatalf("failed to create nested dir: %v", err)
+		}
+
+		err = os.WriteFile(filepath.Join(subDir, "only-file.yaml"), []byte("title: Test"), 0600)
+		if err != nil {
+			t.Fatalf("failed to write file: %v", err)
+		}
+
+		s := &storage.Storage{UseS3: false, BaseDir: baseDir}
+
+		objects, err := s.ListObjects(context.Background(), "projects")
+		if err != nil {
+			t.Fatalf("ListObjects error: %v", err)
+		}
+
+		if len(objects) != 1 {
+			t.Errorf("expected 1 object (skipping directory), got %d", len(objects))
+		}
+	})
+
+	t.Run("creates directory if missing", func(t *testing.T) {
+		t.Parallel()
+
+		baseDir := t.TempDir()
+		s := &storage.Storage{UseS3: false, BaseDir: baseDir}
+
+		objects, err := s.ListObjects(context.Background(), "new-type")
+		if err != nil {
+			t.Fatalf("ListObjects error: %v", err)
+		}
+
+		if len(objects) != 0 {
+			t.Errorf("expected 0 objects for newly created dir, got %d", len(objects))
+		}
+
+		info, statErr := os.Stat(filepath.Join(baseDir, "new-type"))
+		if statErr != nil {
+			t.Fatalf("expected directory to be created: %v", statErr)
+		}
+
+		if !info.IsDir() {
+			t.Error("expected a directory, not a file")
+		}
+	})
+}
+
+func TestGetFileLocal(t *testing.T) {
+	t.Parallel()
+
+	t.Run("reads existing local file", func(t *testing.T) {
+		t.Parallel()
+
+		baseDir := t.TempDir()
+		articlesDir := filepath.Join(baseDir, "articles")
+
+		err := os.MkdirAll(articlesDir, 0750)
+		if err != nil {
+			t.Fatalf("failed to create dir: %v", err)
+		}
+
+		err = os.WriteFile(filepath.Join(articlesDir, "test.yaml"), []byte("title: Hello"), 0600)
+		if err != nil {
+			t.Fatalf("failed to write file: %v", err)
+		}
+
+		s := &storage.Storage{UseS3: false, BaseDir: baseDir}
+
+		file, err := s.GetFile(context.Background(), "articles/test.yaml")
+		if err != nil {
+			t.Fatalf("GetFile error: %v", err)
+		}
+		defer file.Close()
+
+		content, err := os.ReadFile(file.Name())
+		if err != nil {
+			t.Fatalf("failed to read file: %v", err)
+		}
+
+		if string(content) != "title: Hello" {
+			t.Errorf("expected 'title: Hello', got %q", string(content))
+		}
+	})
+
+	t.Run("returns error for nonexistent file", func(t *testing.T) {
+		t.Parallel()
+
+		s := &storage.Storage{UseS3: false, BaseDir: t.TempDir()}
+
+		_, err := s.GetFile(context.Background(), "articles/missing.yaml")
+		if err == nil {
+			t.Error("expected error for nonexistent file")
+		}
+	})
+}
+
+func TestGetPreparedAndRawFile(t *testing.T) {
+	t.Parallel()
+
+	baseDir := t.TempDir()
+	articlesDir := filepath.Join(baseDir, "articles")
+
+	err := os.MkdirAll(articlesDir, 0750)
+	if err != nil {
+		t.Fatalf("failed to create dir: %v", err)
+	}
+
+	yamlContent := "title: Decoded Doc\nsubtitle: Sub\npreview: Preview text.\n"
+
+	err = os.WriteFile(filepath.Join(articlesDir, "doc.yaml"), []byte(yamlContent), 0600)
+	if err != nil {
+		t.Fatalf("failed to write yaml: %v", err)
+	}
+
+	s := &storage.Storage{UseS3: false, BaseDir: baseDir}
+
+	t.Run("GetPreparedFile decodes yaml", func(t *testing.T) {
+		t.Parallel()
+
+		var doc model.Document
+
+		err := s.GetPreparedFile(context.Background(), "articles/doc.yaml", &doc)
+		if err != nil {
+			t.Fatalf("GetPreparedFile error: %v", err)
+		}
+
+		if doc.Title != "Decoded Doc" {
+			t.Errorf("expected title 'Decoded Doc', got %q", doc.Title)
+		}
+	})
+
+	t.Run("GetRawFile decodes yaml", func(t *testing.T) {
+		t.Parallel()
+
+		var doc model.Document
+
+		err := s.GetRawFile(context.Background(), "articles/doc.yaml", &doc)
+		if err != nil {
+			t.Fatalf("GetRawFile error: %v", err)
+		}
+
+		if doc.Preview != "Preview text." {
+			t.Errorf("expected preview 'Preview text.', got %q", doc.Preview)
+		}
+	})
+
+	t.Run("GetPreparedFile returns error for missing file", func(t *testing.T) {
+		t.Parallel()
+
+		var doc model.Document
+
+		err := s.GetPreparedFile(context.Background(), "articles/missing.yaml", &doc)
+		if err == nil {
+			t.Error("expected error for missing file")
+		}
+	})
+}
+
+func TestGetDocumentBody(t *testing.T) {
+	t.Parallel()
+
+	baseDir := t.TempDir()
+	articlesDir := filepath.Join(baseDir, "articles")
+
+	err := os.MkdirAll(articlesDir, 0750)
+	if err != nil {
+		t.Fatalf("failed to create dir: %v", err)
+	}
+
+	mdContent := "# Test Article\n\nSome **bold** text."
+
+	err = os.WriteFile(filepath.Join(articlesDir, "test.md"), []byte(mdContent), 0600)
+	if err != nil {
+		t.Fatalf("failed to write md file: %v", err)
+	}
+
+	s := &storage.Storage{UseS3: false, BaseDir: baseDir}
+
+	t.Run("GetDocumentBodyRaw returns raw markdown", func(t *testing.T) {
+		t.Parallel()
+
+		raw, err := s.GetDocumentBodyRaw(context.Background(), "articles/test.yaml")
+		if err != nil {
+			t.Fatalf("GetDocumentBodyRaw error: %v", err)
+		}
+
+		if raw != mdContent {
+			t.Errorf("expected raw markdown %q, got %q", mdContent, raw)
+		}
+	})
+
+	t.Run("GetDocumentBody returns HTML", func(t *testing.T) {
+		t.Parallel()
+
+		html, err := s.GetDocumentBody(context.Background(), "articles/test.yaml")
+		if err != nil {
+			t.Fatalf("GetDocumentBody error: %v", err)
+		}
+
+		if !strings.Contains(html, "<strong>bold</strong>") {
+			t.Errorf("expected HTML with <strong>, got %q", html)
+		}
+
+		if !strings.Contains(html, `class="category-title"`) {
+			t.Errorf("expected styled h1, got %q", html)
+		}
+	})
+
+	t.Run("GetDocumentBody returns error for missing file", func(t *testing.T) {
+		t.Parallel()
+
+		_, err := s.GetDocumentBody(context.Background(), "articles/nonexistent.yaml")
+		if err == nil {
+			t.Error("expected error for missing markdown file")
+		}
+	})
+}
+
 func getYAMLDocument() *fstest.MapFile {
 	return &fstest.MapFile{
 		Data: []byte(
