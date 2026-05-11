@@ -30,7 +30,7 @@ jobs:
 
   test:
     name: Test and Coverage
-    runs-on7 ubuntu-latest
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
 
