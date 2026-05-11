@@ -406,6 +406,67 @@ func TestFormatFileSize(t *testing.T) {
 	}
 }
 
+func TestLocalPath(t *testing.T) {
+	t.Parallel()
+
+	t.Run("valid relative path", func(t *testing.T) {
+		t.Parallel()
+
+		result, err := storage.LocalPath("/base", "articles/test.md")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+
+		if result != "/base/articles/test.md" {
+			t.Errorf("expected /base/articles/test.md, got %q", result)
+		}
+	})
+
+	t.Run("rejects absolute path", func(t *testing.T) {
+		t.Parallel()
+
+		_, err := storage.LocalPath("/base", "/etc/passwd")
+		if err == nil {
+			t.Error("expected error for absolute path traversal")
+		}
+	})
+
+	t.Run("rejects parent directory traversal", func(t *testing.T) {
+		t.Parallel()
+
+		_, err := storage.LocalPath("/base", "../../../etc/passwd")
+		if err == nil {
+			t.Error("expected error for parent directory traversal")
+		}
+	})
+
+	t.Run("rejects empty filename", func(t *testing.T) {
+		t.Parallel()
+
+		_, err := storage.LocalPath("/base", "")
+		if err == nil {
+			t.Error("expected error for empty filename")
+		}
+	})
+}
+
+func TestDecodeFileError(t *testing.T) {
+	t.Parallel()
+
+	t.Run("returns error for invalid yaml", func(t *testing.T) {
+		t.Parallel()
+
+		invalidYAML := strings.NewReader(":\n  invalid:\n  - [broken")
+
+		var doc model.Document
+
+		err := storage.DecodeFile(invalidYAML, &doc)
+		if err == nil {
+			t.Error("expected error for invalid YAML")
+		}
+	})
+}
+
 func setupHealthDB(t *testing.T) {
 	t.Helper()
 
