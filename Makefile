@@ -2,24 +2,9 @@
 
 # Build the application
 all: build test
-templ-install:
-	@if ! command -v templ > /dev/null; then \
-		read -p "Go's 'templ' is not installed on your machine. Do you want to install it? [Y/n] " choice; \
-		if [ "$$choice" != "n" ] && [ "$$choice" != "N" ]; then \
-			go install github.com/a-h/templ/cmd/templ@latest; \
-			if [ ! -x "$$(command -v templ)" ]; then \
-				echo "templ installation failed. Exiting..."; \
-				exit 1; \
-			fi; \
-		else \
-			echo "You chose not to install templ. Exiting..."; \
-			exit 1; \
-		fi; \
-	fi
-
-build: templ-install
+build:
 	@echo "Building..."
-	@templ generate
+	@go tool templ generate
 
 	@CGO_ENABLED=1 go build -o main cmd/api/main.go
 
@@ -117,4 +102,4 @@ deploy:
 	fi
 
 
-.PHONY: all build run test coverage clean watch templ-install create-user deploy complexity docker-run docker-down
+.PHONY: all build run test coverage clean watch create-user deploy complexity docker-run docker-down
