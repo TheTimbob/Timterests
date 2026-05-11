@@ -57,8 +57,8 @@ func RSSHandler(
 		}
 
 		pubDate := a.Date
-		t, err := time.Parse("2006-01-02", a.Date)
 
+		t, err := time.Parse("2006-01-02", a.Date)
 		if err == nil {
 			pubDate = t.Format(time.RFC1123Z)
 		}
