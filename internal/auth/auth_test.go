@@ -93,7 +93,14 @@ func TestIsAuthenticated(t *testing.T) {
 			t.Fatalf("SetSessionValue failed: %v", err)
 		}
 
-		if !a.IsAuthenticated(r) {
+		// Use a fresh request with the saved cookie to avoid gorilla's request-level cache,
+		// which would make the assertion pass even if session.Save were never called.
+		r2 := newRequest()
+		for _, c := range w.Result().Cookies() {
+			r2.AddCookie(c)
+		}
+
+		if !a.IsAuthenticated(r2) {
 			t.Error("expected authenticated after setting email session value")
 		}
 	})
@@ -119,7 +126,7 @@ func TestIsAuthenticated(t *testing.T) {
 func TestSetSessionValue(t *testing.T) {
 	t.Parallel()
 
-	t.Run("sets and persists multiple values", func(t *testing.T) {
+	t.Run("authenticates user when multiple session values are set", func(t *testing.T) {
 		t.Parallel()
 
 		a := auth.NewAuth("test-session")
@@ -136,7 +143,12 @@ func TestSetSessionValue(t *testing.T) {
 			t.Fatalf("SetSessionValue failed: %v", err)
 		}
 
-		if !a.IsAuthenticated(r) {
+		r2 := newRequest()
+		for _, c := range w.Result().Cookies() {
+			r2.AddCookie(c)
+		}
+
+		if !a.IsAuthenticated(r2) {
 			t.Error("expected authenticated after setting email")
 		}
 	})
