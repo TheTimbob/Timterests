@@ -148,6 +148,40 @@ func TestPromptOperations(t *testing.T) {
 		}
 	})
 
+	t.Run("get instruction rejects path traversal", func(t *testing.T) {
+		_, err := ai.GetInstruction("../../etc/passwd")
+		if err == nil {
+			t.Error("expected error for path traversal, got nil")
+		}
+	})
+
+	t.Run("get instruction returns error for nonexistent file", func(t *testing.T) {
+		tmpDir := t.TempDir()
+
+		promptsDir := filepath.Join(tmpDir, "prompts")
+
+		err := os.MkdirAll(promptsDir, 0750)
+		if err != nil {
+			t.Fatalf("failed to ensure prompts dir: %v", err)
+		}
+
+		t.Chdir(tmpDir)
+
+		_, err = ai.GetInstruction("does-not-exist.txt")
+		if err == nil {
+			t.Error("expected error for nonexistent file, got nil")
+		}
+	})
+
+	t.Run("list instruction options returns error for bad path", func(t *testing.T) {
+		t.Parallel()
+
+		_, _, err := ai.GetInstructionOptionList("/nonexistent/dir/path")
+		if err == nil {
+			t.Error("expected error for nonexistent directory, got nil")
+		}
+	})
+
 	t.Run("list instruction options", func(t *testing.T) {
 		t.Parallel()
 
