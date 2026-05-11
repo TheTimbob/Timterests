@@ -1,12 +1,28 @@
 package errors_test
 
 import (
+	"bytes"
 	"errors"
+	"fmt"
+	"log"
 	"net/http"
+	"os"
+	"strings"
 	"testing"
 
 	apperrors "timterests/internal/errors"
 )
+
+func captureLogOutput(fn func()) string {
+	var buf bytes.Buffer
+
+	log.SetOutput(&buf)
+	defer log.SetOutput(os.Stderr)
+
+	fn()
+
+	return buf.String()
+}
 
 func TestAppError(t *testing.T) {
 	t.Parallel()
@@ -111,8 +127,10 @@ func TestSeverityConstructors(t *testing.T) {
 		wantCode string
 		wantSev  apperrors.Severity
 	}{
+		{"Unauthorized", apperrors.Unauthorized(nil), "UNAUTHORIZED", apperrors.SeverityWarning},
 		{"Forbidden", apperrors.Forbidden(), "FORBIDDEN", apperrors.SeverityWarning},
 		{"MethodNotAllowed", apperrors.MethodNotAllowed(), "METHOD_NOT_ALLOWED", apperrors.SeverityWarning},
+		{"LoginFailed", apperrors.LoginFailed(nil), "LOGIN_FAILED", apperrors.SeverityWarning},
 		{"PanicRecovered", apperrors.PanicRecovered(nil), "PANIC_RECOVERED", apperrors.SeverityCritical},
 		{"RenderFailed", apperrors.RenderFailed(nil), "RENDER_FAILED", apperrors.SeverityError},
 		{"ParseFormFailed", apperrors.ParseFormFailed(nil), "PARSE_FORM_FAILED", apperrors.SeverityWarning},
@@ -131,4 +149,157 @@ func TestSeverityConstructors(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestLogError(t *testing.T) {
+	t.Run("logs error with handler context", func(t *testing.T) {
+		err := apperrors.NotFound(errors.New("missing item"))
+		err = err.WithHandler("ArticleHandler", "getArticle")
+
+		output := captureLogOutput(func() { apperrors.LogError(err) })
+
+		for _, want := range []string{
+			"[WARNING]",
+			"NOT_FOUND",
+			"handler=ArticleHandler",
+			"action=getArticle",
+			"missing item",
+		} {
+			if !strings.Contains(output, want) {
+				t.Errorf("expected log output to contain %q, got: %s", want, output)
+			}
+		}
+	})
+
+	t.Run("logs error without handler context uses dash fallback", func(t *testing.T) {
+		err := apperrors.InternalServerError(errors.New("unexpected"))
+
+		output := captureLogOutput(func() { apperrors.LogError(err) })
+
+		for _, want := range []string{
+			"[ERROR]",
+			"INTERNAL_SERVER_ERROR",
+			"handler=-",
+			"action=-",
+		} {
+			if !strings.Contains(output, want) {
+				t.Errorf("expected log output to contain %q, got: %s", want, output)
+			}
+		}
+	})
+
+	t.Run("logs critical error with stack trace", func(t *testing.T) {
+		err := apperrors.PanicRecovered(errors.New("panic"))
+
+		output := captureLogOutput(func() { apperrors.LogError(err) })
+
+		for _, want := range []string{
+			"[CRITICAL]",
+			"PANIC_RECOVERED",
+			"[STACK]",
+			"goroutine",
+		} {
+			if !strings.Contains(output, want) {
+				t.Errorf("expected log output to contain %q, got: %s", want, output)
+			}
+		}
+	})
+
+	t.Run("handles nil error gracefully", func(t *testing.T) {
+		output := captureLogOutput(func() { apperrors.LogError(nil) })
+
+		if output != "" {
+			t.Errorf("expected no output for nil error, got: %s", output)
+		}
+	})
+
+	t.Run("logs error without underlying error omits colon suffix", func(t *testing.T) {
+		err := apperrors.Forbidden()
+
+		output := captureLogOutput(func() { apperrors.LogError(err) })
+
+		if !strings.Contains(output, "FORBIDDEN") {
+			t.Errorf("expected FORBIDDEN in output, got: %s", output)
+		}
+
+		if strings.Contains(output, "You don't have permission to perform this action.:") {
+			t.Error("message should not have trailing colon when there is no underlying error")
+		}
+	})
+
+	t.Run("logs info severity with cyan color", func(t *testing.T) {
+		err := &apperrors.AppError{
+			Code:     "CUSTOM_INFO",
+			Message:  "informational event",
+			Severity: apperrors.SeverityInfo,
+		}
+
+		output := captureLogOutput(func() { apperrors.LogError(err) })
+
+		for _, want := range []string{
+			"[INFO]",
+			"CUSTOM_INFO",
+			"informational event",
+			"\033[36m",
+		} {
+			if !strings.Contains(output, want) {
+				t.Errorf("expected log output to contain %q, got: %s", want, output)
+			}
+		}
+	})
+}
+
+func TestIsAndAs(t *testing.T) {
+	t.Parallel()
+
+	t.Run("Is delegates to errors.Is", func(t *testing.T) {
+		t.Parallel()
+
+		sentinel := errors.New("sentinel")
+		wrapped := fmt.Errorf("wrapped: %w", sentinel)
+
+		if !apperrors.Is(wrapped, sentinel) {
+			t.Error("expected Is to find sentinel in wrapped error")
+		}
+
+		if apperrors.Is(wrapped, errors.New("other")) {
+			t.Error("expected Is to return false for unrelated error")
+		}
+	})
+
+	t.Run("As delegates to errors.As", func(t *testing.T) {
+		t.Parallel()
+
+		appErr := apperrors.NotFound(nil)
+
+		var target *apperrors.AppError
+
+		if !apperrors.As(appErr, &target) {
+			t.Fatal("expected As to match AppError")
+		}
+
+		if target.Code != "NOT_FOUND" {
+			t.Errorf("got code %q, want NOT_FOUND", target.Code)
+		}
+	})
+}
+
+func TestWithErr(t *testing.T) {
+	t.Parallel()
+
+	t.Run("creates independent copy with new error", func(t *testing.T) {
+		t.Parallel()
+
+		original := apperrors.NotFound(nil)
+		inner := errors.New("specific reason")
+		withErr := original.WithErr(inner)
+
+		if !errors.Is(withErr.Err, inner) {
+			t.Error("WithErr did not set the inner error")
+		}
+
+		if original.Err != nil {
+			t.Error("original was mutated")
+		}
+	})
 }
