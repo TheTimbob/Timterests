@@ -152,4 +152,40 @@ func TestSetSessionValue(t *testing.T) {
 			t.Error("expected authenticated after setting email")
 		}
 	})
+
+	t.Run("non-string session value yields unauthenticated", func(t *testing.T) {
+		t.Parallel()
+
+		a := auth.NewAuth("test-session")
+		r := newRequest()
+		w := httptest.NewRecorder()
+
+		err := a.SetSessionValue(w, r, map[any]any{"email": 12345})
+		if err != nil {
+			t.Fatalf("SetSessionValue failed: %v", err)
+		}
+
+		r2 := newRequest()
+		for _, c := range w.Result().Cookies() {
+			r2.AddCookie(c)
+		}
+
+		if a.IsAuthenticated(r2) {
+			t.Error("expected unauthenticated when email is non-string type")
+		}
+	})
+}
+
+func TestInitializeSessionEnvFallback(t *testing.T) {
+	t.Setenv("SESSION_NAME", "env-session-key")
+
+	a := auth.NewAuth("")
+	if a == nil {
+		t.Fatal("expected non-nil Auth with env fallback")
+	}
+
+	r := newRequest()
+	if a.IsAuthenticated(r) {
+		t.Error("expected unauthenticated for fresh request")
+	}
 }
