@@ -65,6 +65,7 @@ var htmlTagRegex = regexp.MustCompile(`<[^>]*>`)
 // RemoveHTMLTags strips all HTML tags from a string.
 func RemoveHTMLTags(s string) string {
 	stripped := htmlTagRegex.ReplaceAllString(s, " ")
+
 	return strings.Join(strings.Fields(stripped), " ")
 }
 
