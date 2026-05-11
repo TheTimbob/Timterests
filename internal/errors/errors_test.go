@@ -2,6 +2,7 @@ package errors_test
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"testing"
 
@@ -111,8 +112,10 @@ func TestSeverityConstructors(t *testing.T) {
 		wantCode string
 		wantSev  apperrors.Severity
 	}{
+		{"Unauthorized", apperrors.Unauthorized(nil), "UNAUTHORIZED", apperrors.SeverityWarning},
 		{"Forbidden", apperrors.Forbidden(), "FORBIDDEN", apperrors.SeverityWarning},
 		{"MethodNotAllowed", apperrors.MethodNotAllowed(), "METHOD_NOT_ALLOWED", apperrors.SeverityWarning},
+		{"LoginFailed", apperrors.LoginFailed(nil), "LOGIN_FAILED", apperrors.SeverityWarning},
 		{"PanicRecovered", apperrors.PanicRecovered(nil), "PANIC_RECOVERED", apperrors.SeverityCritical},
 		{"RenderFailed", apperrors.RenderFailed(nil), "RENDER_FAILED", apperrors.SeverityError},
 		{"ParseFormFailed", apperrors.ParseFormFailed(nil), "PARSE_FORM_FAILED", apperrors.SeverityWarning},
@@ -131,4 +134,102 @@ func TestSeverityConstructors(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestLogError(t *testing.T) {
+	t.Parallel()
+
+	t.Run("logs error with handler context", func(t *testing.T) {
+		t.Parallel()
+
+		err := apperrors.NotFound(errors.New("missing item"))
+		err = err.WithHandler("ArticleHandler", "getArticle")
+
+		apperrors.LogError(err)
+	})
+
+	t.Run("logs error without handler context", func(t *testing.T) {
+		t.Parallel()
+
+		err := apperrors.InternalServerError(errors.New("unexpected"))
+
+		apperrors.LogError(err)
+	})
+
+	t.Run("logs critical error with stack trace", func(t *testing.T) {
+		t.Parallel()
+
+		err := apperrors.PanicRecovered(errors.New("panic"))
+
+		apperrors.LogError(err)
+	})
+
+	t.Run("handles nil error gracefully", func(t *testing.T) {
+		t.Parallel()
+
+		apperrors.LogError(nil)
+	})
+
+	t.Run("logs error without underlying error", func(t *testing.T) {
+		t.Parallel()
+
+		err := apperrors.Forbidden()
+
+		apperrors.LogError(err)
+	})
+}
+
+func TestIsAndAs(t *testing.T) {
+	t.Parallel()
+
+	t.Run("Is delegates to errors.Is", func(t *testing.T) {
+		t.Parallel()
+
+		sentinel := errors.New("sentinel")
+		wrapped := fmt.Errorf("wrapped: %w", sentinel)
+
+		if !apperrors.Is(wrapped, sentinel) {
+			t.Error("expected Is to find sentinel in wrapped error")
+		}
+
+		if apperrors.Is(wrapped, errors.New("other")) {
+			t.Error("expected Is to return false for unrelated error")
+		}
+	})
+
+	t.Run("As delegates to errors.As", func(t *testing.T) {
+		t.Parallel()
+
+		appErr := apperrors.NotFound(nil)
+
+		var target *apperrors.AppError
+
+		if !apperrors.As(appErr, &target) {
+			t.Fatal("expected As to match AppError")
+		}
+
+		if target.Code != "NOT_FOUND" {
+			t.Errorf("got code %q, want NOT_FOUND", target.Code)
+		}
+	})
+}
+
+func TestWithErr(t *testing.T) {
+	t.Parallel()
+
+	t.Run("creates independent copy with new error", func(t *testing.T) {
+		t.Parallel()
+
+		original := apperrors.NotFound(nil)
+		inner := errors.New("specific reason")
+		withErr := original.WithErr(inner)
+
+		if !errors.Is(withErr.Err, inner) {
+			t.Error("WithErr did not set the inner error")
+		}
+
+		if original.Err != nil {
+			t.Error("original was mutated")
+		}
+	})
 }
