@@ -166,7 +166,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 		web.GetLetterHandler(w, r, *s.Storage, letterID, s.auth)
 	}))
 	// Wrap: recovery is outermost so it catches panics from all inner middleware.
-	return recoveryMiddleware(s.corsMiddleware(s.maxBytesMiddleware(mux)))
+	return recoveryMiddleware(securityHeadersMiddleware(s.corsMiddleware(s.maxBytesMiddleware(mux))))
 }
 
 func recoveryMiddleware(next http.Handler) http.Handler {
@@ -187,6 +187,20 @@ func recoveryMiddleware(next http.Handler) http.Handler {
 func (s *Server) maxBytesMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		r.Body = http.MaxBytesReader(w, r.Body, 10<<20)
+		next.ServeHTTP(w, r)
+	})
+}
+
+func securityHeadersMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		w.Header().Set("X-Frame-Options", "DENY")
+		w.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")
+		w.Header().Set(
+			"Permissions-Policy",
+			"camera=(), microphone=(), geolocation=()",
+		)
+
 		next.ServeHTTP(w, r)
 	})
 }
