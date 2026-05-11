@@ -149,46 +149,29 @@ func TestGetTags(t *testing.T) {
 func TestReadingTime(t *testing.T) {
 	t.Parallel()
 
-	t.Run("short content returns 1 min", func(t *testing.T) {
-		t.Parallel()
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{"short content returns 1 min", "<p>Hello world</p>", "1 min read"},
+		{"long content estimates correctly", "<p>" + strings.Repeat("word ", 600) + "</p>", "3 min read"},
+		{"strips HTML before counting", "<h1>Title</h1><p>One <strong>two</strong> three</p>", "1 min read"},
+		{"empty content returns 1 min", "", "1 min read"},
+		{"just over threshold rounds up", "<p>" + strings.Repeat("word ", 201) + "</p>", "2 min read"},
+	}
 
-		result := storage.ReadingTime("<p>Hello world</p>")
-		if result != "1 min read" {
-			t.Errorf("expected %q, got %q", "1 min read", result)
-		}
-	})
+	for _, tc := range tests {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 
-	t.Run("long content estimates correctly", func(t *testing.T) {
-		t.Parallel()
-
-		words := strings.Repeat("word ", 600)
-		html := "<p>" + words + "</p>"
-
-		result := storage.ReadingTime(html)
-		if result != "3 min read" {
-			t.Errorf("expected %q, got %q", "3 min read", result)
-		}
-	})
-
-	t.Run("strips HTML before counting", func(t *testing.T) {
-		t.Parallel()
-
-		html := "<h1>Title</h1><p>One <strong>two</strong> three</p>"
-
-		result := storage.ReadingTime(html)
-		if result != "1 min read" {
-			t.Errorf("expected %q, got %q", "1 min read", result)
-		}
-	})
-
-	t.Run("empty content returns 1 min", func(t *testing.T) {
-		t.Parallel()
-
-		result := storage.ReadingTime("")
-		if result != "1 min read" {
-			t.Errorf("expected %q, got %q", "1 min read", result)
-		}
-	})
+			result := storage.ReadingTime(tc.input)
+			if result != tc.expected {
+				t.Errorf("expected %q, got %q", tc.expected, result)
+			}
+		})
+	}
 }
 
 func TestHTMLParsing(t *testing.T) {
