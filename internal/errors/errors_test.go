@@ -1,13 +1,28 @@
 package errors_test
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
+	"os"
+	"strings"
 	"testing"
 
 	apperrors "timterests/internal/errors"
 )
+
+func captureLogOutput(fn func()) string {
+	var buf bytes.Buffer
+
+	log.SetOutput(&buf)
+	defer log.SetOutput(os.Stderr)
+
+	fn()
+
+	return buf.String()
+}
 
 func TestAppError(t *testing.T) {
 	t.Parallel()
@@ -137,45 +152,100 @@ func TestSeverityConstructors(t *testing.T) {
 }
 
 func TestLogError(t *testing.T) {
-	t.Parallel()
-
 	t.Run("logs error with handler context", func(t *testing.T) {
-		t.Parallel()
-
 		err := apperrors.NotFound(errors.New("missing item"))
 		err = err.WithHandler("ArticleHandler", "getArticle")
 
-		apperrors.LogError(err)
+		output := captureLogOutput(func() { apperrors.LogError(err) })
+
+		for _, want := range []string{
+			"[WARNING]",
+			"NOT_FOUND",
+			"handler=ArticleHandler",
+			"action=getArticle",
+			"missing item",
+		} {
+			if !strings.Contains(output, want) {
+				t.Errorf("expected log output to contain %q, got: %s", want, output)
+			}
+		}
 	})
 
-	t.Run("logs error without handler context", func(t *testing.T) {
-		t.Parallel()
-
+	t.Run("logs error without handler context uses dash fallback", func(t *testing.T) {
 		err := apperrors.InternalServerError(errors.New("unexpected"))
 
-		apperrors.LogError(err)
+		output := captureLogOutput(func() { apperrors.LogError(err) })
+
+		for _, want := range []string{
+			"[ERROR]",
+			"INTERNAL_SERVER_ERROR",
+			"handler=-",
+			"action=-",
+		} {
+			if !strings.Contains(output, want) {
+				t.Errorf("expected log output to contain %q, got: %s", want, output)
+			}
+		}
 	})
 
 	t.Run("logs critical error with stack trace", func(t *testing.T) {
-		t.Parallel()
-
 		err := apperrors.PanicRecovered(errors.New("panic"))
 
-		apperrors.LogError(err)
+		output := captureLogOutput(func() { apperrors.LogError(err) })
+
+		for _, want := range []string{
+			"[CRITICAL]",
+			"PANIC_RECOVERED",
+			"[STACK]",
+			"goroutine",
+		} {
+			if !strings.Contains(output, want) {
+				t.Errorf("expected log output to contain %q, got: %s", want, output)
+			}
+		}
 	})
 
 	t.Run("handles nil error gracefully", func(t *testing.T) {
-		t.Parallel()
+		output := captureLogOutput(func() { apperrors.LogError(nil) })
 
-		apperrors.LogError(nil)
+		if output != "" {
+			t.Errorf("expected no output for nil error, got: %s", output)
+		}
 	})
 
-	t.Run("logs error without underlying error", func(t *testing.T) {
-		t.Parallel()
-
+	t.Run("logs error without underlying error omits colon suffix", func(t *testing.T) {
 		err := apperrors.Forbidden()
 
-		apperrors.LogError(err)
+		output := captureLogOutput(func() { apperrors.LogError(err) })
+
+		if !strings.Contains(output, "FORBIDDEN") {
+			t.Errorf("expected FORBIDDEN in output, got: %s", output)
+		}
+
+		if strings.Contains(output, "You don't have permission to perform this action.:") {
+			t.Error("message should not have trailing colon when there is no underlying error")
+		}
+	})
+
+	t.Run("logs info severity with cyan color", func(t *testing.T) {
+		err := &apperrors.AppError{
+			Code:     "CUSTOM_INFO",
+			Message:  "informational event",
+			Severity: apperrors.SeverityInfo,
+		}
+
+		output := captureLogOutput(func() { apperrors.LogError(err) })
+
+		for _, want := range []string{
+			"[INFO]",
+			"CUSTOM_INFO",
+			"informational event",
+			"\033[36m",
+		} {
+			if !strings.Contains(output, want) {
+				t.Errorf("expected log output to contain %q, got: %s", want, output)
+			}
+		}
 	})
 }
 
