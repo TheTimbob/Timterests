@@ -209,6 +209,65 @@ func TestGetArticleNotFound(t *testing.T) {
 	})
 }
 
+func TestFormatDateForFilename(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{"valid date", "2026-01-15", "01-15-2026"},
+		{"invalid date returns original", "not-a-date", "not-a-date"},
+		{"empty string", "", ""},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			got := web.FormatDateForFilename(tc.input)
+			if got != tc.expected {
+				t.Errorf("FormatDateForFilename(%q) = %q, want %q", tc.input, got, tc.expected)
+			}
+		})
+	}
+}
+
+func TestArticlesGridDesign(t *testing.T) {
+	s := testSetup(t, context.Background())
+
+	t.Run("render articles with grid design", func(t *testing.T) {
+		t.Parallel()
+
+		req := httptest.NewRequestWithContext(
+			context.Background(), http.MethodGet, "/articles?design=grid", nil,
+		)
+		rec := httptest.NewRecorder()
+
+		web.ArticlesPageHandler(rec, req, *s, "all", "grid")
+
+		if rec.Code != http.StatusOK {
+			t.Errorf("expected status 200, got %d", rec.Code)
+		}
+	})
+
+	t.Run("render articles with links design", func(t *testing.T) {
+		t.Parallel()
+
+		req := httptest.NewRequestWithContext(
+			context.Background(), http.MethodGet, "/articles?design=links", nil,
+		)
+		rec := httptest.NewRecorder()
+
+		web.ArticlesPageHandler(rec, req, *s, "all", "links")
+
+		if rec.Code != http.StatusOK {
+			t.Errorf("expected status 200, got %d", rec.Code)
+		}
+	})
+}
+
 func TestArticleCardConversion(t *testing.T) {
 	ctx := context.Background()
 	s := testSetup(t, ctx)
