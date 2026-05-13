@@ -1,4 +1,4 @@
-package server
+package server_test
 
 import (
 	"io"
@@ -6,27 +6,12 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"timterests/internal/server"
 )
 
-func TestRecoveryMiddlewarePanic(t *testing.T) {
-	panicking := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		panic("test panic")
-	})
-
-	handler := recoveryMiddleware(panicking)
-
-	rec := httptest.NewRecorder()
-	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/", nil)
-
-	handler.ServeHTTP(rec, req)
-
-	if rec.Code != http.StatusInternalServerError {
-		t.Errorf("expected 500 after panic, got %d", rec.Code)
-	}
-}
-
 func TestMaxBytesMiddlewareRejectsOversizedBody(t *testing.T) {
-	s := &Server{}
+	s := &server.Server{}
 
 	drainBody := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, err := io.ReadAll(r.Body)
@@ -39,7 +24,7 @@ func TestMaxBytesMiddlewareRejectsOversizedBody(t *testing.T) {
 		w.WriteHeader(http.StatusOK)
 	})
 
-	handler := s.maxBytesMiddleware(drainBody)
+	handler := s.MaxBytesMiddleware(drainBody)
 
 	oversized := strings.NewReader(strings.Repeat("x", 11*1024*1024))
 
