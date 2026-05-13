@@ -260,6 +260,7 @@ func TestRegisterRoutesEndpoints(t *testing.T) {
 		"/sitemap.xml",
 		"/about",
 		"/writer",
+		"/writer?type-id=invalid",
 		"/admin",
 		"/admin/documents",
 		"/admin/users",
