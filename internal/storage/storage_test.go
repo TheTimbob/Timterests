@@ -441,6 +441,100 @@ func setupHealthDB(t *testing.T) {
 	t.Chdir(filepath.Dir(dbDir))
 }
 
+func TestInitDB(t *testing.T) {
+	t.Run("creates users table when missing", func(t *testing.T) {
+		dbDir := filepath.Join(t.TempDir(), "database")
+
+		err := os.MkdirAll(dbDir, 0750)
+		if err != nil {
+			t.Fatalf("failed to create database dir: %v", err)
+		}
+
+		t.Chdir(filepath.Dir(dbDir))
+
+		err = storage.InitDB(context.Background())
+		if err != nil {
+			t.Fatalf("InitDB failed: %v", err)
+		}
+
+		db, err := sql.Open("sqlite3", filepath.Join(dbDir, "timterests.db"))
+		if err != nil {
+			t.Fatalf("failed to open db: %v", err)
+		}
+		defer db.Close()
+
+		var count int
+
+		err = db.QueryRowContext(
+			context.Background(),
+			"SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='users'",
+		).Scan(&count)
+		if err != nil {
+			t.Fatalf("failed to query sqlite_master: %v", err)
+		}
+
+		if count != 1 {
+			t.Errorf("expected users table to exist, got count %d", count)
+		}
+	})
+
+	t.Run("is idempotent when table already exists", func(t *testing.T) {
+		dbDir := filepath.Join(t.TempDir(), "database")
+
+		err := os.MkdirAll(dbDir, 0750)
+		if err != nil {
+			t.Fatalf("failed to create database dir: %v", err)
+		}
+
+		t.Chdir(filepath.Dir(dbDir))
+
+		err = storage.InitDB(context.Background())
+		if err != nil {
+			t.Fatalf("first InitDB failed: %v", err)
+		}
+
+		err = storage.InitDB(context.Background())
+		if err != nil {
+			t.Fatalf("second InitDB failed: %v", err)
+		}
+	})
+
+	t.Run("returns error when no database directory", func(t *testing.T) {
+		t.Chdir(t.TempDir())
+
+		err := storage.InitDB(context.Background())
+		if err == nil {
+			t.Error("expected error when database directory is missing")
+		}
+	})
+}
+
+func TestCreateUserTable(t *testing.T) {
+	t.Run("creates table and allows insert", func(t *testing.T) {
+		dbPath := filepath.Join(t.TempDir(), "test.db")
+
+		db, err := sql.Open("sqlite3", dbPath)
+		if err != nil {
+			t.Fatalf("failed to open db: %v", err)
+		}
+		defer db.Close()
+
+		err = storage.CreateUserTable(context.Background(), db)
+		if err != nil {
+			t.Fatalf("CreateUserTable failed: %v", err)
+		}
+
+		_, err = db.ExecContext(
+			context.Background(),
+			"INSERT INTO users (first_name, last_name, email, password) VALUES (?, ?, ?, ?)",
+			"Test", "User", "test@example.com", "hash",
+		)
+		if err != nil {
+			t.Fatalf("insert into users failed: %v", err)
+		}
+	})
+}
+
 func getYAMLDocument() *fstest.MapFile {
 	return &fstest.MapFile{
 		Data: []byte(
