@@ -80,9 +80,30 @@ func TestRSSHandler(t *testing.T) {
 			t.Errorf("RSS item link missing base URL: %q", item.Link)
 		}
 
+		if strings.Contains(item.Link, "//article") {
+			t.Errorf("RSS item link has double slash: %q", item.Link)
+		}
+
 		_, err := time.Parse(time.RFC1123Z, item.PubDate)
 		if err != nil {
-			t.Errorf("RSS item pubDate %q is not valid RFC 822: %v", item.PubDate, err)
+			t.Errorf("RSS item pubDate %q is not valid RFC1123Z: %v", item.PubDate, err)
 		}
+	}
+}
+
+func TestRSSHandlerTrailingSlash(t *testing.T) {
+	s := testSetup(t, context.Background())
+	t.Setenv("SITE_URL", "https://example.com/")
+
+	req := httptest.NewRequestWithContext(
+		context.Background(), http.MethodGet, "/rss.xml", nil,
+	)
+	rec := httptest.NewRecorder()
+
+	web.RSSHandler(rec, req, *s)
+
+	body := rec.Body.String()
+	if strings.Contains(body, "https://example.com//") {
+		t.Error("trailing slash on SITE_URL produced double slashes in feed URLs")
 	}
 }

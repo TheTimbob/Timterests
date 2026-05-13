@@ -4,6 +4,7 @@ import (
 	"encoding/xml"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"timterests/internal/service"
@@ -38,7 +39,7 @@ func RSSHandler(
 	r *http.Request,
 	s storage.Storage,
 ) {
-	baseURL := Site().URL
+	baseURL := strings.TrimRight(Site().URL, "/")
 
 	articles, err := service.ListArticles(r.Context(), s, "all")
 	if err != nil {
@@ -56,10 +57,9 @@ func RSSHandler(
 			desc = a.Preview
 		}
 
-		pubDate := a.Date
+		var pubDate string
 
-		t, err := time.Parse("2006-01-02", a.Date)
-		if err == nil {
+		if t, err := time.Parse("2006-01-02", a.Date); err == nil {
 			pubDate = t.Format(time.RFC1123Z)
 		}
 
