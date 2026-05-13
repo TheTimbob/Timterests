@@ -651,6 +651,19 @@ func TestListObjectsLocal(t *testing.T) {
 			}
 		}
 
+		older := time.Now().Add(-2 * time.Hour)
+		newer := time.Now().Add(-1 * time.Hour)
+
+		err = os.Chtimes(filepath.Join(subDir, "alpha.yaml"), older, older)
+		if err != nil {
+			t.Fatalf("failed to set mod time for alpha: %v", err)
+		}
+
+		err = os.Chtimes(filepath.Join(subDir, "bravo.yaml"), newer, newer)
+		if err != nil {
+			t.Fatalf("failed to set mod time for bravo: %v", err)
+		}
+
 		s := &storage.Storage{UseS3: false, BaseDir: baseDir}
 
 		objects, err := s.ListObjects(context.Background(), "articles")
@@ -660,6 +673,11 @@ func TestListObjectsLocal(t *testing.T) {
 
 		if len(objects) != 2 {
 			t.Fatalf("expected 2 objects, got %d", len(objects))
+		}
+
+		if objects[0].LastModified.Before(*objects[1].LastModified) {
+			t.Errorf("expected descending order: first=%v should be after second=%v",
+				objects[0].LastModified, objects[1].LastModified)
 		}
 	})
 
@@ -842,7 +860,6 @@ func TestGetPreparedFile(t *testing.T) {
 			t.Errorf("expected title 'Decoded Doc', got %q", doc.Title)
 		}
 	})
-
 }
 
 func TestGetDocumentBody(t *testing.T) {

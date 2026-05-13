@@ -203,6 +203,10 @@ func TestAdminDocumentsSortOrder(t *testing.T) {
 		addAuthCookie(req)
 		web.AdminDocumentsPageHandler(rec, req, *s, a)
 
+		if rec.Code != http.StatusOK {
+			t.Fatalf("expected status 200, got %d", rec.Code)
+		}
+
 		doc, err := goquery.NewDocumentFromReader(rec.Body)
 		if err != nil {
 			t.Fatalf("failed to parse response: %v", err)
@@ -216,6 +220,10 @@ func TestAdminDocumentsSortOrder(t *testing.T) {
 				filenames = append(filenames, name)
 			}
 		})
+
+		if len(filenames) < 2 {
+			t.Fatalf("expected at least 2 filenames to verify sort, got %d", len(filenames))
+		}
 
 		for i := 1; i < len(filenames); i++ {
 			if filenames[i-1] > filenames[i] {
@@ -233,6 +241,10 @@ func TestAdminDocumentsSortOrder(t *testing.T) {
 		addAuthCookie(req)
 		web.AdminDocumentsPageHandler(rec, req, *s, a)
 
+		if rec.Code != http.StatusOK {
+			t.Fatalf("expected status 200, got %d", rec.Code)
+		}
+
 		doc, err := goquery.NewDocumentFromReader(rec.Body)
 		if err != nil {
 			t.Fatalf("failed to parse response: %v", err)
@@ -246,6 +258,10 @@ func TestAdminDocumentsSortOrder(t *testing.T) {
 				filenames = append(filenames, name)
 			}
 		})
+
+		if len(filenames) < 2 {
+			t.Fatalf("expected at least 2 filenames to verify sort, got %d", len(filenames))
+		}
 
 		for i := 1; i < len(filenames); i++ {
 			if filenames[i-1] < filenames[i] {

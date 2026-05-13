@@ -149,9 +149,25 @@ func TestPromptOperations(t *testing.T) {
 	})
 
 	t.Run("get instruction rejects path traversal", func(t *testing.T) {
-		_, err := ai.GetInstruction("../../etc/passwd")
+		tmpDir := t.TempDir()
+
+		err := os.MkdirAll(filepath.Join(tmpDir, "prompts"), 0750)
+		if err != nil {
+			t.Fatalf("failed to create prompts dir: %v", err)
+		}
+
+		secret := filepath.Join(tmpDir, "secret.txt")
+
+		err = os.WriteFile(secret, []byte("sensitive data"), 0600)
+		if err != nil {
+			t.Fatalf("failed to write secret file: %v", err)
+		}
+
+		t.Chdir(tmpDir)
+
+		content, err := ai.GetInstruction("../secret.txt")
 		if err == nil {
-			t.Error("expected error for path traversal, got nil")
+			t.Errorf("expected error for path traversal, got content: %q", content)
 		}
 	})
 
