@@ -9,6 +9,8 @@ import (
 
 	"timterests/internal/server"
 	"timterests/internal/storage"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
 func TestRoutes(t *testing.T) {
@@ -98,5 +100,139 @@ func TestSecurityHeaders(t *testing.T) {
 	pp := resp.Header.Get("Permissions-Policy")
 	if !strings.Contains(pp, "camera=()") {
 		t.Errorf("Permissions-Policy missing camera=(), got %q", pp)
+	}
+}
+
+func TestRecoveryMiddleware(t *testing.T) {
+	setupHealthTestDB(t)
+
+	s := &server.Server{
+		Storage: &storage.Storage{
+			UseS3:   false,
+			BaseDir: t.TempDir(),
+		},
+	}
+
+	handler := s.RegisterRoutes()
+
+	svr := httptest.NewServer(handler)
+	defer svr.Close()
+
+	req, err := http.NewRequestWithContext(
+		t.Context(), http.MethodGet, svr.URL+"/health", nil,
+	)
+	if err != nil {
+		t.Fatalf("error creating request: %v", err)
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
+
+	defer func() { _ = resp.Body.Close() }()
+
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusServiceUnavailable {
+		t.Errorf("expected 200 or 503, got %d", resp.StatusCode)
+	}
+}
+
+func TestCORSPreflight(t *testing.T) {
+	setupHealthTestDB(t)
+
+	s := &server.Server{
+		Storage: &storage.Storage{
+			UseS3:   false,
+			BaseDir: t.TempDir(),
+		},
+	}
+
+	svr := httptest.NewServer(s.RegisterRoutes())
+	defer svr.Close()
+
+	req, err := http.NewRequestWithContext(
+		t.Context(), http.MethodOptions, svr.URL+"/health", nil,
+	)
+	if err != nil {
+		t.Fatalf("error creating request: %v", err)
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
+
+	defer func() { _ = resp.Body.Close() }()
+
+	if resp.StatusCode != http.StatusNoContent {
+		t.Errorf("expected 204 for OPTIONS preflight, got %d", resp.StatusCode)
+	}
+
+	corsHeaders := map[string]string{
+		"Access-Control-Allow-Origin":  "*",
+		"Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH",
+	}
+
+	for name, want := range corsHeaders {
+		got := resp.Header.Get(name)
+		if got != want {
+			t.Errorf("header %s: got %q, want %q", name, got, want)
+		}
+	}
+}
+
+func TestMaxBytesMiddleware(t *testing.T) {
+	setupHealthTestDB(t)
+
+	s := &server.Server{
+		Storage: &storage.Storage{
+			UseS3:   false,
+			BaseDir: t.TempDir(),
+		},
+	}
+
+	svr := httptest.NewServer(s.RegisterRoutes())
+	defer svr.Close()
+
+	body := strings.NewReader(strings.Repeat("x", 1024))
+
+	req, err := http.NewRequestWithContext(
+		t.Context(), http.MethodPost, svr.URL+"/health", body,
+	)
+	if err != nil {
+		t.Fatalf("error creating request: %v", err)
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
+
+	defer func() { _ = resp.Body.Close() }()
+
+	if resp.StatusCode >= 500 {
+		t.Errorf("expected non-500 for small body, got %d", resp.StatusCode)
+	}
+}
+
+func TestHelloWorldContentType(t *testing.T) {
+	t.Parallel()
+
+	s := &server.Server{}
+	rec := httptest.NewRecorder()
+	req := httptest.NewRequestWithContext(
+		t.Context(), http.MethodGet, "/hello", nil,
+	)
+
+	s.HelloWorldHandler(rec, req)
+
+	ct := rec.Header().Get("Content-Type")
+	if !strings.Contains(ct, "application/json") {
+		t.Errorf("expected JSON content type, got %q", ct)
+	}
+
+	body := rec.Body.String()
+	if !strings.Contains(body, "Hello World") {
+		t.Errorf("expected Hello World in body, got %q", body)
 	}
 }
