@@ -159,6 +159,7 @@ func TestReadingTime(t *testing.T) {
 		{"strips HTML before counting", "<h1>Title</h1><p>One <strong>two</strong> three</p>", "1 min read"},
 		{"empty content returns 1 min", "", "1 min read"},
 		{"just over threshold rounds up", "<p>" + strings.Repeat("word ", 201) + "</p>", "2 min read"},
+		{"adjacent tags preserve word boundaries", "<h1>Title</h1><p>Body</p>", "1 min read"},
 	}
 
 	for _, tc := range tests {
@@ -187,6 +188,17 @@ func TestHTMLParsing(t *testing.T) {
 			t.Errorf("Expected %s, got %s", expected, result)
 		}
 	})
+	t.Run("adjacent tags preserve word boundaries", func(t *testing.T) {
+		t.Parallel()
+
+		input := `<h1>Title</h1><p>Body</p>`
+		result := storage.RemoveHTMLTags(input)
+
+		if result != "Title Body" {
+			t.Errorf("expected %q, got %q", "Title Body", result)
+		}
+	})
+
 	t.Run("filenames are sanitized and formatted", func(t *testing.T) {
 		t.Parallel()
 
