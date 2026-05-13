@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"timterests/internal/auth"
+	"timterests/internal/storage"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -178,13 +179,7 @@ func setupAuthDB(t *testing.T) {
 	}
 	defer db.Close()
 
-	_, err = db.ExecContext(context.Background(), `CREATE TABLE IF NOT EXISTS users (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		first_name TEXT NOT NULL,
-		last_name TEXT NOT NULL,
-		email TEXT UNIQUE NOT NULL,
-		password TEXT NOT NULL
-	)`)
+	err = storage.CreateUserTable(context.Background(), db)
 	if err != nil {
 		t.Fatalf("failed to create users table: %v", err)
 	}

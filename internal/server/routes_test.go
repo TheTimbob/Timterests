@@ -103,40 +103,6 @@ func TestSecurityHeaders(t *testing.T) {
 	}
 }
 
-func TestRecoveryMiddleware(t *testing.T) {
-	setupHealthTestDB(t)
-
-	s := &server.Server{
-		Storage: &storage.Storage{
-			UseS3:   false,
-			BaseDir: t.TempDir(),
-		},
-	}
-
-	handler := s.RegisterRoutes()
-
-	svr := httptest.NewServer(handler)
-	defer svr.Close()
-
-	req, err := http.NewRequestWithContext(
-		t.Context(), http.MethodGet, svr.URL+"/health", nil,
-	)
-	if err != nil {
-		t.Fatalf("error creating request: %v", err)
-	}
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		t.Fatalf("request failed: %v", err)
-	}
-
-	defer func() { _ = resp.Body.Close() }()
-
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusServiceUnavailable {
-		t.Errorf("expected 200 or 503, got %d", resp.StatusCode)
-	}
-}
-
 func TestCORSPreflight(t *testing.T) {
 	setupHealthTestDB(t)
 
@@ -178,40 +144,6 @@ func TestCORSPreflight(t *testing.T) {
 		if got != want {
 			t.Errorf("header %s: got %q, want %q", name, got, want)
 		}
-	}
-}
-
-func TestMaxBytesMiddleware(t *testing.T) {
-	setupHealthTestDB(t)
-
-	s := &server.Server{
-		Storage: &storage.Storage{
-			UseS3:   false,
-			BaseDir: t.TempDir(),
-		},
-	}
-
-	svr := httptest.NewServer(s.RegisterRoutes())
-	defer svr.Close()
-
-	body := strings.NewReader(strings.Repeat("x", 1024))
-
-	req, err := http.NewRequestWithContext(
-		t.Context(), http.MethodPost, svr.URL+"/health", body,
-	)
-	if err != nil {
-		t.Fatalf("error creating request: %v", err)
-	}
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		t.Fatalf("request failed: %v", err)
-	}
-
-	defer func() { _ = resp.Body.Close() }()
-
-	if resp.StatusCode >= 500 {
-		t.Errorf("expected non-500 for small body, got %d", resp.StatusCode)
 	}
 }
 

@@ -248,7 +248,16 @@ func TestArticlesGridDesign(t *testing.T) {
 		web.ArticlesPageHandler(rec, req, *s, "all", "grid")
 
 		if rec.Code != http.StatusOK {
-			t.Errorf("expected status 200, got %d", rec.Code)
+			t.Fatalf("expected status 200, got %d", rec.Code)
+		}
+
+		doc, err := goquery.NewDocumentFromReader(rec.Body)
+		if err != nil {
+			t.Fatalf("failed to parse response: %v", err)
+		}
+
+		if doc.Find("li.grid-list-element").Length() == 0 {
+			t.Error("expected grid-list-element for grid design, but found none")
 		}
 	})
 
@@ -263,7 +272,16 @@ func TestArticlesGridDesign(t *testing.T) {
 		web.ArticlesPageHandler(rec, req, *s, "all", "links")
 
 		if rec.Code != http.StatusOK {
-			t.Errorf("expected status 200, got %d", rec.Code)
+			t.Fatalf("expected status 200, got %d", rec.Code)
+		}
+
+		doc, err := goquery.NewDocumentFromReader(rec.Body)
+		if err != nil {
+			t.Fatalf("failed to parse response: %v", err)
+		}
+
+		if doc.Find("div.link-item").Length() == 0 {
+			t.Error("expected link-item elements for links design, but found none")
 		}
 	})
 }
