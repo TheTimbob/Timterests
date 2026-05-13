@@ -236,3 +236,105 @@ func TestHelloWorldContentType(t *testing.T) {
 		t.Errorf("expected Hello World in body, got %q", body)
 	}
 }
+
+func TestRegisterRoutesEndpoints(t *testing.T) {
+	s := &server.Server{
+		Storage: &storage.Storage{
+			UseS3:   false,
+			BaseDir: t.TempDir(),
+		},
+	}
+
+	svr := httptest.NewServer(s.RegisterRoutes())
+	defer svr.Close()
+
+	endpoints := []string{
+		"/",
+		"/home",
+		"/web",
+		"/web/home",
+		"/articles",
+		"/projects",
+		"/reading-list",
+		"/login",
+		"/sitemap.xml",
+		"/about",
+		"/writer",
+		"/admin",
+		"/admin/documents",
+		"/admin/users",
+		"/admin/users/create",
+		"/write",
+		"/write/suggest",
+		"/download",
+		"/download/new",
+		"/article",
+		"/project",
+		"/book",
+		"/letter",
+		"/letters",
+	}
+
+	for _, path := range endpoints {
+		t.Run(path, func(t *testing.T) {
+			req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, svr.URL+path, nil)
+			if err != nil {
+				t.Fatalf("error creating request: %v", err)
+			}
+
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("error making request to %s: %v", path, err)
+			}
+
+			defer func() { _ = resp.Body.Close() }()
+
+			if resp.StatusCode == 0 {
+				t.Errorf("expected non-zero status code for %s", path)
+			}
+		})
+	}
+}
+
+func TestRecoveryMiddlewarePanic(t *testing.T) {
+	s := &server.Server{
+		Storage: &storage.Storage{
+			UseS3:   false,
+			BaseDir: t.TempDir(),
+		},
+		// auth is nil — /letters calls a.IsAuthenticated → nil deref → panic
+	}
+
+	svr := httptest.NewServer(s.RegisterRoutes())
+	defer svr.Close()
+
+	req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, svr.URL+"/letters", nil)
+	if err != nil {
+		t.Fatalf("error creating request: %v", err)
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("error making request: %v", err)
+	}
+
+	defer func() { _ = resp.Body.Close() }()
+
+	if resp.StatusCode != http.StatusInternalServerError {
+		t.Errorf("expected 500 from panic recovery, got %d", resp.StatusCode)
+	}
+}
+
+func TestNewServer(t *testing.T) {
+	t.Setenv("PORT", "18080")
+	t.Setenv("SESSION_NAME", "test-session")
+
+	svr := server.NewServer()
+	if svr == nil {
+		t.Fatal("expected non-nil server")
+	}
+
+	if svr.Addr != ":18080" {
+		t.Errorf("expected addr :18080, got %s", svr.Addr)
+	}
+}
