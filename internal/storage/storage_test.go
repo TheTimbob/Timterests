@@ -535,6 +535,322 @@ func TestCreateUserTable(t *testing.T) {
 	})
 }
 
+func TestLocalPath(t *testing.T) {
+	t.Parallel()
+
+	t.Run("valid relative path", func(t *testing.T) {
+		t.Parallel()
+
+		result, err := storage.LocalPath("/base", "subdir/file.yaml")
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+
+		if result != "/base/subdir/file.yaml" {
+			t.Errorf("expected /base/subdir/file.yaml, got %s", result)
+		}
+	})
+
+	t.Run("path traversal is rejected", func(t *testing.T) {
+		t.Parallel()
+
+		_, err := storage.LocalPath("/base", "../etc/passwd")
+		if err == nil {
+			t.Error("expected error for path traversal, got nil")
+		}
+	})
+
+	t.Run("absolute filename is rejected", func(t *testing.T) {
+		t.Parallel()
+
+		_, err := storage.LocalPath("/base", "/absolute/path")
+		if err == nil {
+			t.Error("expected error for absolute filename, got nil")
+		}
+	})
+}
+
+func TestListObjects(t *testing.T) {
+	t.Parallel()
+
+	t.Run("lists files from existing directory", func(t *testing.T) {
+		t.Parallel()
+
+		baseDir := t.TempDir()
+		dir := filepath.Join(baseDir, "articles")
+
+		err := os.MkdirAll(dir, 0750)
+		if err != nil {
+			t.Fatalf("failed to create articles dir: %v", err)
+		}
+
+		err = os.WriteFile(filepath.Join(dir, "one.yaml"), []byte("title: One"), 0600)
+		if err != nil {
+			t.Fatalf("failed to write file: %v", err)
+		}
+
+		err = os.WriteFile(filepath.Join(dir, "two.yaml"), []byte("title: Two"), 0600)
+		if err != nil {
+			t.Fatalf("failed to write file: %v", err)
+		}
+
+		s := &storage.Storage{UseS3: false, BaseDir: baseDir}
+
+		objects, err := s.ListObjects(context.Background(), "articles")
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+
+		if len(objects) != 2 {
+			t.Errorf("expected 2 objects, got %d", len(objects))
+		}
+	})
+
+	t.Run("creates directory and returns empty list", func(t *testing.T) {
+		t.Parallel()
+
+		s := &storage.Storage{UseS3: false, BaseDir: t.TempDir()}
+
+		objects, err := s.ListObjects(context.Background(), "newdir")
+		if err != nil {
+			t.Fatalf("expected no error for new dir, got %v", err)
+		}
+
+		if len(objects) != 0 {
+			t.Errorf("expected 0 objects, got %d", len(objects))
+		}
+	})
+
+	t.Run("ignores subdirectories", func(t *testing.T) {
+		t.Parallel()
+
+		baseDir := t.TempDir()
+		dir := filepath.Join(baseDir, "articles")
+
+		err := os.MkdirAll(filepath.Join(dir, "subdir"), 0750)
+		if err != nil {
+			t.Fatalf("failed to create subdirs: %v", err)
+		}
+
+		err = os.WriteFile(filepath.Join(dir, "file.yaml"), []byte("title: File"), 0600)
+		if err != nil {
+			t.Fatalf("failed to write file: %v", err)
+		}
+
+		s := &storage.Storage{UseS3: false, BaseDir: baseDir}
+
+		objects, err := s.ListObjects(context.Background(), "articles")
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+
+		if len(objects) != 1 {
+			t.Errorf("expected 1 object (subdir ignored), got %d", len(objects))
+		}
+	})
+}
+
+func TestGetFile(t *testing.T) {
+	t.Parallel()
+
+	t.Run("opens existing local file", func(t *testing.T) {
+		t.Parallel()
+
+		baseDir := t.TempDir()
+		dir := filepath.Join(baseDir, "articles")
+
+		err := os.MkdirAll(dir, 0750)
+		if err != nil {
+			t.Fatalf("failed to create dir: %v", err)
+		}
+
+		err = os.WriteFile(filepath.Join(dir, "test.yaml"), []byte("title: Test"), 0600)
+		if err != nil {
+			t.Fatalf("failed to write file: %v", err)
+		}
+
+		s := &storage.Storage{UseS3: false, BaseDir: baseDir}
+
+		file, err := s.GetFile(context.Background(), "articles/test.yaml")
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+
+		defer file.Close()
+	})
+
+	t.Run("returns error for nonexistent file", func(t *testing.T) {
+		t.Parallel()
+
+		s := &storage.Storage{UseS3: false, BaseDir: t.TempDir()}
+
+		_, err := s.GetFile(context.Background(), "articles/missing.yaml")
+		if err == nil {
+			t.Error("expected error for missing file, got nil")
+		}
+	})
+}
+
+func TestGetPreparedFile(t *testing.T) {
+	t.Parallel()
+
+	baseDir := t.TempDir()
+	dir := filepath.Join(baseDir, "articles")
+
+	err := os.MkdirAll(dir, 0750)
+	if err != nil {
+		t.Fatalf("failed to create dir: %v", err)
+	}
+
+	err = os.WriteFile(filepath.Join(dir, "test.yaml"), []byte("title: Prepared Article\nsubtitle: Sub"), 0600)
+	if err != nil {
+		t.Fatalf("failed to write file: %v", err)
+	}
+
+	s := &storage.Storage{UseS3: false, BaseDir: baseDir}
+
+	var doc model.Document
+
+	err = s.GetPreparedFile(context.Background(), "articles/test.yaml", &doc)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	if doc.Title != "Prepared Article" {
+		t.Errorf("expected title 'Prepared Article', got %q", doc.Title)
+	}
+}
+
+func TestGetRawFile(t *testing.T) {
+	t.Parallel()
+
+	baseDir := t.TempDir()
+	dir := filepath.Join(baseDir, "articles")
+
+	err := os.MkdirAll(dir, 0750)
+	if err != nil {
+		t.Fatalf("failed to create dir: %v", err)
+	}
+
+	err = os.WriteFile(filepath.Join(dir, "raw.yaml"), []byte("title: Raw Article"), 0600)
+	if err != nil {
+		t.Fatalf("failed to write file: %v", err)
+	}
+
+	s := &storage.Storage{UseS3: false, BaseDir: baseDir}
+
+	var doc model.Document
+
+	err = s.GetRawFile(context.Background(), "articles/raw.yaml", &doc)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	if doc.Title != "Raw Article" {
+		t.Errorf("expected title 'Raw Article', got %q", doc.Title)
+	}
+}
+
+func TestGetImage(t *testing.T) {
+	t.Parallel()
+
+	t.Run("local mode returns web path", func(t *testing.T) {
+		t.Parallel()
+
+		s := &storage.Storage{UseS3: false, BaseDir: t.TempDir()}
+
+		result, err := s.GetImage(context.Background(), "images/photo.jpg")
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+
+		expected := "/storage/images/photo.jpg"
+		if result != expected {
+			t.Errorf("expected %q, got %q", expected, result)
+		}
+	})
+
+	t.Run("returns error for path traversal", func(t *testing.T) {
+		t.Parallel()
+
+		s := &storage.Storage{UseS3: false, BaseDir: t.TempDir()}
+
+		_, err := s.GetImage(context.Background(), "../etc/passwd")
+		if err == nil {
+			t.Error("expected error for path traversal, got nil")
+		}
+	})
+}
+
+func TestGetDocumentBodyRaw(t *testing.T) {
+	t.Parallel()
+
+	baseDir := t.TempDir()
+	dir := filepath.Join(baseDir, "articles")
+
+	err := os.MkdirAll(dir, 0750)
+	if err != nil {
+		t.Fatalf("failed to create dir: %v", err)
+	}
+
+	mdContent := "# Test Article\n\nThis is the body."
+
+	err = os.WriteFile(filepath.Join(dir, "test.md"), []byte(mdContent), 0600)
+	if err != nil {
+		t.Fatalf("failed to write md file: %v", err)
+	}
+
+	s := &storage.Storage{UseS3: false, BaseDir: baseDir}
+
+	raw, err := s.GetDocumentBodyRaw(context.Background(), "articles/test.yaml")
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	if raw != mdContent {
+		t.Errorf("expected %q, got %q", mdContent, raw)
+	}
+}
+
+func TestGetDocumentBody(t *testing.T) {
+	t.Parallel()
+
+	baseDir := t.TempDir()
+	dir := filepath.Join(baseDir, "articles")
+
+	err := os.MkdirAll(dir, 0750)
+	if err != nil {
+		t.Fatalf("failed to create dir: %v", err)
+	}
+
+	err = os.WriteFile(filepath.Join(dir, "test.md"), []byte("# Title\n\nBody text."), 0600)
+	if err != nil {
+		t.Fatalf("failed to write md file: %v", err)
+	}
+
+	s := &storage.Storage{UseS3: false, BaseDir: baseDir}
+
+	html, err := s.GetDocumentBody(context.Background(), "articles/test.yaml")
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	if !strings.Contains(html, "<h1") {
+		t.Errorf("expected HTML with h1 tag, got %q", html)
+	}
+}
+
+func TestDownloadS3FileLocalMode(t *testing.T) {
+	t.Parallel()
+
+	s := &storage.Storage{UseS3: false, BaseDir: t.TempDir()}
+
+	err := s.DownloadS3File(context.Background(), "articles/test.yaml")
+	if err != nil {
+		t.Errorf("expected no error in local mode, got %v", err)
+	}
+}
+
 func getYAMLDocument() *fstest.MapFile {
 	return &fstest.MapFile{
 		Data: []byte(
