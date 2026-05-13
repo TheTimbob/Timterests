@@ -182,7 +182,101 @@ func TestAdminDocumentsPageHandler(t *testing.T) {
 		rec := httptest.NewRecorder()
 
 		addAuthCookie(req)
+		web.AdminDocumentsPageHandler(rec, req, *s, a)
 
+		if rec.Code != http.StatusOK {
+			t.Errorf("expected status 200, got %d", rec.Code)
+		}
+	})
+}
+
+func TestAdminDocumentsSortOrder(t *testing.T) {
+	a, addAuthCookie := testAuthentication(t)
+	s := testSetup(t, context.Background())
+
+	t.Run("filename ascending is ordered", func(t *testing.T) {
+		req := httptest.NewRequestWithContext(
+			context.Background(), http.MethodGet, "/admin/documents?sort=filename&dir=asc", nil,
+		)
+		rec := httptest.NewRecorder()
+
+		addAuthCookie(req)
+		web.AdminDocumentsPageHandler(rec, req, *s, a)
+
+		if rec.Code != http.StatusOK {
+			t.Fatalf("expected status 200, got %d", rec.Code)
+		}
+
+		doc, err := goquery.NewDocumentFromReader(rec.Body)
+		if err != nil {
+			t.Fatalf("failed to parse response: %v", err)
+		}
+
+		var filenames []string
+
+		doc.Find("table.admin-table tbody tr td:first-child").Each(func(_ int, sel *goquery.Selection) {
+			name := strings.TrimSpace(sel.Text())
+			if name != "" {
+				filenames = append(filenames, name)
+			}
+		})
+
+		if len(filenames) < 2 {
+			t.Fatalf("expected at least 2 filenames to verify sort, got %d", len(filenames))
+		}
+
+		for i := 1; i < len(filenames); i++ {
+			if filenames[i-1] > filenames[i] {
+				t.Errorf("filenames not sorted ascending: %q > %q", filenames[i-1], filenames[i])
+			}
+		}
+	})
+
+	t.Run("filename descending is ordered", func(t *testing.T) {
+		req := httptest.NewRequestWithContext(
+			context.Background(), http.MethodGet, "/admin/documents?sort=filename&dir=desc", nil,
+		)
+		rec := httptest.NewRecorder()
+
+		addAuthCookie(req)
+		web.AdminDocumentsPageHandler(rec, req, *s, a)
+
+		if rec.Code != http.StatusOK {
+			t.Fatalf("expected status 200, got %d", rec.Code)
+		}
+
+		doc, err := goquery.NewDocumentFromReader(rec.Body)
+		if err != nil {
+			t.Fatalf("failed to parse response: %v", err)
+		}
+
+		var filenames []string
+
+		doc.Find("table.admin-table tbody tr td:first-child").Each(func(_ int, sel *goquery.Selection) {
+			name := strings.TrimSpace(sel.Text())
+			if name != "" {
+				filenames = append(filenames, name)
+			}
+		})
+
+		if len(filenames) < 2 {
+			t.Fatalf("expected at least 2 filenames to verify sort, got %d", len(filenames))
+		}
+
+		for i := 1; i < len(filenames); i++ {
+			if filenames[i-1] < filenames[i] {
+				t.Errorf("filenames not sorted descending: %q < %q", filenames[i-1], filenames[i])
+			}
+		}
+	})
+
+	t.Run("modified date sort returns 200", func(t *testing.T) {
+		req := httptest.NewRequestWithContext(
+			context.Background(), http.MethodGet, "/admin/documents?sort=modified&dir=desc", nil,
+		)
+		rec := httptest.NewRecorder()
+
+		addAuthCookie(req)
 		web.AdminDocumentsPageHandler(rec, req, *s, a)
 
 		if rec.Code != http.StatusOK {
