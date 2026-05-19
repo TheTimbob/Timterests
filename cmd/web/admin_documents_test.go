@@ -191,6 +191,90 @@ func TestAdminDocumentsPageHandler(t *testing.T) {
 	})
 }
 
+func TestAdminDocumentsSortByModified(t *testing.T) {
+	a, addAuthCookie := testAuthentication(t)
+	s := testSetup(t, context.Background())
+
+	t.Run("modified ascending is ordered", func(t *testing.T) {
+		req := httptest.NewRequestWithContext(
+			context.Background(), http.MethodGet,
+			"/admin/documents?sort=modified&dir=asc", nil,
+		)
+		rec := httptest.NewRecorder()
+
+		addAuthCookie(req)
+		web.AdminDocumentsPageHandler(rec, req, *s, a)
+
+		if rec.Code != http.StatusOK {
+			t.Fatalf("expected status 200, got %d", rec.Code)
+		}
+
+		doc, err := goquery.NewDocumentFromReader(rec.Body)
+		if err != nil {
+			t.Fatalf("failed to parse response: %v", err)
+		}
+
+		var dates []string
+
+		doc.Find("table.admin-table tbody tr").Each(func(_ int, row *goquery.Selection) {
+			date := strings.TrimSpace(row.Find("td").Eq(2).Text())
+			if date != "" {
+				dates = append(dates, date)
+			}
+		})
+
+		if len(dates) < 2 {
+			t.Fatalf("expected at least 2 dates to verify sort, got %d", len(dates))
+		}
+
+		for i := 1; i < len(dates); i++ {
+			if dates[i-1] > dates[i] {
+				t.Errorf("dates not sorted ascending: %q > %q", dates[i-1], dates[i])
+			}
+		}
+	})
+
+	t.Run("modified descending is ordered", func(t *testing.T) {
+		req := httptest.NewRequestWithContext(
+			context.Background(), http.MethodGet,
+			"/admin/documents?sort=modified&dir=desc", nil,
+		)
+		rec := httptest.NewRecorder()
+
+		addAuthCookie(req)
+		web.AdminDocumentsPageHandler(rec, req, *s, a)
+
+		if rec.Code != http.StatusOK {
+			t.Fatalf("expected status 200, got %d", rec.Code)
+		}
+
+		doc, err := goquery.NewDocumentFromReader(rec.Body)
+		if err != nil {
+			t.Fatalf("failed to parse response: %v", err)
+		}
+
+		var dates []string
+
+		doc.Find("table.admin-table tbody tr").Each(func(_ int, row *goquery.Selection) {
+			date := strings.TrimSpace(row.Find("td").Eq(2).Text())
+			if date != "" {
+				dates = append(dates, date)
+			}
+		})
+
+		if len(dates) < 2 {
+			t.Fatalf("expected at least 2 dates to verify sort, got %d", len(dates))
+		}
+
+		for i := 1; i < len(dates); i++ {
+			if dates[i-1] < dates[i] {
+				t.Errorf("dates not sorted descending: %q < %q", dates[i-1], dates[i])
+			}
+		}
+	})
+
+}
+
 func TestListAllDocuments(t *testing.T) {
 	s := testSetup(t, context.Background())
 

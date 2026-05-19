@@ -209,6 +209,83 @@ func TestGetArticleNotFound(t *testing.T) {
 	})
 }
 
+func TestFormatDateForFilename(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{"valid date", "2026-01-15", "01-15-2026"},
+		{"invalid date returns original", "not-a-date", "not-a-date"},
+		{"empty string", "", ""},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			got := web.FormatDateForFilename(tc.input)
+			if got != tc.expected {
+				t.Errorf("FormatDateForFilename(%q) = %q, want %q", tc.input, got, tc.expected)
+			}
+		})
+	}
+}
+
+func TestArticlesGridDesign(t *testing.T) {
+	s := testSetup(t, context.Background())
+
+	t.Run("render articles with grid design", func(t *testing.T) {
+		t.Parallel()
+
+		req := httptest.NewRequestWithContext(
+			context.Background(), http.MethodGet, "/articles?design=grid", nil,
+		)
+		rec := httptest.NewRecorder()
+
+		web.ArticlesPageHandler(rec, req, *s, "all", "grid")
+
+		if rec.Code != http.StatusOK {
+			t.Fatalf("expected status 200, got %d", rec.Code)
+		}
+
+		doc, err := goquery.NewDocumentFromReader(rec.Body)
+		if err != nil {
+			t.Fatalf("failed to parse response: %v", err)
+		}
+
+		if doc.Find("li.grid-list-element").Length() == 0 {
+			t.Error("expected grid-list-element for grid design, but found none")
+		}
+	})
+
+	t.Run("render articles with links design", func(t *testing.T) {
+		t.Parallel()
+
+		req := httptest.NewRequestWithContext(
+			context.Background(), http.MethodGet, "/articles?design=links", nil,
+		)
+		rec := httptest.NewRecorder()
+
+		web.ArticlesPageHandler(rec, req, *s, "all", "links")
+
+		if rec.Code != http.StatusOK {
+			t.Fatalf("expected status 200, got %d", rec.Code)
+		}
+
+		doc, err := goquery.NewDocumentFromReader(rec.Body)
+		if err != nil {
+			t.Fatalf("failed to parse response: %v", err)
+		}
+
+		if doc.Find("div.link-item").Length() == 0 {
+			t.Error("expected link-item elements for links design, but found none")
+		}
+	})
+}
+
 func TestArticleCardConversion(t *testing.T) {
 	ctx := context.Background()
 	s := testSetup(t, ctx)
