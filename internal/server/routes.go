@@ -111,6 +111,9 @@ func (s *Server) RegisterRoutes() http.Handler {
 	mux.Handle("/sitemap.xml", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		web.SitemapHandler(w, r, *s.Storage)
 	}))
+	mux.Handle("/rss.xml", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		web.RSSHandler(w, r, *s.Storage)
+	}))
 
 	// Health check
 	mux.HandleFunc("/health", s.HealthHandler)
