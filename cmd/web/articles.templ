@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"timterests/cmd/web/components"
 	"timterests/internal/model"
+	"timterests/internal/storage"
 )
 
 func articleDescription(a model.Article) string {
@@ -92,6 +93,7 @@ templ ArticleDisplay(dc model.DisplayContent, userIsAdmin bool) {
     @EditArticleButton(dc, userIsAdmin)
     @components.DownloadDocumentButton(dc.S3Key, userIsAdmin)
 	<div id="article-container">
+		<p class="card-date">{ storage.ReadingTime(dc.Body) }</p>
 		@templ.Raw(dc.Body)
 	</div>
 }

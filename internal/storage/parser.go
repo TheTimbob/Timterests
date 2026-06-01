@@ -60,11 +60,26 @@ func GetTags(v reflect.Value, tags []string) []string {
 	return tags
 }
 
+var htmlTagRegex = regexp.MustCompile(`<[^>]*>`)
+
 // RemoveHTMLTags strips all HTML tags from a string.
 func RemoveHTMLTags(s string) string {
-	re := regexp.MustCompile(`<[^>]*>`)
+	stripped := htmlTagRegex.ReplaceAllString(s, " ")
 
-	return re.ReplaceAllString(s, "")
+	return strings.Join(strings.Fields(stripped), " ")
+}
+
+// ReadingTime estimates the reading time for HTML content.
+// Returns a human-readable string like "3 min read".
+func ReadingTime(htmlBody string) string {
+	text := RemoveHTMLTags(htmlBody)
+	words := strings.Fields(text)
+
+	const wordsPerMinute = 200
+
+	minutes := max((len(words)+wordsPerMinute-1)/wordsPerMinute, 1)
+
+	return strconv.Itoa(minutes) + " min read"
 }
 
 // SanitizeFilename sanitizes a filename for safe file system use.
