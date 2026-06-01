@@ -99,6 +99,7 @@ func DownloadNewDocumentHandler(w http.ResponseWriter, r *http.Request, a *auth.
 		}
 	}()
 
+	// #nosec G705 -- writing to a temp file, not an HTTP response; no XSS risk
 	_, err = fmt.Fprintf(f, "# %s\n## %s\n\n%s", title, subtitle, body)
 
 	closeErr := f.Close()

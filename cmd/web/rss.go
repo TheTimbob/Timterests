@@ -39,7 +39,8 @@ func RSSHandler(
 	r *http.Request,
 	s storage.Storage,
 ) {
-	baseURL := strings.TrimRight(Site().URL, "/")
+    site := Site()
+	baseURL := strings.TrimRight(site.URL, "/")
 
 	articles, err := service.ListArticles(r.Context(), s, "all")
 	if err != nil {
@@ -76,9 +77,9 @@ func RSSHandler(
 	feed := rssFeed{
 		Version: "2.0",
 		Channel: rssChannel{
-			Title:       Site().Name,
+			Title:       site.Name,
 			Link:        baseURL,
-			Description: Site().Description,
+			Description: site.Description,
 			Language:    "en",
 			Items:       items,
 		},

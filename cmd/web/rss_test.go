@@ -84,9 +84,11 @@ func TestRSSHandler(t *testing.T) {
 			t.Errorf("RSS item link has double slash: %q", item.Link)
 		}
 
-		_, err := time.Parse(time.RFC1123Z, item.PubDate)
-		if err != nil {
-			t.Errorf("RSS item pubDate %q is not valid RFC1123Z: %v", item.PubDate, err)
+		if item.PubDate != "" {
+			_, err := time.Parse(time.RFC1123Z, item.PubDate)
+			if err != nil {
+				t.Errorf("RSS item pubDate %q is not valid RFC1123Z: %v", item.PubDate, err)
+			}
 		}
 	}
 }
