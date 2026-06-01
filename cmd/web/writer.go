@@ -235,18 +235,16 @@ func WriterSuggestionHandler(w http.ResponseWriter, r *http.Request, s storage.S
 	}
 }
 
-type metaSetter interface {
-	SetMeta(id, key string)
-}
+
 
 func loadRawDoc[T any, PT interface {
 	*T
-	metaSetter
+	model.MetaSetter
 }](ctx context.Context, key, idStr string, s storage.Storage) (model.Content[T], error) {
 	var doc T
 	PT(&doc).SetMeta(idStr, key)
 
-	err := s.GetRawFile(ctx, key, PT(&doc))
+	err := s.GetPreparedFile(ctx, key, PT(&doc))
 	if err != nil {
 		return model.Content[T]{}, fmt.Errorf("failed to get raw file: %w", err)
 	}

@@ -30,3 +30,7 @@ type Content[T any] struct {
 	Doc  T
 	Body string
 }
+
+type MetaSetter interface {
+	SetMeta(id, key string)
+}
