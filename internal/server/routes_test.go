@@ -106,6 +106,8 @@ func TestSecurityHeaders(t *testing.T) {
 func TestCORSPreflight(t *testing.T) {
 	setupHealthTestDB(t)
 
+	t.Setenv("SITE_URL", "https://example.com")
+
 	s := &server.Server{
 		Storage: &storage.Storage{
 			UseS3:   false,
@@ -135,7 +137,7 @@ func TestCORSPreflight(t *testing.T) {
 	}
 
 	corsHeaders := map[string]string{
-		"Access-Control-Allow-Origin":  "*",
+		"Access-Control-Allow-Origin":  "https://example.com",
 		"Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH",
 	}
 

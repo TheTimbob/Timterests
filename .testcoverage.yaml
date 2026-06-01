@@ -1,9 +1,9 @@
 profile: tmp/cover.out
-threshold:
 #TODO adjust thresholds upwards when tests are improved
+threshold:
   file: 0 # 70
   package: 0 # 80
-  total: 2 #95
+  total: 65 #95
 exclude:
   paths:
     - '.*_templ\.go$'    # exclude all templ template files

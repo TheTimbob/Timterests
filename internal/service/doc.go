@@ -4,19 +4,15 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"timterests/internal/model"
 	"timterests/internal/storage"
 )
-
-// metaSetter is satisfied by any type whose pointer embeds *model.Document.
-type metaSetter interface {
-	SetMeta(id, key string)
-}
 
 // getDoc initialises a zero-value T, sets its metadata, fetches and prepares
 // the file from storage, and returns a pointer to the result.
 func getDoc[T any, PT interface {
 	*T
-	metaSetter
+	model.MetaSetter
 }](ctx context.Context, s storage.Storage, key string, id int) (*T, error) {
 	var doc T
 

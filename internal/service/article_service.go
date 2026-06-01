@@ -99,8 +99,6 @@ func GetLatestArticle(ctx context.Context, s storage.Storage) (*model.Article, e
 func FormatArticleDateForFilename(dateStr string) string {
 	t, err := time.Parse("2006-01-02", dateStr)
 	if err != nil {
-		log.Printf("FormatArticleDateForFilename: failed to parse date %q: %v", dateStr, err)
-
 		return dateStr
 	}
 
