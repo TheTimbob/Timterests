@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"timterests/cmd/web"
 	"timterests/internal/auth"
@@ -156,6 +157,16 @@ func TestArticleRendering(t *testing.T) {
 		if doc.Find("h2").Length() == 0 {
 			t.Error("expected h2 element to be rendered, but it wasn't")
 		}
+
+		// Expect the reading time estimate to be present and formatted correctly.
+		readingTime := doc.Find("#article-container p.card-date").First().Text()
+		if readingTime == "" {
+			t.Error("expected reading time element to be rendered, but it wasn't")
+		}
+
+		if !strings.HasSuffix(readingTime, " min read") {
+			t.Errorf("expected reading time to match \"X min read\", got %q", readingTime)
+		}
 	})
 
 	t.Run("render article display only", func(t *testing.T) {
@@ -189,6 +200,16 @@ func TestArticleRendering(t *testing.T) {
 
 		if doc.Find("h2").Length() == 0 {
 			t.Error("expected h2 element to be rendered, but it wasn't")
+		}
+
+		// Expect the reading time estimate to be present and formatted correctly.
+		readingTime := doc.Find("#article-container p.card-date").First().Text()
+		if readingTime == "" {
+			t.Error("expected reading time element to be rendered, but it wasn't")
+		}
+
+		if !strings.HasSuffix(readingTime, " min read") {
+			t.Errorf("expected reading time to match \"X min read\", got %q", readingTime)
 		}
 	})
 }
