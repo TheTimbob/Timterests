@@ -39,7 +39,7 @@ func RSSHandler(
 	r *http.Request,
 	s storage.Storage,
 ) {
-    site := Site()
+	site := Site()
 	baseURL := strings.TrimRight(site.URL, "/")
 
 	articles, err := service.ListArticles(r.Context(), s, "all")
