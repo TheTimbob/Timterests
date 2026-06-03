@@ -217,7 +217,7 @@ func TestAdminDocumentsSortByModified(t *testing.T) {
 		var dates []string
 
 		doc.Find("table.admin-table tbody tr").Each(func(_ int, row *goquery.Selection) {
-			date := strings.TrimSpace(row.Find("td").Eq(2).Text())
+			date := strings.TrimSpace(row.Find("td").Eq(4).Text())
 			if date != "" {
 				dates = append(dates, date)
 			}
@@ -256,7 +256,7 @@ func TestAdminDocumentsSortByModified(t *testing.T) {
 		var dates []string
 
 		doc.Find("table.admin-table tbody tr").Each(func(_ int, row *goquery.Selection) {
-			date := strings.TrimSpace(row.Find("td").Eq(2).Text())
+			date := strings.TrimSpace(row.Find("td").Eq(4).Text())
 			if date != "" {
 				dates = append(dates, date)
 			}
@@ -272,7 +272,6 @@ func TestAdminDocumentsSortByModified(t *testing.T) {
 			}
 		}
 	})
-
 }
 
 func TestListAllDocuments(t *testing.T) {

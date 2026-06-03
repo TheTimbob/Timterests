@@ -175,6 +175,40 @@ func TestStorage(t *testing.T) {
 			t.Errorf("Markdown file should start with title header, got: %s", string(content))
 		}
 	})
+
+	t.Run("write markdown document escapes html", func(t *testing.T) {
+		t.Parallel()
+
+		formData := map[string]any{
+			"title":    `<script>alert("title")</script>`,
+			"subtitle": `<img src=x onerror=alert("subtitle")>`,
+			"body":     `<script>alert("body")</script>`,
+		}
+
+		tempDir := t.TempDir()
+		yamlPath := tempDir + "/escaped.yaml"
+		mdPath := tempDir + "/escaped.md"
+
+		err := storage.WriteMarkdownDocument(yamlPath, mdPath, formData)
+		if err != nil {
+			t.Fatalf("Expected no error writing, got %v", err)
+		}
+
+		content, err := os.ReadFile(mdPath)
+		if err != nil {
+			t.Fatalf("Expected no error reading md file, got %v", err)
+		}
+
+		body := string(content)
+
+		if strings.Contains(body, "<script>") || strings.Contains(body, "<img") {
+			t.Fatalf("Expected markdown file to escape raw HTML, got: %s", body)
+		}
+
+		if !strings.Contains(body, "&lt;script&gt;alert(&#34;body&#34;)&lt;/script&gt;") {
+			t.Errorf("Expected escaped body HTML, got: %s", body)
+		}
+	})
 }
 
 func TestGetPromptContent(t *testing.T) {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"html/template"
 	"io"
 	"io/fs"
 	"log"
@@ -587,7 +588,12 @@ func WriteMarkdownDocument(yamlPath, mdPath string, formData map[string]any) err
 	title, _ := formData["title"].(string)
 	subtitle, _ := formData["subtitle"].(string)
 
-	_, err = fmt.Fprintf(mf, "# %s\n## %s\n\n%s", title, subtitle, body)
+	tmpl, err := template.New("").Parse("# {{.Title}}\n## {{.Subtitle}}\n\n{{.Body}}")
+	if err != nil {
+		return fmt.Errorf("failed to parse markdown template: %w", err)
+	}
+
+	err = tmpl.Execute(mf, struct{ Title, Subtitle, Body string }{title, subtitle, body})
 	if err != nil {
 		return fmt.Errorf("failed to write markdown file: %w", err)
 	}

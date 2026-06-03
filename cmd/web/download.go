@@ -2,7 +2,7 @@ package web
 
 import (
 	"errors"
-	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 	"os"
@@ -99,8 +99,14 @@ func DownloadNewDocumentHandler(w http.ResponseWriter, r *http.Request, a *auth.
 		}
 	}()
 
-	// #nosec G705 -- writing to a temp file, not an HTTP response; no XSS risk
-	_, err = fmt.Fprintf(f, "# %s\n## %s\n\n%s", title, subtitle, body)
+	tmpl, err := template.New("").Parse("# {{.Title}}\n## {{.Subtitle}}\n\n{{.Body}}")
+	if err != nil {
+		HandleError(w, r, apperrors.InternalServerError(err), "DownloadNewDocumentHandler", "parseTemplate")
+
+		return
+	}
+
+	err = tmpl.Execute(f, struct{ Title, Subtitle, Body string }{title, subtitle, body})
 
 	closeErr := f.Close()
 	if closeErr != nil {
