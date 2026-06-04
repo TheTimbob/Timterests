@@ -46,6 +46,24 @@ func TestFilterTags(t *testing.T) {
 	})
 }
 
+// activeDesign returns which design button has the "active" class by splitting
+// the rendered HTML on "<button" boundaries and checking each section.
+func activeDesign(html string) string {
+	for section := range strings.SplitSeq(html, "<button") {
+		if !strings.Contains(section, "active") {
+			continue
+		}
+
+		for _, design := range []string{"list", "grid", "links"} {
+			if strings.Contains(section, `"design": "`+design+`"`) {
+				return design
+			}
+		}
+	}
+
+	return ""
+}
+
 func TestFilterDesign(t *testing.T) {
 	t.Parallel()
 
@@ -62,6 +80,10 @@ func TestFilterDesign(t *testing.T) {
 		if buttons < 3 {
 			t.Errorf("expected at least 3 view-btn references, got %d", buttons)
 		}
+
+		if got := activeDesign(html); got != "list" {
+			t.Errorf("expected list button to be active, got %q", got)
+		}
 	})
 
 	t.Run("empty design defaults to list active", func(t *testing.T) {
@@ -76,6 +98,10 @@ func TestFilterDesign(t *testing.T) {
 		if !strings.Contains(html, `"design": "grid"`) {
 			t.Error("expected grid design hx-vals")
 		}
+
+		if got := activeDesign(html); got != "list" {
+			t.Errorf("expected list button to be active for empty design, got %q", got)
+		}
 	})
 
 	t.Run("grid design renders grid button active", func(t *testing.T) {
@@ -85,6 +111,24 @@ func TestFilterDesign(t *testing.T) {
 
 		if !strings.Contains(html, `hx-get="/projects"`) {
 			t.Error("expected hx-get for projects")
+		}
+
+		if got := activeDesign(html); got != "grid" {
+			t.Errorf("expected grid button to be active, got %q", got)
+		}
+	})
+
+	t.Run("links design renders links button active", func(t *testing.T) {
+		t.Parallel()
+
+		html := render(t, components.FilterDesign("/reading-list", "links"))
+
+		if !strings.Contains(html, `hx-get="/reading-list"`) {
+			t.Error("expected hx-get for reading-list")
+		}
+
+		if got := activeDesign(html); got != "links" {
+			t.Errorf("expected links button to be active, got %q", got)
 		}
 	})
 }
