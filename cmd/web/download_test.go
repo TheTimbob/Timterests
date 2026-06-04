@@ -93,6 +93,41 @@ func TestDownloadNewDocumentHandler(t *testing.T) {
 			t.Error("expected markdown to contain body content")
 		}
 	})
+
+	t.Run("escapes html in generated markdown", func(t *testing.T) {
+		a, addAuthCookie := testAuthentication(t)
+
+		form := url.Values{}
+		form.Set("title", `<script>alert("title")</script>`)
+		form.Set("subtitle", `<img src=x onerror=alert("subtitle")>`)
+		form.Set("body", `<script>alert("body")</script>`)
+
+		req := httptest.NewRequestWithContext(
+			t.Context(), http.MethodPost, "/download/new",
+			strings.NewReader(form.Encode()),
+		)
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+		addAuthCookie(req)
+
+		rec := httptest.NewRecorder()
+
+		web.DownloadNewDocumentHandler(rec, req, a)
+
+		if rec.Code != http.StatusOK {
+			t.Errorf("expected status 200, got %d", rec.Code)
+		}
+
+		body := rec.Body.String()
+
+		if strings.Contains(body, "<script>") || strings.Contains(body, "<img") {
+			t.Fatalf("expected generated markdown to escape raw HTML, got: %s", body)
+		}
+
+		if !strings.Contains(body, "&lt;script&gt;alert(&#34;body&#34;)&lt;/script&gt;") {
+			t.Errorf("expected escaped body HTML, got: %s", body)
+		}
+	})
 }
 
 func TestDownloadDocumentHandler(t *testing.T) {

@@ -58,22 +58,22 @@ Controlled by the `USE_S3` env var. In local mode, files are read directly from 
 
 ### Required Environment Variables
 
-| Variable                         | Purpose                                           |
-| -------------------------------- | ------------------------------------------------- |
-| `PORT`                           | HTTP server port                                  |
-| `SESSION_NAME`                   | Cookie session key name                           |
-| `USE_S3`                         | Set to `"true"` to use S3; otherwise local        |
-| `AWS_BUCKET_NAME`                | S3 bucket (required if `USE_S3=true`)             |
-| `AWS_REGION`                     | AWS region (required if `USE_S3=true`)            |
-| `OPENAI_API_KEY`                 | Required for AI writer suggestions                |
+| Variable                         | Purpose                                                                          |
+| -------------------------------- | -------------------------------------------------------------------------------- |
+| `PORT`                           | HTTP server port                                                                 |
+| `SESSION_NAME`                   | Cookie session key name                                                          |
+| `USE_S3`                         | Set to `"true"` to use S3; otherwise local                                       |
+| `AWS_BUCKET_NAME`                | S3 bucket (required if `USE_S3=true`)                                            |
+| `AWS_REGION`                     | AWS region (required if `USE_S3=true`)                                           |
+| `OPENAI_API_KEY`                 | Required for AI writer suggestions                                               |
 | `GOATCOUNTER_URL`                | GoatCounter subdomain (e.g. `mysite.goatcounter.com`); omit to disable analytics |
-| `SITE_URL`                       | Base URL for SEO (canonical, sitemap, OG tags)    |
-| `SITE_NAME`                      | Site name shown in titles, banner, JSON-LD (default: `Timterests`) |
-| `SITE_SUBTITLE`                  | Banner subtitle (default: `Tim's interests`)      |
-| `AUTHOR_NAME`                    | Author name for footer, JSON-LD, descriptions (default: `Tim Scott`) |
-| `SITE_DESCRIPTION`               | Fallback meta description                         |
-| `REPO_URL`                       | GitHub repo URL for footer link                   |
-| `FONTAWESOME_KIT_ID`             | FontAwesome kit ID; omit to disable icons         |
-| `SSL_CERT_FILE` / `SSL_KEY_FILE` | Optional TLS; server falls back to HTTP if absent |
+| `SITE_URL`                       | Base URL for SEO (canonical, sitemap, OG tags)                                   |
+| `SITE_NAME`                      | Site name shown in titles, banner, JSON-LD (default: `Timterests`)               |
+| `SITE_SUBTITLE`                  | Banner subtitle (default: `Tim's interests`)                                     |
+| `AUTHOR_NAME`                    | Author name for footer, JSON-LD, descriptions (default: `Tim Scott`)             |
+| `SITE_DESCRIPTION`               | Fallback meta description                                                        |
+| `REPO_URL`                       | GitHub repo URL for footer link                                                  |
+| `FONTAWESOME_KIT_ID`             | FontAwesome kit ID; omit to disable icons                                        |
+| `SSL_CERT_FILE` / `SSL_KEY_FILE` | Optional TLS; server falls back to HTTP if absent                                |
 
 Load via `.env` file — `godotenv/autoload` is imported in `internal/server/server.go`. See `.env.example` for all available variables.
