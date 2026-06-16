@@ -130,31 +130,55 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	// Article Routes
 	mux.Handle("/articles", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if web.Site().IsHidden("articles") {
+			http.NotFound(w, r)
+			return
+		}
 		design := r.URL.Query().Get("design")
 		tag := r.URL.Query().Get("tag")
 		web.ArticlesPageHandler(w, r, *s.Storage, tag, design)
 	}))
 	mux.Handle("/article", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if web.Site().IsHidden("articles") {
+			http.NotFound(w, r)
+			return
+		}
 		articleID := r.URL.Query().Get("id")
 		web.GetArticleHandler(w, r, *s.Storage, articleID, s.auth)
 	}))
 	// Projects Routes
 	mux.Handle("/projects", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if web.Site().IsHidden("projects") {
+			http.NotFound(w, r)
+			return
+		}
 		design := r.URL.Query().Get("design")
 		tag := r.URL.Query().Get("tag")
 		web.ProjectsPageHandler(w, r, *s.Storage, tag, design)
 	}))
 	mux.Handle("/project", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if web.Site().IsHidden("projects") {
+			http.NotFound(w, r)
+			return
+		}
 		projectID := r.URL.Query().Get("id")
 		web.GetProjectHandler(w, r, *s.Storage, projectID, s.auth)
 	}))
 	// Reading List Routes
 	mux.Handle("/reading-list", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if web.Site().IsHidden("reading-list") {
+			http.NotFound(w, r)
+			return
+		}
 		design := r.URL.Query().Get("design")
 		tag := r.URL.Query().Get("tag")
 		web.ReadingListPageHandler(w, r, *s.Storage, tag, design)
 	}))
 	mux.Handle("/book", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if web.Site().IsHidden("reading-list") {
+			http.NotFound(w, r)
+			return
+		}
 		articleID := r.URL.Query().Get("id")
 		web.GetReadingListBook(w, r, *s.Storage, articleID, s.auth)
 	}))
