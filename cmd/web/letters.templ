@@ -26,20 +26,20 @@ templ LettersList(letters []model.Letter, design string) {
 			for i := 0; i < len(letters); i += 4 {
 				<li class="grid-list-element">
 					for j := i; j < i+4 && j < len(letters); j++ {
-						@LetterCard(letters[j], j).MiniCard()
+						@LetterCard(letters[j]).MiniCard()
 					}
 				</li>
 			}
         } else if design == "links" {
-            for i, letter := range letters {
+            for _, letter := range letters {
                 <li>
-                    @LetterCard(letter, i).LinkCard()
+                    @LetterCard(letter).LinkCard()
                 </li>
             }
 		} else {
-        	for i, letter := range letters {
+        	for _, letter := range letters {
 				<li>
-    		        @LetterCard(letter, i).LargeCard()
+    		        @LetterCard(letter).LargeCard()
 				</li>
 			}
 		}

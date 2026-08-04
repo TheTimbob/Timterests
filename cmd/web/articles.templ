@@ -57,20 +57,20 @@ templ ArticlesList(articles []model.Article, design string) {
 			for i := 0; i < len(articles); i += 4 {
 				<li class="grid-list-element">
 					for j := i; j < i+4 && j < len(articles); j++ {
-                        @ArticleCard(articles[j], j).MiniCard()
+                        @ArticleCard(articles[j]).MiniCard()
                     }
 				</li>
 			}
 		} else if design == "links" {
-            for i, article := range articles {
+            for _, article := range articles {
                 <li>
-                    @ArticleCard(article, i).LinkCard()
+                    @ArticleCard(article).LinkCard()
                 </li>
             }
         } else {
-			for i, article := range articles {
+			for _, article := range articles {
 				<li>
-                    @ArticleCard(article, i).LargeCard()
+                    @ArticleCard(article).LargeCard()
 				</li>
 			}
 		}

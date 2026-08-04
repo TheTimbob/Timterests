@@ -232,7 +232,7 @@ func TestProjectCardConversion(t *testing.T) {
 			t.Fatalf("failed to get project: %v", err)
 		}
 
-		card := web.ProjectCard(*project, 0)
+		card := web.ProjectCard(*project)
 
 		if card.Title != project.Title {
 			t.Errorf("expected card title %q, got %q", project.Title, card.Title)

@@ -11,21 +11,21 @@ templ HomeForm(latestArticle *model.Article, featuredProject *model.Project) {
 templ HomeContent(latestArticle *model.Article, featuredProject *model.Project) {
 	<div id="home-container">
         @Introduction()
-        <div class="animate-slide-up animate-delay-1">
+        <div>
             @ContentBreakdown()
         </div>
-		<div class="section-grid-2 animate-slide-up animate-delay-2">
+		<div class="section-grid-2">
             @LatestArticle(latestArticle)
             @FeaturedProject(featuredProject)
 		</div>
-        <div class="animate-slide-up animate-delay-3">
+        <div>
             @CurrentFocus()
         </div>
 	</div>
 }
 
 templ Introduction() {
-    <div class="intro-section animate-slide-up">
+    <div class="intro-section">
         <h1 class="home-title">
             Welcome to { Site().Name }
         </h1>

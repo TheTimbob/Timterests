@@ -26,20 +26,20 @@ templ ReadingListList(readingList []model.ReadingList, design string) {
 			for i := 0; i < len(readingList); i += 4 {
 				<li class="grid-list-element">
 					for j := i; j < i+4 && j < len(readingList); j++ {
-						@BookCard(readingList[j], j).MiniCard()
+						@BookCard(readingList[j]).MiniCard()
 					}
 				</li>
 			}
         } else if design == "links" {
-            for i, book := range readingList {
+            for _, book := range readingList {
                 <li>
-                    @BookCard(book, i).LinkCard()
+                    @BookCard(book).LinkCard()
                 </li>
             }
 		} else {
-            for i, book := range readingList {
+            for _, book := range readingList {
                 <li>
-                    @BookCard(book, i).LargeCard()
+                    @BookCard(book).LargeCard()
                 </li>
             }
         }

@@ -231,7 +231,7 @@ func TestBookCardConversion(t *testing.T) {
 			t.Fatalf("failed to get book: %v", err)
 		}
 
-		card := web.BookCard(*book, 0)
+		card := web.BookCard(*book)
 
 		if card.Title != book.Title {
 			t.Errorf("expected card title %q, got %q", book.Title, card.Title)
