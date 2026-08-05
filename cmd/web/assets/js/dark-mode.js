@@ -4,26 +4,18 @@ function getStoredTheme() {
     (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
 }
 
-// Apply theme immediately (runs before DOM is ready)
-(function() {
-  const theme = getStoredTheme();
-  if (theme === "dark") {
-    document.documentElement.classList.add("dark");
-  }
-})();
+// Apply the theme before first paint. This must be able to remove the class as
+// well as add it, or a light-mode visitor renders dark until the DOM is ready.
+function applyStoredTheme() {
+  document.documentElement.classList.toggle("dark", getStoredTheme() === "dark");
+}
+
+applyStoredTheme();
 
 // Toggle theme function
 function toggleTheme() {
-  const html = document.documentElement;
-  const darkModeSwitch = document.getElementById("dark-mode-switch");
-
-  if (!darkModeSwitch.checked) {
-    html.classList.add("dark");
-    localStorage.setItem("theme", "dark");
-  } else {
-    html.classList.remove("dark");
-    localStorage.setItem("theme", "light");
-  }
+  const isDark = document.documentElement.classList.toggle("dark");
+  localStorage.setItem("theme", isDark ? "dark" : "light");
 }
 
 // Initialize theme switch
@@ -31,13 +23,7 @@ function initThemeSwitch() {
   const darkModeSwitch = document.getElementById("dark-mode-switch");
   if (!darkModeSwitch) return;
 
-  const storedTheme = getStoredTheme();
-
-  // Apply theme
-  document.documentElement.classList.toggle("dark", storedTheme === "dark");
-
-  // Sync switch state
-  darkModeSwitch.checked = storedTheme === "light";
+  applyStoredTheme();
 
   // Add event listener (remove first to prevent duplicates)
   darkModeSwitch.removeEventListener("change", toggleTheme);
