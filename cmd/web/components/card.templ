@@ -1,7 +1,5 @@
 package components
 
-import "fmt"
-
 type Card struct {
     Title       string
     Subtitle    string
@@ -10,15 +8,10 @@ type Card struct {
     ImagePath   string
     Get         string
     Tags        []string
-    Index       int
-}
-
-func (c Card) animationDelay() string {
-    return fmt.Sprintf("animation-delay: %.1fs", float64(c.Index)*0.1)
 }
 
 templ (c Card) LargeCard() {
-	<div class="card-container animate-slide-up" style={ c.animationDelay() } hx-get={ c.Get } hx-target="#main-content" hx-swap="innerHTML" hx-push-url="true" tabindex="0" role="link" aria-label={ c.Title }>
+	<div class="card-container" hx-get={ c.Get } hx-target="#main-content" hx-swap="innerHTML" hx-push-url="true" tabindex="0" role="link" aria-label={ c.Title }>
         @c.renderImage(c.Title)
         <div class="card-content">
             @CardTitleContainer(c.Title, c.Subtitle)
@@ -32,7 +25,7 @@ templ (c Card) LargeCard() {
 }
 
 templ (c Card) MiniCard() {
-	<div class="mini-card-container animate-slide-up" style={ c.animationDelay() } hx-get={ c.Get } hx-target="#main-content" hx-swap="innerHTML" hx-push-url="true" tabindex="0" role="link" aria-label={ c.Title }>
+	<div class="mini-card-container" hx-get={ c.Get } hx-target="#main-content" hx-swap="innerHTML" hx-push-url="true" tabindex="0" role="link" aria-label={ c.Title }>
         @c.renderImage(c.Title)
         <div class="card-content">
 			<div class="card-title-container">
@@ -45,7 +38,7 @@ templ (c Card) MiniCard() {
 }
 
 templ (c Card) LinkCard() {
-    <div class="link-item animate-slide-up" style={ c.animationDelay() } hx-get={ c.Get } hx-target="#main-content" hx-swap="innerHTML" hx-push-url="true" tabindex="0" role="link" aria-label={ c.Title }>
+    <div class="link-item" hx-get={ c.Get } hx-target="#main-content" hx-swap="innerHTML" hx-push-url="true" tabindex="0" role="link" aria-label={ c.Title }>
         if c.Date != "" {
             <p>{ c.Date } - { c.Title } </p>
         } else {

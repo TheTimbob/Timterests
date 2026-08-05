@@ -319,7 +319,7 @@ func TestArticleCardConversion(t *testing.T) {
 			t.Fatalf("failed to get article: %v", err)
 		}
 
-		card := web.ArticleCard(*article, 0)
+		card := web.ArticleCard(*article)
 
 		if card.Title != article.Title {
 			t.Errorf("expected card title %q, got %q", article.Title, card.Title)

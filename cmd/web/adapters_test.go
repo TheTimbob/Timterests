@@ -19,7 +19,7 @@ func TestArticleAdapters(t *testing.T) {
 			t.Fatalf("service.GetArticle failed: %v", err)
 		}
 
-		card := web.ArticleCard(*ma, 0)
+		card := web.ArticleCard(*ma)
 
 		if card.Title != ma.Title {
 			t.Errorf("Title mismatch: got %q, want %q", card.Title, ma.Title)
@@ -42,7 +42,7 @@ func TestArticleAdapters(t *testing.T) {
 
 		cards := make([]any, len(mas))
 		for i, a := range mas {
-			cards[i] = web.ArticleCard(a, i)
+			cards[i] = web.ArticleCard(a)
 		}
 
 		if len(cards) != len(mas) {
@@ -56,7 +56,7 @@ func TestArticleAdapters(t *testing.T) {
 			t.Fatalf("service.GetArticle failed: %v", err)
 		}
 
-		card := web.ArticleCard(*ma, 0)
+		card := web.ArticleCard(*ma)
 
 		expectedURL := "/article?id=5"
 		if card.Get != expectedURL {
@@ -84,7 +84,7 @@ func TestProjectAdapters(t *testing.T) {
 			t.Fatalf("service.GetProject failed: %v", err)
 		}
 
-		card := web.ProjectCard(*mp, 0)
+		card := web.ProjectCard(*mp)
 
 		if card.Title != mp.Title {
 			t.Errorf("Title mismatch: got %q, want %q", card.Title, mp.Title)
@@ -103,7 +103,7 @@ func TestProjectAdapters(t *testing.T) {
 
 		cards := make([]any, len(mps))
 		for i, p := range mps {
-			cards[i] = web.ProjectCard(p, i)
+			cards[i] = web.ProjectCard(p)
 		}
 
 		if len(cards) != len(mps) {
@@ -117,7 +117,7 @@ func TestProjectAdapters(t *testing.T) {
 			t.Fatalf("service.GetProject failed: %v", err)
 		}
 
-		card := web.ProjectCard(*mp, 0)
+		card := web.ProjectCard(*mp)
 
 		expectedURL := "/project?id=3"
 		if card.Get != expectedURL {
@@ -146,7 +146,7 @@ func TestLetterAdapters(t *testing.T) {
 			t.Fatalf("service.GetLetter failed: %v", err)
 		}
 
-		card := web.LetterCard(*ml, 0)
+		card := web.LetterCard(*ml)
 
 		if card.Title != ml.Title {
 			t.Errorf("Title mismatch: got %q, want %q", card.Title, ml.Title)
@@ -165,7 +165,7 @@ func TestLetterAdapters(t *testing.T) {
 
 		cards := make([]any, len(mls))
 		for i, l := range mls {
-			cards[i] = web.LetterCard(l, i)
+			cards[i] = web.LetterCard(l)
 		}
 
 		if len(cards) != len(mls) {
@@ -179,7 +179,7 @@ func TestLetterAdapters(t *testing.T) {
 			t.Fatalf("service.GetLetter failed: %v", err)
 		}
 
-		card := web.LetterCard(*ml, 0)
+		card := web.LetterCard(*ml)
 
 		expectedURL := "/letter?id=4"
 		if card.Get != expectedURL {
@@ -203,7 +203,7 @@ func TestReadingListAdapters(t *testing.T) {
 			t.Fatalf("service.GetBook failed: %v", err)
 		}
 
-		card := web.BookCard(*mb, 0)
+		card := web.BookCard(*mb)
 
 		if card.Title != mb.Title {
 			t.Errorf("Title mismatch: got %q, want %q", card.Title, mb.Title)
@@ -222,7 +222,7 @@ func TestReadingListAdapters(t *testing.T) {
 
 		cards := make([]any, len(mbs))
 		for i, b := range mbs {
-			cards[i] = web.BookCard(b, i)
+			cards[i] = web.BookCard(b)
 		}
 
 		if len(cards) != len(mbs) {
@@ -236,7 +236,7 @@ func TestReadingListAdapters(t *testing.T) {
 			t.Fatalf("service.GetBook failed: %v", err)
 		}
 
-		card := web.BookCard(*mb, 0)
+		card := web.BookCard(*mb)
 
 		expectedURL := "/book?id=7"
 		if card.Get != expectedURL {

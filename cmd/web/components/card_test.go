@@ -37,7 +37,6 @@ func TestLargeCard(t *testing.T) {
 			ImagePath: "/images/test.png",
 			Get:       "/article?id=1",
 			Tags:      []string{"go", "testing"},
-			Index:     2,
 		}
 
 		html := render(t, c.LargeCard())
@@ -52,7 +51,6 @@ func TestLargeCard(t *testing.T) {
 			"go",
 			"testing",
 			"card-container",
-			"animation-delay: 0.2s",
 		} {
 			if !strings.Contains(html, want) {
 				t.Errorf("LargeCard missing %q", want)
@@ -93,7 +91,6 @@ func TestMiniCard(t *testing.T) {
 			Title: "Mini Title",
 			Get:   "/mini",
 			Tags:  []string{"rust"},
-			Index: 0,
 		}
 
 		html := render(t, c.MiniCard())
@@ -102,7 +99,6 @@ func TestMiniCard(t *testing.T) {
 			"Mini Title",
 			"mini-card-container",
 			"rust",
-			"animation-delay: 0.0s",
 		} {
 			if !strings.Contains(html, want) {
 				t.Errorf("MiniCard missing %q", want)
@@ -174,29 +170,6 @@ func TestCardTitleContainer(t *testing.T) {
 	} {
 		if !strings.Contains(html, want) {
 			t.Errorf("CardTitleContainer missing %q", want)
-		}
-	}
-}
-
-func TestAnimationDelay(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		index int
-		want  string
-	}{
-		{0, "0.0s"},
-		{1, "0.1s"},
-		{5, "0.5s"},
-		{10, "1.0s"},
-	}
-
-	for _, tc := range tests {
-		c := components.Card{Title: "T", Get: "/x", Index: tc.index}
-		html := render(t, c.LargeCard())
-
-		if !strings.Contains(html, tc.want) {
-			t.Errorf("Index %d: expected delay %q in HTML", tc.index, tc.want)
 		}
 	}
 }

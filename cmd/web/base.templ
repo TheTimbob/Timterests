@@ -198,7 +198,7 @@ templ Base(activePage string, metas ...MetaProps) {
 					<a href="/about" class={ "nav-link", templ.KV("active", activePage == "about") }><i class="fa-solid fa-question" aria-hidden="true"></i> About</a>
 				</div>
 			</nav>
-			<main id="main-content" class="main-content animate-fade-in" aria-live="polite">
+			<main id="main-content" class="main-content" aria-live="polite">
 				{ children... }
 			</main>
 			<footer class="banner-footer">

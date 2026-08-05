@@ -2,7 +2,7 @@ package web
 
 templ AboutForm(about About) {
 	@Base("about") {
-		<div id="about-container" class="animate-fade-in">
+		<div id="about-container">
 			<h1 class="category-title">{ about.Title }</h1>
 			<div class="about-tabs">
 				<button class="tab-btn active" hx-get="/about?tab=bio" hx-target=".tab-content" hx-swap="innerHTML" onclick="setActiveTab(this)">Bio</button>
