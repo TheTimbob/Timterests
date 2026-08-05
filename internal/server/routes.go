@@ -5,10 +5,19 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"path"
 	"strconv"
+	"strings"
 
 	"timterests/cmd/web"
 	apperrors "timterests/internal/errors"
+)
+
+// Asset cache lifetimes. Filenames are not content-hashed, so changes only
+// propagate once the window lapses.
+const (
+	longCacheControl    = "public, max-age=604800"
+	defaultCacheControl = "public, max-age=3600"
 )
 
 // RegisterRoutes configures all HTTP routes and returns the handler.
@@ -23,7 +32,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	// Serve static files from the "web" directory
 	fileServer := http.FileServer(http.FS(web.Files))
-	mux.Handle("/assets/", fileServer)
+	mux.Handle("/assets/", staticCacheMiddleware(fileServer))
 
 	// Home Routes
 	mux.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -225,6 +234,27 @@ func (s *Server) corsMiddleware(next http.Handler) http.Handler {
 		// Proceed with the next handler
 		next.ServeHTTP(w, r)
 	})
+}
+
+// staticCacheMiddleware gives embedded assets a freshness lifetime. embed.FS
+// reports a zero modtime, so without this they carry no cache headers at all
+// and the browser refetches them on every navigation.
+func staticCacheMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", cacheControlFor(r.URL.Path))
+		next.ServeHTTP(w, r)
+	})
+}
+
+// cacheControlFor picks a lifetime from the asset's extension. Images and fonts
+// change far less often than CSS and JS.
+func cacheControlFor(urlPath string) string {
+	switch strings.ToLower(path.Ext(urlPath)) {
+	case ".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".ico", ".woff", ".woff2":
+		return longCacheControl
+	default:
+		return defaultCacheControl
+	}
 }
 
 // HelloWorldHandler responds with a simple "Hello World" message ensuring server is running.
