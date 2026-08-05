@@ -5,3 +5,7 @@ import "net/http"
 func (s *Server) MaxBytesMiddleware(next http.Handler) http.Handler {
 	return s.maxBytesMiddleware(next)
 }
+
+func StaticCacheMiddleware(next http.Handler) http.Handler {
+	return staticCacheMiddleware(next)
+}
