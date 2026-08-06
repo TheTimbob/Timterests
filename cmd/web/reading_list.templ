@@ -57,12 +57,12 @@ templ BookDisplay(book model.ReadingList, dc model.DisplayContent, userIsAdmin b
     @components.DownloadDocumentButton(dc.S3Key, userIsAdmin)
 	<div id="reading-list-container">
 		@templ.Raw(dc.Body)
-		<p>Author: { book.Author }</p>
-		<p>Published: { book.Published }</p>
-		<p>ISBN: { book.ISBN }</p>
-		<p>Website: <a href={ templ.SafeURL(book.Website) } target="_blank">{ book.Website }</a></p>
+		<p class="content-text">Author: { book.Author }</p>
+		<p class="content-text">Published: { book.Published }</p>
+		<p class="content-text">ISBN: { book.ISBN }</p>
+		<p class="content-text">Website: <a href={ templ.SafeURL(book.Website) } target="_blank">{ book.Website }</a></p>
 		<br>
-		<div>I am not affiliated with, nor do I own any rights to, the books listed in my reading list. All purchase links are non-affiliate and provided solely for informational purposes.</div>
+		<div class="content-text">I am not affiliated with, nor do I own any rights to, the books listed in my reading list. All purchase links are non-affiliate and provided solely for informational purposes.</div>
 	</div>
 }
 
