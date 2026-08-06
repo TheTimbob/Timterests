@@ -451,8 +451,11 @@ func TestLocalPath(t *testing.T) {
 			t.Fatalf("unexpected error: %v", err)
 		}
 
-		if result != "/base/articles/test.md" {
-			t.Errorf("expected /base/articles/test.md, got %q", result)
+		// Build the expectation the same way LocalPath does, so the assertion
+		// does not depend on the host's path separator.
+		expected := filepath.Join("/base", "articles/test.md")
+		if result != expected {
+			t.Errorf("expected %q, got %q", expected, result)
 		}
 	})
 
