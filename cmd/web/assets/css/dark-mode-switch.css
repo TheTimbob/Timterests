@@ -58,7 +58,9 @@
   }
 }
 
-.dark-mode-switch-input:checked + .dark-mode-switch-label {
+/* Drive the indicator from the applied theme rather than the checkbox state, so
+   it cannot disagree with the page while scripts are still initialising. */
+html:not(.dark) .dark-mode-switch-label {
   background-color: #8fb5f5;
   border-color: #347cf8;
 
