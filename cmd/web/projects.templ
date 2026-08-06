@@ -34,20 +34,20 @@ templ ProjectsList(projects []model.Project, design string) {
 			for i := 0; i < len(projects); i += 4 {
 				<li class="grid-list-element">
 					for j := i; j < i+4 && j < len(projects); j++ {
-						@ProjectCard(projects[j], j).MiniCard()
+						@ProjectCard(projects[j]).MiniCard()
 					}
 				</li>
 			}
         } else if design == "links" {
-            for i, project := range projects {
+            for _, project := range projects {
                 <li>
-                    @ProjectCard(project, i).LinkCard()
+                    @ProjectCard(project).LinkCard()
                 </li>
             }
 		} else {
-			for i, project := range projects {
+			for _, project := range projects {
 			<li>
-				@ProjectCard(project, i).LargeCard()
+				@ProjectCard(project).LargeCard()
 			</li>
 			}
 		}

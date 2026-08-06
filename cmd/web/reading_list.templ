@@ -26,20 +26,20 @@ templ ReadingListList(readingList []model.ReadingList, design string) {
 			for i := 0; i < len(readingList); i += 4 {
 				<li class="grid-list-element">
 					for j := i; j < i+4 && j < len(readingList); j++ {
-						@BookCard(readingList[j], j).MiniCard()
+						@BookCard(readingList[j]).MiniCard()
 					}
 				</li>
 			}
         } else if design == "links" {
-            for i, book := range readingList {
+            for _, book := range readingList {
                 <li>
-                    @BookCard(book, i).LinkCard()
+                    @BookCard(book).LinkCard()
                 </li>
             }
 		} else {
-            for i, book := range readingList {
+            for _, book := range readingList {
                 <li>
-                    @BookCard(book, i).LargeCard()
+                    @BookCard(book).LargeCard()
                 </li>
             }
         }
@@ -57,12 +57,12 @@ templ BookDisplay(book model.ReadingList, dc model.DisplayContent, userIsAdmin b
     @components.DownloadDocumentButton(dc.S3Key, userIsAdmin)
 	<div id="reading-list-container">
 		@templ.Raw(dc.Body)
-		<p>Author: { book.Author }</p>
-		<p>Published: { book.Published }</p>
-		<p>ISBN: { book.ISBN }</p>
-		<p>Website: <a href={ templ.SafeURL(book.Website) } target="_blank">{ book.Website }</a></p>
+		<p class="content-text">Author: { book.Author }</p>
+		<p class="content-text">Published: { book.Published }</p>
+		<p class="content-text">ISBN: { book.ISBN }</p>
+		<p class="content-text">Website: <a href={ templ.SafeURL(book.Website) } target="_blank">{ book.Website }</a></p>
 		<br>
-		<div>I am not affiliated with, nor do I own any rights to, the books listed in my reading list. All purchase links are non-affiliate and provided solely for informational purposes.</div>
+		<div class="content-text">I am not affiliated with, nor do I own any rights to, the books listed in my reading list. All purchase links are non-affiliate and provided solely for informational purposes.</div>
 	</div>
 }
 

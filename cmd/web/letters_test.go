@@ -243,7 +243,7 @@ func TestLetterCardConversion(t *testing.T) {
 			t.Fatalf("failed to get letter: %v", err)
 		}
 
-		card := web.LetterCard(*letter, 0)
+		card := web.LetterCard(*letter)
 
 		if card.Title != letter.Title {
 			t.Errorf("expected card title %q, got %q", letter.Title, card.Title)
