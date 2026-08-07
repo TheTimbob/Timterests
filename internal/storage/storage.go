@@ -355,19 +355,13 @@ func (h HealthResult) Healthy() bool {
 	return h.Status == "ok"
 }
 
-// Health checks storage and database connectivity.
+// Health checks storage connectivity.
 func (s *Storage) Health() HealthResult {
 	checks := make(map[string]string)
 	healthy := true
 
 	checks["storage"] = s.checkStorage()
 	if checks["storage"] != "ok" {
-		healthy = false
-	}
-
-	checks["database"] = checkDatabase()
-
-	if checks["database"] != "ok" {
 		healthy = false
 	}
 
@@ -403,26 +397,6 @@ func (s *Storage) checkStorage() string {
 	return "ok"
 }
 
-func checkDatabase() string {
-	db, err := GetDB(context.Background())
-	if err != nil {
-		return fmt.Sprintf("error: %v", err)
-	}
-
-	defer func() {
-		closeErr := db.Close()
-		if closeErr != nil {
-			log.Printf("health: failed to close database: %v", closeErr)
-		}
-	}()
-
-	err = db.PingContext(context.Background())
-	if err != nil {
-		return fmt.Sprintf("error: %v", err)
-	}
-
-	return "ok"
-}
 
 // findProjectRoot walks up the directory tree to find the project root based on go.mod.
 func findProjectRoot() (string, error) {

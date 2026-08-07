@@ -56,13 +56,6 @@ func (s *Server) RegisterRoutes() http.Handler {
 		web.AdminDocumentsPageHandler(w, r, *s.Storage, s.auth)
 	}))
 
-	mux.Handle("/admin/users", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		web.AdminUsersPageHandler(w, r, s.auth)
-	}))
-	mux.Handle("/admin/users/create", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		web.CreateUserHandler(w, r, s.auth)
-	}))
-
 	mux.Handle("/writer", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var (
 			docType, key string
@@ -134,7 +127,16 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	// Login Routes
 	mux.Handle("/login", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		web.LoginHandler(w, r, s.auth)
+		web.LoginHandler(w, r)
+	}))
+	mux.Handle("/auth/login", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		web.OIDCLoginHandler(w, r, s.oidc)
+	}))
+	mux.Handle("/auth/callback", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		web.OIDCCallbackHandler(w, r, s.oidc)
+	}))
+	mux.Handle("/logout", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		web.LogoutHandler(w, r, s.auth, s.oidc)
 	}))
 
 	// Article Routes

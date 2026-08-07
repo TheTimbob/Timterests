@@ -36,7 +36,7 @@ func testAuthentication(t *testing.T) (*auth.Auth, func(*http.Request)) {
 	t.Setenv("SESSION_NAME", sessionName)
 
 	// Create a new Auth instance
-	a := auth.NewAuth(sessionName)
+	a := auth.NewAuth(sessionName, "test-signing-key-at-least-32-chars!!")
 
 	// Create a test request and recorder to capture the session cookie
 	setupReq := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/", nil)

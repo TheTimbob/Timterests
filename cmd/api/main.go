@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"timterests/internal/server"
-	"timterests/internal/storage"
 )
 
 func gracefulShutdown(apiServer *http.Server, done chan bool) {
@@ -41,12 +40,6 @@ func gracefulShutdown(apiServer *http.Server, done chan bool) {
 }
 
 func main() {
-	// Initialize the database
-	err := storage.InitDB(context.Background())
-	if err != nil {
-		log.Printf("Failed to initialize database: %v", err)
-	}
-
 	// Initialize the server
 	server := server.NewServer()
 
@@ -61,7 +54,7 @@ func main() {
 
 	tlsStarted := false
 
-	_, err = os.Stat(certFile)
+	_, err := os.Stat(certFile)
 	if err == nil {
 		_, err := os.Stat(keyFile)
 		if err == nil {

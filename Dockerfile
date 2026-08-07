@@ -1,6 +1,5 @@
 # Golang build image
 FROM golang:1.26-alpine AS build
-RUN apk add --no-cache alpine-sdk
 
 WORKDIR /app
 
@@ -10,7 +9,7 @@ RUN go mod download
 COPY . .
 RUN go tool templ generate
 
-RUN CGO_ENABLED=1 GOOS=linux go build -o main cmd/api/main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -o main cmd/api/main.go
 
 # Production image
 FROM alpine:3.22.2 AS prod
@@ -20,7 +19,6 @@ WORKDIR /app
 COPY --from=build /app/main /app/main
 COPY --from=build /app/go.mod /app/go.mod
 COPY --from=build /app/storage /app/storage
-COPY --from=build /app/database /app/database
 COPY --from=build /app/favicon.ico /app/favicon.ico
 
 EXPOSE ${PORT}
