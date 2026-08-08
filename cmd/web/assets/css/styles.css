@@ -1090,6 +1090,7 @@ a:hover {
 
 .admin-search-form {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
   align-items: center;
   margin-bottom: 1rem;
@@ -1097,6 +1098,13 @@ a:hover {
 
 .admin-search-input {
   max-width: 24rem;
+  margin-bottom: 0;
+}
+
+/* Filter controls sit inline in the form, so they drop the stacked-field margin
+   and size to their content rather than filling the row. */
+.admin-filter {
+  width: auto;
   margin-bottom: 0;
 }
 

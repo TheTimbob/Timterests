@@ -274,6 +274,98 @@ func TestAdminDocumentsSortByModified(t *testing.T) {
 	})
 }
 
+func TestAdminDocumentsFilters(t *testing.T) {
+	a, addAuthCookie := testAuthentication(t)
+	s := testSetup(t, context.Background())
+
+	// rowsFor returns the Type column of every listed document.
+	rowsFor := func(t *testing.T, query string) []string {
+		t.Helper()
+
+		req := httptest.NewRequestWithContext(
+			context.Background(), http.MethodGet, "/admin/documents"+query, nil,
+		)
+		rec := httptest.NewRecorder()
+
+		addAuthCookie(req)
+		web.AdminDocumentsPageHandler(rec, req, *s, a)
+
+		if rec.Code != http.StatusOK {
+			t.Fatalf("expected status 200, got %d", rec.Code)
+		}
+
+		doc, err := goquery.NewDocumentFromReader(rec.Body)
+		if err != nil {
+			t.Fatalf("failed to parse response: %v", err)
+		}
+
+		var types []string
+
+		doc.Find("table.admin-table tbody tr").Each(func(_ int, row *goquery.Selection) {
+			// Skip the "No documents found." placeholder row.
+			if row.Find(".admin-table-empty").Length() > 0 {
+				return
+			}
+
+			types = append(types, strings.TrimSpace(row.Find("td").Eq(1).Text()))
+		})
+
+		return types
+	}
+
+	unfiltered := rowsFor(t, "")
+	if len(unfiltered) < 2 {
+		t.Fatalf("need at least 2 documents to test filtering, got %d", len(unfiltered))
+	}
+
+	t.Run("type filter returns only that type", func(t *testing.T) {
+		types := rowsFor(t, "?type=articles")
+
+		if len(types) == 0 {
+			t.Fatal("expected at least one article")
+		}
+
+		for _, got := range types {
+			if got != "articles" {
+				t.Errorf("expected only articles, got %q", got)
+			}
+		}
+
+		if len(types) >= len(unfiltered) {
+			t.Error("expected the type filter to narrow the list")
+		}
+	})
+
+	// An unknown type is ignored rather than silently hiding everything.
+	t.Run("unknown type is ignored", func(t *testing.T) {
+		if got := len(rowsFor(t, "?type=nonsense")); got != len(unfiltered) {
+			t.Errorf("expected all %d documents, got %d", len(unfiltered), got)
+		}
+	})
+
+	t.Run("future date range excludes everything", func(t *testing.T) {
+		if got := len(rowsFor(t, "?from=2999-01-01")); got != 0 {
+			t.Errorf("expected no documents modified after 2999, got %d", got)
+		}
+	})
+
+	// A malformed date must not be treated as a filter that matches nothing.
+	t.Run("unparseable date is ignored", func(t *testing.T) {
+		if got := len(rowsFor(t, "?from=not-a-date")); got != len(unfiltered) {
+			t.Errorf("expected all %d documents, got %d", len(unfiltered), got)
+		}
+	})
+
+	t.Run("filters survive sorting links", func(t *testing.T) {
+		types := rowsFor(t, "?type=articles&sort=modified&dir=desc")
+		for _, got := range types {
+			if got != "articles" {
+				t.Errorf("expected filter to persist through sorting, got %q", got)
+			}
+		}
+	})
+}
+
 func TestListAllDocuments(t *testing.T) {
 	s := testSetup(t, context.Background())
 
