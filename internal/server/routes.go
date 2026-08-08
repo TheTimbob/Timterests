@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"timterests/cmd/web"
+	"timterests/internal/auth"
 	apperrors "timterests/internal/errors"
 )
 
@@ -176,7 +177,23 @@ func (s *Server) RegisterRoutes() http.Handler {
 		web.GetLetterHandler(w, r, *s.Storage, letterID, s.auth)
 	}))
 	// Wrap: recovery is outermost so it catches panics from all inner middleware.
-	return recoveryMiddleware(securityHeadersMiddleware(s.corsMiddleware(s.maxBytesMiddleware(mux))))
+	return recoveryMiddleware(
+		securityHeadersMiddleware(
+			s.corsMiddleware(s.maxBytesMiddleware(s.authContextMiddleware(mux))),
+		),
+	)
+}
+
+// authContextMiddleware resolves the request's auth state once and stores it in
+// the context. Verifying the signed session cookie is not free, and templates
+// need the answer as well as handlers, so doing it here avoids repeating the
+// work for every component that asks.
+func (s *Server) authContextMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := auth.WithAuthenticated(r.Context(), s.auth.IsAuthenticated(r))
+
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
 }
 
 func recoveryMiddleware(next http.Handler) http.Handler {
