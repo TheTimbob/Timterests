@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -32,15 +33,25 @@ type DocumentInfo struct {
 	Index        int
 }
 
+// DocTypes returns the content directories the admin dashboard lists. A function
+// rather than a package variable so callers cannot mutate the shared slice.
+func DocTypes() []string {
+	return []string{"articles", "projects", "reading-list", "letters"}
+}
+
 // AdminDocumentsParams holds the data passed to the admin documents template.
 type AdminDocumentsParams struct {
 	Docs       []DocumentInfo
 	Query      string
+	DocType    string // empty means all types
+	From       string // YYYY-MM-DD, inclusive
+	To         string // YYYY-MM-DD, inclusive
 	SortBy     string
 	SortDir    string
 	Page       int
 	TotalPages int
 	Total      int
+	DocTypes   []string
 }
 
 // AdminDocumentsPageHandler handles the admin documents dashboard at /admin/documents.
@@ -52,9 +63,17 @@ func AdminDocumentsPageHandler(w http.ResponseWriter, r *http.Request, s storage
 	}
 
 	query := r.URL.Query().Get("q")
+	docType := r.URL.Query().Get("type")
+	from := r.URL.Query().Get("from")
+	to := r.URL.Query().Get("to")
 	sortBy := r.URL.Query().Get("sort")
 	sortDir := r.URL.Query().Get("dir")
 	pageStr := r.URL.Query().Get("page")
+
+	// An unrecognised type would otherwise filter everything away with no clue why.
+	if docType != "" && !slices.Contains(DocTypes(), docType) {
+		docType = ""
+	}
 
 	if sortBy == "" {
 		sortBy = "filename"
@@ -76,7 +95,7 @@ func AdminDocumentsPageHandler(w http.ResponseWriter, r *http.Request, s storage
 		return
 	}
 
-	docs = filterDocs(docs, query)
+	docs = filterDocs(docs, query, docType, from, to)
 	sortDocs(docs, sortBy, sortDir)
 
 	// Paginate
@@ -93,11 +112,15 @@ func AdminDocumentsPageHandler(w http.ResponseWriter, r *http.Request, s storage
 	params := AdminDocumentsParams{
 		Docs:       docs[start:end],
 		Query:      query,
+		DocType:    docType,
+		From:       from,
+		To:         to,
 		SortBy:     sortBy,
 		SortDir:    sortDir,
 		Page:       page,
 		TotalPages: totalPages,
 		Total:      total,
+		DocTypes:   DocTypes(),
 	}
 
 	var component templ.Component
@@ -116,22 +139,55 @@ func AdminDocumentsPageHandler(w http.ResponseWriter, r *http.Request, s storage
 	}
 }
 
-// filterDocs returns documents whose filenames contain the query string (case-insensitive).
-func filterDocs(docs []DocumentInfo, query string) []DocumentInfo {
-	if query == "" {
-		return docs
+// filterDocs narrows documents by filename search, document type, and modified
+// date range. Empty values are ignored, so no filters returns everything.
+func filterDocs(docs []DocumentInfo, query, docType, from, to string) []DocumentInfo {
+	lower := strings.ToLower(query)
+	// Dates that fail to parse are treated as absent rather than matching nothing.
+	after, hasAfter := parseFilterDate(from)
+	before, hasBefore := parseFilterDate(to)
+
+	// "to" is inclusive, so compare against the end of that day.
+	if hasBefore {
+		before = before.AddDate(0, 0, 1)
 	}
 
-	lower := strings.ToLower(query)
 	filtered := docs[:0]
 
 	for _, d := range docs {
-		if strings.Contains(strings.ToLower(d.Filename), lower) {
-			filtered = append(filtered, d)
+		if lower != "" && !strings.Contains(strings.ToLower(d.Filename), lower) {
+			continue
 		}
+
+		if docType != "" && d.DocType != docType {
+			continue
+		}
+
+		if hasAfter && d.LastModified.Before(after) {
+			continue
+		}
+
+		if hasBefore && !d.LastModified.Before(before) {
+			continue
+		}
+
+		filtered = append(filtered, d)
 	}
 
 	return filtered
+}
+
+func parseFilterDate(value string) (time.Time, bool) {
+	if value == "" {
+		return time.Time{}, false
+	}
+
+	parsed, err := time.Parse(time.DateOnly, value)
+	if err != nil {
+		return time.Time{}, false
+	}
+
+	return parsed, true
 }
 
 // sortDocs sorts documents in-place by the given field and direction.
@@ -156,8 +212,6 @@ func sortDocs(docs []DocumentInfo, sortBy, sortDir string) {
 
 // ListAllDocuments collects DocumentInfo from all content type directories.
 func ListAllDocuments(ctx context.Context, s storage.Storage) ([]DocumentInfo, error) {
-	docTypes := []string{"articles", "projects", "reading-list", "letters"}
-
 	source := "Local"
 	if s.UseS3 {
 		source = "S3"
@@ -165,7 +219,7 @@ func ListAllDocuments(ctx context.Context, s storage.Storage) ([]DocumentInfo, e
 
 	var docs []DocumentInfo
 
-	for _, docType := range docTypes {
+	for _, docType := range DocTypes() {
 		objects, err := s.ListObjects(ctx, docType+"/")
 		if err != nil {
 			return nil, fmt.Errorf("listing %s: %w", docType, err)
@@ -193,12 +247,21 @@ func ListAllDocuments(ctx context.Context, s storage.Storage) ([]DocumentInfo, e
 	return docs, nil
 }
 
-// buildDocumentsURL constructs a properly encoded URL for the admin documents page.
-func buildDocumentsURL(query, sortBy, sortDir string, page int) string {
+// buildDocumentsURL constructs a properly encoded URL for the admin documents
+// page, carrying the active filters through sorting and pagination. It takes the
+// params struct so adding a filter does not mean touching every call site.
+func buildDocumentsURL(p AdminDocumentsParams, sortBy, sortDir string, page int) string {
 	v := url.Values{}
 
-	if query != "" {
-		v.Set("q", query)
+	for key, value := range map[string]string{
+		"q":    p.Query,
+		"type": p.DocType,
+		"from": p.From,
+		"to":   p.To,
+	} {
+		if value != "" {
+			v.Set(key, value)
+		}
 	}
 
 	v.Set("sort", sortBy)
