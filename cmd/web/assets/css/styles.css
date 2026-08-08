@@ -19,6 +19,9 @@
   --green-tag: #6ee7b7;
   --blue: #3b82f6;
   --purple: #8b5cf6;
+  --yellow: #eab308;
+  --orange: #f97316;
+  --red: #ef4444;
 }
 
 /* Accessibility */
@@ -1256,6 +1259,15 @@ a:hover {
 }
 .fa-diagram-project {
   color: var(--purple);
+}
+.fa-gauge {
+  color: var(--yellow);
+}
+.fa-pen-to-square {
+  color: var(--orange);
+}
+.fa-right-from-bracket {
+  color: var(--red);
 }
 .fa-solid,
 .fa-brands {
