@@ -95,10 +95,6 @@ func (s *Server) RegisterRoutes() http.Handler {
 		web.WriteDocumentHandler(w, r, *s.Storage, s.auth)
 	}))
 
-	mux.Handle("/write/suggest", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		web.WriterSuggestionHandler(w, r, *s.Storage, s.auth)
-	}))
-
 	mux.Handle("/download", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		documentKey := r.URL.Query().Get("key")
 		web.DownloadDocumentHandler(w, r, *s.Storage, documentKey, s.auth)

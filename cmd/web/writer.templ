@@ -17,9 +17,6 @@ templ WriterDisplay(data WriterFormData) {
     <div id="writer-container" class="form-container">
         <h1 class="category-title">Create a Document</h1>
         @WriterFormContent(data)
-        <hr>
-        <h2 class="category-subtitle">AI Suggestions</h2>
-        @OpenAISuggestion()
     </div>
 }
 
@@ -143,31 +140,4 @@ templ ProjectFormContent(project *model.Project) {
         <label class="form-label" for="tags">Tags:</label>
         <input class="form-input" type="text" id="tags" name="tags" placeholder="Comma Separated" value={strings.Join(project.Tags, ",")} required>
     </div>
-}
-
-templ OpenAISuggestion() {
-    <div class="form-field">
-        <button type="button" class="button ai-button"
-                hx-post="/write/suggest"
-                hx-target="#suggestion"
-                hx-include="#writer-form"
-                hx-indicator="#ai-loading">
-            Get Suggestion
-        </button>
-        <span id="ai-loading" class="htmx-indicator">Loading...</span>
-    </div>
-    <div class="form-field" id="suggestion-container" style="display: none;">
-        <div class="form-textarea" id="suggestion"></div>
-    </div>
-}
-
-templ AISuggestionResponse(content string) {
-    <p class="ai-content">{ content }</p>
-    <script>
-        document.getElementById('suggestion-container').style.display = 'block';
-    </script>
-}
-
-templ AISuggestionError(errorMsg string) {
-    <p class="ai-error">{ errorMsg }</p>
 }

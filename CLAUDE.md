@@ -41,7 +41,6 @@ cmd/api/main.go → internal/server/server.go (NewServer)
 - **`internal/storage/`** — Dual-mode storage abstraction (S3 or local filesystem). Content files are YAML; the `body` field is markdown converted to HTML at read time.
 - **`internal/model/`** — Shared `Document` struct (`title`, `subtitle`, `body`, `tags`) embedded by all content types via `yaml:",inline"`.
 - **`internal/auth/`** — Cookie-based sessions (gorilla/sessions). Sign-in is Google via an Amazon Cognito user pool; `oidc.go` performs the handshake and admits only members of the pool's `admins` group. There is no user database.
-- **`internal/ai/`** — OpenAI GPT-4o integration for the writer's AI suggestion feature. Prompt instruction files live in `prompts/`.
 
 ### Content Types
 
@@ -65,7 +64,6 @@ Controlled by the `USE_S3` env var. In local mode, files are read directly from 
 | `USE_S3`                         | Set to `"true"` to use S3; otherwise local                                       |
 | `AWS_BUCKET_NAME`                | S3 bucket (required if `USE_S3=true`)                                            |
 | `AWS_REGION`                     | AWS region (required if `USE_S3=true`)                                           |
-| `OPENAI_API_KEY`                 | Required for AI writer suggestions                                               |
 | `GOATCOUNTER_URL`                | GoatCounter subdomain (e.g. `mysite.goatcounter.com`); omit to disable analytics |
 | `SITE_URL`                       | Base URL for SEO (canonical, sitemap, OG tags) and the OAuth callback            |
 | `COGNITO_DOMAIN`                 | Cognito hosted domain; used for the logout endpoint                              |
