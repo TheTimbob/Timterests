@@ -57,7 +57,7 @@ templ AdminDocumentsTable(params AdminDocumentsParams) {
 			/>
 			<button type="submit" class="button">Apply</button>
 			if params.Query != "" || params.DocType != "" || params.From != "" || params.To != "" {
-				<a href="/admin/documents" class="button button-sm admin-filter-clear">Clear</a>
+				<a href="/admin/documents" class="button">Clear</a>
 			}
 		</form>
             <div class="admin-table-wrapper">
