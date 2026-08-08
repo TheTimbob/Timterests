@@ -5,6 +5,8 @@ import (
 	"os"
 	"strconv"
 	"time"
+
+	"timterests/internal/auth"
 )
 
 // MetaProps holds SEO and Open Graph metadata for a page.
@@ -196,6 +198,11 @@ templ Base(activePage string, metas ...MetaProps) {
 					<a href="/projects" class={ "nav-link", templ.KV("active", activePage == "projects") }><i class="fa-brands fa-github" aria-hidden="true"></i> Projects</a>
 					<a href="/reading-list" class={ "nav-link", templ.KV("active", activePage == "reading-list") }><i class="fa-solid fa-book" aria-hidden="true"></i> Reading List</a>
 					<a href="/about" class={ "nav-link", templ.KV("active", activePage == "about") }><i class="fa-solid fa-question" aria-hidden="true"></i> About</a>
+					if auth.IsAdmin(ctx) {
+						<a href="/admin" class={ "nav-link", templ.KV("active", activePage == "admin") }><i class="fa-solid fa-gauge" aria-hidden="true"></i> Admin</a>
+						<a href="/writer" class={ "nav-link", templ.KV("active", activePage == "writer") }><i class="fa-solid fa-pen-to-square" aria-hidden="true"></i> Writer</a>
+						<a href="/logout" class="nav-link"><i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i> Sign out</a>
+					}
 				</div>
 			</nav>
 			<main id="main-content" class="main-content" aria-live="polite">
@@ -208,6 +215,12 @@ templ Base(activePage string, metas ...MetaProps) {
 					<a href="/projects" class="nav-footer-link">Projects</a>
 					<a href="/reading-list" class="nav-footer-link">Reading List</a>
 					<a href="/about" class="nav-footer-link">About</a>
+					if auth.IsAdmin(ctx) {
+						<a href="/admin" class="nav-footer-link">Admin</a>
+						<a href="/admin/documents" class="nav-footer-link">Documents</a>
+						<a href="/writer" class="nav-footer-link">Writer</a>
+						<a href="/logout" class="nav-footer-link">Sign out</a>
+					}
 				</nav>
 				<p class="copywrite-text">
 					<a href={ templ.SafeURL(Site().RepoURL) } class="nav-footer-link">&copy; { strconv.Itoa(time.Now().Year()) } { Site().AuthorName }</a>
