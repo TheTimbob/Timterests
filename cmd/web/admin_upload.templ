@@ -1,0 +1,52 @@
+package web
+
+templ UploadPage(result UploadResult) {
+	@Base("admin") {
+		<div id="admin-upload-container">
+			<h1 class="category-title">Upload</h1>
+			<p class="content-text">
+				Upload an existing document as a matching <code>.yaml</code> and <code>.md</code> pair.
+				The metadata is checked against the required fields for its type before anything is saved.
+			</p>
+			@UploadForm(result)
+		</div>
+	}
+}
+
+templ UploadForm(result UploadResult) {
+	<div id="upload-form-wrapper" class="card-container-static">
+		if result.Message != "" {
+			<p class="upload-success">{ result.Message }</p>
+		}
+		for _, message := range result.Errors {
+			<p class="error-message" role="alert">{ message }</p>
+		}
+		<form
+			hx-post="/admin/upload"
+			hx-target="#upload-form-wrapper"
+			hx-swap="outerHTML"
+			hx-encoding="multipart/form-data"
+		>
+			<div class="form-field">
+				<label class="form-label" for="document-type">Document type</label>
+				<select class="form-select" id="document-type" name="document-type" required>
+					<option value="">Choose a type…</option>
+					for _, docType := range result.DocTypes {
+						<option value={ docType } selected?={ result.DocType == docType }>{ docType }</option>
+					}
+				</select>
+			</div>
+			<div class="form-field">
+				<label class="form-label" for="yaml-file">Metadata file (.yaml)</label>
+				<input class="form-input" type="file" id="yaml-file" name="yaml-file" accept=".yaml" required/>
+			</div>
+			<div class="form-field">
+				<label class="form-label" for="md-file">Body file (.md)</label>
+				<input class="form-input" type="file" id="md-file" name="md-file" accept=".md" required/>
+			</div>
+			<div class="form-field">
+				<button type="submit" class="button">Upload</button>
+			</div>
+		</form>
+	</div>
+}

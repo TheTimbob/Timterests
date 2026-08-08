@@ -468,6 +468,38 @@ func (s *Storage) GetDocumentBodyRaw(ctx context.Context, yamlKey string) (strin
 	return string(content), nil
 }
 
+// WriteFile stores raw bytes at key, writing locally and, in S3 mode, uploading
+// as well. The local copy is written either way because that directory doubles
+// as the read cache — skipping it would leave the new file invisible until
+// something else pulled it down.
+func (s *Storage) WriteFile(ctx context.Context, key string, content []byte) error {
+	path, err := LocalPath(s.BaseDir, key)
+	if err != nil {
+		return fmt.Errorf("getting local path: %w", err)
+	}
+
+	err = os.MkdirAll(filepath.Dir(path), 0750)
+	if err != nil {
+		return fmt.Errorf("failed to create directory for %s: %w", key, err)
+	}
+
+	err = os.WriteFile(path, content, 0600)
+	if err != nil {
+		return fmt.Errorf("failed to write %s: %w", key, err)
+	}
+
+	if !s.UseS3 {
+		return nil
+	}
+
+	err = s.UploadFileToS3(ctx, key)
+	if err != nil {
+		return fmt.Errorf("failed to upload %s: %w", key, err)
+	}
+
+	return nil
+}
+
 // DeleteDocument removes both halves of a document — the .yaml metadata and the
 // .md body — in whichever storage mode is active. In S3 mode the local cache
 // copies are removed too, otherwise the deleted document keeps being served from

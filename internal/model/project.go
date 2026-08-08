@@ -1,7 +1,5 @@
 package model
 
-import "errors"
-
 // Project represents a personal software project.
 type Project struct {
 	Document `yaml:",inline"`
@@ -27,9 +25,5 @@ func (p *Project) Timespan() string {
 
 // Validate checks that the Project has the required fields populated.
 func (p *Project) Validate() error {
-	if p.Title == "" {
-		return errors.New("project title is required")
-	}
-
-	return nil
+	return ValidateRequired(p)
 }

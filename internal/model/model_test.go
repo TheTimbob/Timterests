@@ -63,10 +63,10 @@ func TestProjectTimespan(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name      string
-		start     string
-		end       string
-		expected  string
+		name     string
+		start    string
+		end      string
+		expected string
 	}{
 		{"both dates", "Jan 2023", "Dec 2024", "Jan 2023 — Dec 2024"},
 		{"ongoing project", "Mar 2024", "", "Mar 2024 — Present"},

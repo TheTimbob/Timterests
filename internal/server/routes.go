@@ -66,6 +66,16 @@ func (s *Server) RegisterRoutes() http.Handler {
 		web.DeleteDocumentHandler(w, r, *s.Storage, s.auth)
 	}))
 
+	mux.Handle("/admin/upload", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost {
+			web.UploadDocumentHandler(w, r, *s.Storage, s.auth)
+
+			return
+		}
+
+		web.UploadPageHandler(w, r, s.auth)
+	}))
+
 	mux.Handle("/writer", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var (
 			docType, key string

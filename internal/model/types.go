@@ -5,7 +5,7 @@ package model
 type Document struct {
 	ID       string
 	S3Key    string
-	Title    string   `yaml:"title"`
+	Title    string   `validate:"required" yaml:"title"`
 	Subtitle string   `yaml:"subtitle"`
 	Preview  string   `yaml:"preview"`
 	Tags     []string `yaml:"tags"`
