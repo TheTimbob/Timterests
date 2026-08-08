@@ -57,6 +57,10 @@ func (s *Server) RegisterRoutes() http.Handler {
 		web.AdminDocumentsPageHandler(w, r, *s.Storage, s.auth)
 	}))
 
+	mux.Handle("/admin/documents/delete", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		web.DeleteDocumentHandler(w, r, *s.Storage, s.auth)
+	}))
+
 	mux.Handle("/writer", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var (
 			docType, key string

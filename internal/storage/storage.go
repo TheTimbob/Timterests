@@ -468,6 +468,59 @@ func (s *Storage) GetDocumentBodyRaw(ctx context.Context, yamlKey string) (strin
 	return string(content), nil
 }
 
+// DeleteDocument removes both halves of a document — the .yaml metadata and the
+// .md body — in whichever storage mode is active. In S3 mode the local cache
+// copies are removed too, otherwise the deleted document keeps being served from
+// disk.
+//
+// A missing file is not an error: the goal is that the document is gone, and a
+// half-written document must still be removable.
+func (s *Storage) DeleteDocument(ctx context.Context, yamlKey string) error {
+	mdKey := strings.TrimSuffix(yamlKey, ".yaml") + ".md"
+
+	for _, key := range []string{yamlKey, mdKey} {
+		if s.UseS3 {
+			err := s.deleteS3Object(ctx, key)
+			if err != nil {
+				return err
+			}
+		}
+
+		err := s.deleteLocalFile(key)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (s *Storage) deleteS3Object(ctx context.Context, key string) error {
+	_, err := s.S3Client.DeleteObject(ctx, &s3.DeleteObjectInput{
+		Bucket: aws.String(s.BucketName),
+		Key:    aws.String(key),
+	})
+	if err != nil {
+		return fmt.Errorf("failed to delete %s from S3: %w", key, err)
+	}
+
+	return nil
+}
+
+func (s *Storage) deleteLocalFile(key string) error {
+	path, err := LocalPath(s.BaseDir, key)
+	if err != nil {
+		return fmt.Errorf("getting local path: %w", err)
+	}
+
+	err = os.Remove(path)
+	if err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("failed to delete %s: %w", key, err)
+	}
+
+	return nil
+}
+
 // GetDocumentBody reads the Markdown body file paired with yamlKey, converts it to HTML, and returns it.
 // The body file is expected at the same path as yamlKey but with a .md extension.
 func (s *Storage) GetDocumentBody(ctx context.Context, yamlKey string) (string, error) {
