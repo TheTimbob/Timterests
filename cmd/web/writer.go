@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"strings"
 
-	"timterests/internal/ai"
 	"timterests/internal/auth"
 	apperrors "timterests/internal/errors"
 	"timterests/internal/model"
@@ -167,75 +166,6 @@ func WriteDocumentHandler(w http.ResponseWriter, r *http.Request, s storage.Stor
 
 	http.Redirect(w, r, "/writer", http.StatusSeeOther)
 }
-
-func WriterSuggestionHandler(w http.ResponseWriter, r *http.Request, s storage.Storage, a *auth.Auth) {
-	if !a.IsAuthenticated(r) {
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
-
-		return
-	}
-
-	err := r.ParseForm()
-	if err != nil {
-		HandleError(w, r, apperrors.ParseFormFailed(err), "WriterSuggestionHandler", "parseForm")
-
-		return
-	}
-
-	bodyContent := r.FormValue("body")
-	if strings.TrimSpace(bodyContent) == "" {
-		component := AISuggestionError("Please enter some content in the body field first.")
-
-		renderErr := renderHTML(w, r, http.StatusOK, component)
-		if renderErr != nil {
-			HandleError(w, r, apperrors.RenderFailed(renderErr), "WriterSuggestionHandler", "renderEmpty")
-		}
-
-		return
-	}
-
-	docType := r.FormValue("document-type")
-	if strings.TrimSpace(docType) == "" {
-		docType = "articles"
-	}
-
-	systemInstruction, err := s.GetPromptContent(r.Context(), docType)
-	if err != nil {
-		log.Printf("Failed to load system prompt for docType %q: %v", docType, err)
-
-		component := AISuggestionError("AI suggestions are temporarily unavailable. Please try again later.")
-
-		renderErr := renderHTML(w, r, http.StatusOK, component)
-		if renderErr != nil {
-			HandleError(w, r, apperrors.RenderFailed(renderErr), "WriterSuggestionHandler", "renderPromptError")
-		}
-
-		return
-	}
-
-	suggestion, err := ai.GenerateSuggestion(r.Context(), bodyContent, systemInstruction)
-	if err != nil {
-		log.Printf("Failed to generate AI suggestion: %v", err)
-
-		component := AISuggestionError("Failed to get AI suggestion. Please try again later.")
-
-		renderErr := renderHTML(w, r, http.StatusOK, component)
-		if renderErr != nil {
-			HandleError(w, r, apperrors.RenderFailed(renderErr), "WriterSuggestionHandler", "renderAIError")
-		}
-
-		return
-	}
-
-	component := AISuggestionResponse(suggestion)
-
-	err = renderHTML(w, r, http.StatusOK, component)
-	if err != nil {
-		HandleError(w, r, apperrors.RenderFailed(err), "WriterSuggestionHandler", "renderSuggestion")
-	}
-}
-
-
 
 func loadRawDoc[T any, PT interface {
 	*T

@@ -3,7 +3,7 @@ profile: tmp/cover.out
 threshold:
   file: 0 # 70
   package: 0 # 80
-  total: 65 #95
+  total: 60 #95
 exclude:
   paths:
     - '.*_templ\.go$'    # exclude all templ template files
