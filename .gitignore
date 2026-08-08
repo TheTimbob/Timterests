@@ -43,6 +43,3 @@ memory/*
 
 # Keep empty directories
 !.gitkeep
-
-# Keep DB schema
-!database/schema.db

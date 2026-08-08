@@ -126,7 +126,7 @@ func TestArticleRendering(t *testing.T) {
 	s := testSetup(t, context.Background())
 
 	// Create auth instance for tests (won't be authenticated but prevents nil pointer)
-	a := auth.NewAuth("test-session-key-minimum-32-bytes")
+	a := auth.NewAuth("test-session", "test-signing-key-at-least-32-chars!!")
 
 	t.Run("render article page", func(t *testing.T) {
 		req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/article?id=0", nil)
@@ -216,7 +216,7 @@ func TestArticleRendering(t *testing.T) {
 
 func TestGetArticleNotFound(t *testing.T) {
 	s := testSetup(t, context.Background())
-	a := auth.NewAuth("test-session-key-minimum-32-bytes")
+	a := auth.NewAuth("test-session", "test-signing-key-at-least-32-chars!!")
 
 	t.Run("returns 404 for non-existent article ID", func(t *testing.T) {
 		req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/article?id=non-existent-id", nil)

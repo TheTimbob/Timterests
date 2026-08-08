@@ -298,7 +298,7 @@ func TestArticlesBackButtonBehavior(t *testing.T) {
 // TestArticleDetailBackButtonBehavior tests the article detail route.
 func TestArticleDetailBackButtonBehavior(t *testing.T) {
 	s := testSetup(t, context.Background())
-	a := auth.NewAuth("test-session-key-minimum-32-bytes")
+	a := auth.NewAuth("test-session", "test-signing-key-at-least-32-chars!!")
 
 	t.Run("forward nav (HTMX swap) to article detail - partial + cache headers", func(t *testing.T) {
 		t.Parallel()
@@ -353,7 +353,7 @@ func TestArticleDetailBackButtonBehavior(t *testing.T) {
 // TestProjectsBackButtonBehavior tests the projects routes for back-button safety.
 func TestProjectsBackButtonBehavior(t *testing.T) {
 	s := testSetup(t, context.Background())
-	a := auth.NewAuth("test-session-key-minimum-32-bytes")
+	a := auth.NewAuth("test-session", "test-signing-key-at-least-32-chars!!")
 
 	t.Run("projects list - HTMX partial has cache headers", func(t *testing.T) {
 		t.Parallel()
@@ -437,7 +437,7 @@ func TestProjectsBackButtonBehavior(t *testing.T) {
 // TestReadingListBackButtonBehavior tests reading list routes.
 func TestReadingListBackButtonBehavior(t *testing.T) {
 	s := testSetup(t, context.Background())
-	a := auth.NewAuth("test-session-key-minimum-32-bytes")
+	a := auth.NewAuth("test-session", "test-signing-key-at-least-32-chars!!")
 
 	t.Run("reading list - HTMX partial has cache headers", func(t *testing.T) {
 		t.Parallel()

@@ -9,8 +9,6 @@ import (
 
 	"timterests/internal/server"
 	"timterests/internal/storage"
-
-	_ "github.com/mattn/go-sqlite3"
 )
 
 func TestRoutes(t *testing.T) {
@@ -58,7 +56,7 @@ func TestRoutes(t *testing.T) {
 }
 
 func TestSecurityHeaders(t *testing.T) {
-	setupHealthTestDB(t)
+	isolateWorkingDir(t)
 
 	s := &server.Server{
 		Storage: &storage.Storage{
@@ -104,7 +102,7 @@ func TestSecurityHeaders(t *testing.T) {
 }
 
 func TestCORSPreflight(t *testing.T) {
-	setupHealthTestDB(t)
+	isolateWorkingDir(t)
 
 	t.Setenv("SITE_URL", "https://example.com")
 
@@ -263,6 +261,7 @@ func TestRecoveryMiddlewarePanic(t *testing.T) {
 func TestNewServer(t *testing.T) {
 	t.Setenv("PORT", "18080")
 	t.Setenv("SESSION_NAME", "test-session")
+	t.Setenv("SESSION_KEY", "test-signing-key-at-least-32-chars!!")
 
 	svr := server.NewServer()
 	if svr == nil {
@@ -272,4 +271,20 @@ func TestNewServer(t *testing.T) {
 	if svr.Addr != ":18080" {
 		t.Errorf("expected addr :18080, got %s", svr.Addr)
 	}
+}
+
+// A weak signing key must stop the server outright. Booting with one would let
+// anyone forge a session cookie and reach the admin routes.
+func TestNewServerRejectsWeakSessionKey(t *testing.T) {
+	t.Setenv("PORT", "18081")
+	t.Setenv("SESSION_NAME", "test-session")
+	t.Setenv("SESSION_KEY", "too-short")
+
+	defer func() {
+		if recover() == nil {
+			t.Error("expected NewServer to panic on a short SESSION_KEY")
+		}
+	}()
+
+	server.NewServer()
 }

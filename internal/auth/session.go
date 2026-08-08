@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"maps"
 	"net/http"
-	"os"
 
 	"github.com/gorilla/sessions"
 )
@@ -16,12 +15,16 @@ type SessionStore struct {
 	sessionName string
 }
 
-// InitializeSession initializes the session store with options.
-func InitializeSession(key string) *SessionStore {
-	if key == "" {
-		key = os.Getenv("SESSION_NAME")
-	}
+// MinSessionKeyLength is the shortest accepted signing key. Anything weaker and
+// a forged cookie becomes a realistic route straight past authentication.
+const MinSessionKeyLength = 32
 
+// InitializeSession initializes the session store with options.
+//
+// name identifies the cookie and is public. key signs it and is a secret — they
+// are deliberately separate, because a value that appears in a cookie name can
+// never be trusted to protect its contents.
+func InitializeSession(name, key string) *SessionStore {
 	store := sessions.NewCookieStore([]byte(key))
 	store.Options = &sessions.Options{
 		Path:     "/",
@@ -32,7 +35,7 @@ func InitializeSession(key string) *SessionStore {
 	}
 	sess := &SessionStore{
 		store,
-		key,
+		name,
 	}
 
 	return sess
@@ -50,6 +53,25 @@ func (store *SessionStore) SetSessionValue(w http.ResponseWriter, r *http.Reques
 	err = session.Save(r, w)
 	if err != nil {
 		return fmt.Errorf("failed to save session: %w", err)
+	}
+
+	return nil
+}
+
+// ClearSession drops every value and expires the cookie.
+func (store *SessionStore) ClearSession(w http.ResponseWriter, r *http.Request) error {
+	session, err := store.Get(r, store.sessionName)
+	if err != nil {
+		return fmt.Errorf("failed to get session: %w", err)
+	}
+
+	clear(session.Values)
+
+	session.Options.MaxAge = -1
+
+	err = session.Save(r, w)
+	if err != nil {
+		return fmt.Errorf("failed to clear session: %w", err)
 	}
 
 	return nil

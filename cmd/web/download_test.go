@@ -15,7 +15,7 @@ import (
 
 func TestDownloadNewDocumentHandler(t *testing.T) {
 	t.Run("redirects to login when unauthenticated", func(t *testing.T) {
-		a := auth.NewAuth("test-session-key-minimum-32-bytes")
+		a := auth.NewAuth("test-session", "test-signing-key-at-least-32-chars!!")
 
 		req := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/download/new", nil)
 		rec := httptest.NewRecorder()

@@ -70,7 +70,12 @@ jobs:
                   "SESSION_NAME": "${{ secrets.SESSION_NAME }}",
                   "SESSION_KEY": "${{ secrets.SESSION_KEY }}",
                   "PORT": "${{ vars.PORT }}",
-                  "USE_S3": "${{ vars.USE_S3 }}"
+                  "USE_S3": "${{ vars.USE_S3 }}",
+                  "SITE_URL": "${{ vars.SITE_URL }}",
+                  "COGNITO_DOMAIN": "${{ vars.COGNITO_DOMAIN }}",
+                  "COGNITO_USER_POOL_ID": "${{ vars.COGNITO_USER_POOL_ID }}",
+                  "COGNITO_CLIENT_ID": "${{ vars.COGNITO_CLIENT_ID }}",
+                  "COGNITO_CLIENT_SECRET": "${{ secrets.COGNITO_CLIENT_SECRET }}"
                 }
               }
             }' \
