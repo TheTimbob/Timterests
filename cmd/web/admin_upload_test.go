@@ -204,6 +204,32 @@ func TestUploadDocumentHandler(t *testing.T) {
 			t.Errorf("expected a redirect, got %d", rec.Code)
 		}
 	})
+
+	// A body large enough to arrive in several reads must be stored whole. A
+	// single Read call would return only the first chunk and silently truncate.
+	t.Run("stores a large body without truncating", func(t *testing.T) {
+		s := uploadStorage(t)
+
+		body := "# Big\n\n" + strings.Repeat("word ", 40000)
+
+		req := uploadRequest(t, "articles", map[string]string{
+			"yaml-file": validYAML,
+			"md-file":   "post.md|" + body,
+		})
+		addAuthCookie(req)
+
+		rec := httptest.NewRecorder()
+		web.UploadDocumentHandler(rec, req, *s, a)
+
+		written, err := os.ReadFile(filepath.Join(s.BaseDir, "articles", "post.md"))
+		if err != nil {
+			t.Fatalf("expected the body to be written: %v", err)
+		}
+
+		if len(written) != len(body) {
+			t.Errorf("body truncated: wrote %d bytes, expected %d", len(written), len(body))
+		}
+	})
 }
 
 func TestUploadPageHandler(t *testing.T) {

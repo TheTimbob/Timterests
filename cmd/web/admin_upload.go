@@ -3,6 +3,7 @@ package web
 import (
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"mime/multipart"
 	"net/http"
@@ -156,21 +157,28 @@ func readUpload(r *http.Request, field, wantExt string) ([]byte, string, error) 
 
 	content, err := readLimited(file)
 	if err != nil {
-		return nil, "", fmt.Errorf("failed to read %q", name)
+		return nil, "", fmt.Errorf("%q %w", name, err)
 	}
 
 	return content, name, nil
 }
 
+// readLimited reads the whole file, refusing anything over the cap.
+//
+// A single Read is not enough: it may return fewer bytes than requested, which
+// would silently truncate a document rather than fail. Reading one byte past the
+// limit is how an oversized file is detected instead of quietly clipped.
 func readLimited(file multipart.File) ([]byte, error) {
-	buf := make([]byte, maxUploadBytes)
-
-	n, err := file.Read(buf)
-	if err != nil && n == 0 {
-		return nil, fmt.Errorf("reading upload: %w", err)
+	content, err := io.ReadAll(io.LimitReader(file, maxUploadBytes+1))
+	if err != nil {
+		return nil, errors.New("could not be read")
 	}
 
-	return buf[:n], nil
+	if len(content) > maxUploadBytes {
+		return nil, fmt.Errorf("is larger than %dMB", maxUploadBytes>>20)
+	}
+
+	return content, nil
 }
 
 // validateDocumentYAML decodes the metadata into the struct for its type and
