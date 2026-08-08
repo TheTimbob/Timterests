@@ -60,6 +60,13 @@ body {
   margin: 0;
 }
 
+/* Reserve the scrollbar track always. Without it a short page and a tall page
+   have different viewport widths, so the centred column shifts sideways on every
+   navigation. Invisible on macOS overlay scrollbars, very visible elsewhere. */
+html {
+  scrollbar-gutter: stable;
+}
+
 /* A global text colour, so anything without an explicit class cannot silently
    render black on a dark background. Components still override where they need
    a different shade. */
@@ -507,11 +514,14 @@ a:hover {
 }
 
 /* Navigation */
+/* Wraps rather than overflowing — the admin links push this to eight entries
+   when signed in. The row gap keeps wrapped rows from touching. */
 .nav-header {
   box-shadow: var(--shadow-md);
   display: flex;
   flex-wrap: wrap;
   justify-content: space-around;
+  gap: 0.25rem 0.5rem;
   padding: 0.25rem;
 }
 
@@ -570,7 +580,13 @@ a:hover {
   color: var(--green-light);
 }
 
-.nav-link i {
+/* Hold the icon's width up front. Font Awesome swaps each <i> for an <svg> after
+   load, and without a reserved box every nav link shifts sideways when it lands. */
+.nav-link i,
+.nav-link svg {
+  display: inline-block;
+  width: 1.25em;
+  text-align: center;
   font-size: 1.25rem;
   margin-right: 0.25rem;
 }
@@ -949,6 +965,16 @@ a:hover {
   color: var(--text-muted);
 }
 
+.upload-success {
+  color: var(--green-dark);
+  font-size: 0.9rem;
+  margin-bottom: 0.75rem;
+}
+
+.dark .upload-success {
+  color: var(--green-accent);
+}
+
 .error-message {
   color: #c0392b;
   font-size: 0.9rem;
@@ -1099,6 +1125,10 @@ a:hover {
 }
 .dark .highlight-purple {
   color: var(--purple);
+}
+.highlight-yellow,
+.dark .highlight-yellow {
+  color: var(--yellow);
 }
 
 .page-list {
@@ -1293,7 +1323,10 @@ a:hover {
   line-height: 1;
 }
 
-.error-message {
+/* Scoped to the full-page error view. This previously reused .error-message and,
+   being later in the file, silently overrode the inline form errors — turning
+   them muted grey at 1.25rem instead of red at 0.9rem. */
+.error-page-message {
   font-size: 1.25rem;
   color: var(--text-muted);
   margin: 1rem 0 2rem;
