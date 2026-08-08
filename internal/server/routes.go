@@ -54,19 +54,19 @@ func (s *Server) RegisterRoutes() http.Handler {
 		web.HomeHandler(w, r, *s.Storage)
 	}))
 
-	mux.Handle("/admin", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	mux.Handle("/admin", s.requireAuth(func(w http.ResponseWriter, r *http.Request) {
 		web.AdminPageHandler(w, r, s.auth)
 	}))
 
-	mux.Handle("/admin/documents", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	mux.Handle("/admin/documents", s.requireAuth(func(w http.ResponseWriter, r *http.Request) {
 		web.AdminDocumentsPageHandler(w, r, *s.Storage, s.auth)
 	}))
 
-	mux.Handle("/admin/documents/delete", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	mux.Handle("/admin/documents/delete", s.requireAuth(func(w http.ResponseWriter, r *http.Request) {
 		web.DeleteDocumentHandler(w, r, *s.Storage, s.auth)
 	}))
 
-	mux.Handle("/admin/upload", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	mux.Handle("/admin/upload", s.requireAuth(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			web.UploadDocumentHandler(w, r, *s.Storage, s.auth)
 
@@ -76,7 +76,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 		web.UploadPageHandler(w, r, s.auth)
 	}))
 
-	mux.Handle("/writer", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	mux.Handle("/writer", s.requireAuth(func(w http.ResponseWriter, r *http.Request) {
 		var (
 			docType, key string
 			typeID       int
@@ -111,16 +111,16 @@ func (s *Server) RegisterRoutes() http.Handler {
 		web.WriterPageHandler(w, r, *s.Storage, docType, key, typeID, s.auth)
 	}))
 
-	mux.Handle("/write", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	mux.Handle("/write", s.requireAuth(func(w http.ResponseWriter, r *http.Request) {
 		web.WriteDocumentHandler(w, r, *s.Storage, s.auth)
 	}))
 
-	mux.Handle("/download", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	mux.Handle("/download", s.requireAuth(func(w http.ResponseWriter, r *http.Request) {
 		documentKey := r.URL.Query().Get("key")
 		web.DownloadDocumentHandler(w, r, *s.Storage, documentKey, s.auth)
 	}))
 
-	mux.Handle("/download/new", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	mux.Handle("/download/new", s.requireAuth(func(w http.ResponseWriter, r *http.Request) {
 		web.DownloadNewDocumentHandler(w, r, s.auth)
 	}))
 
@@ -186,12 +186,13 @@ func (s *Server) RegisterRoutes() http.Handler {
 		web.GetReadingListBook(w, r, *s.Storage, articleID, s.auth)
 	}))
 	// Letter Routes
-	mux.Handle("/letters", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	// Letters are private, so both routes are gated like the admin pages.
+	mux.Handle("/letters", s.requireAuth(func(w http.ResponseWriter, r *http.Request) {
 		design := r.URL.Query().Get("design")
 		tag := r.URL.Query().Get("tag")
 		web.LettersPageHandler(w, r, *s.Storage, tag, design, s.auth)
 	}))
-	mux.Handle("/letter", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	mux.Handle("/letter", s.requireAuth(func(w http.ResponseWriter, r *http.Request) {
 		letterID := r.URL.Query().Get("id")
 		web.GetLetterHandler(w, r, *s.Storage, letterID, s.auth)
 	}))
@@ -201,6 +202,25 @@ func (s *Server) RegisterRoutes() http.Handler {
 			s.corsMiddleware(s.maxBytesMiddleware(s.authContextMiddleware(mux))),
 		),
 	)
+}
+
+// requireAuth redirects an unauthenticated request to the login page.
+//
+// Applied where routes are registered rather than inside each handler, so
+// protection is visible reading routes.go top to bottom and a new admin route is
+// covered by wrapping it rather than by remembering to add a guard clause. The
+// handlers keep their own checks as well, which protects them when called
+// directly rather than through the router.
+func (s *Server) requireAuth(next http.HandlerFunc) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !auth.IsAdmin(r.Context()) {
+			http.Redirect(w, r, "/login", http.StatusSeeOther)
+
+			return
+		}
+
+		next(w, r)
+	})
 }
 
 // authContextMiddleware resolves the request's auth state once and stores it in
