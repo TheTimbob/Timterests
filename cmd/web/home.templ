@@ -64,7 +64,7 @@ templ CurrentFocus() {
     <div class="card-container-static">
         <div class="card-content">
             <h2 class="card-header-center">
-                <i class="fa-solid fa-code icon-purple"></i>
+                <i class="fa-solid fa-code"></i>
                 Current Tech Focus
             </h2>
             <div class="section-grid-3">
@@ -89,7 +89,7 @@ templ LatestArticle(latestArticle *model.Article) {
     <div class="card-container" hx-get={ "/article?id=" + latestArticle.ID } hx-target="#main-content" hx-swap="innerHTML" hx-push-url="true">
         <div class="card-content">
             <h2 class="card-header-center">
-                <i class="fa-solid fa-newspaper icon-blue"></i>
+                <i class="fa-solid fa-newspaper"></i>
                 Latest Article
             </h2>
             if latestArticle != nil {
@@ -112,7 +112,7 @@ templ FeaturedProject(featuredProject *model.Project) {
     <div class="card-container" hx-get={ "/project?id=" + featuredProject.ID } hx-target="#main-content" hx-swap="innerHTML" hx-push-url="true">
         <div class="card-content">
             <h2 class="card-header-center">
-                <i class="fa-solid fa-diagram-project icon-green"></i>
+                <i class="fa-solid fa-diagram-project"></i>
                 Featured Project
             </h2>
             if featuredProject != nil {

@@ -57,11 +57,15 @@ body {
   margin: 0;
 }
 
+/* A global text colour, so anything without an explicit class cannot silently
+   render black on a dark background. Components still override where they need
+   a different shade. */
 body {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
   background-color: var(--bg-light);
+  color: var(--text-light);
   font-family:
     ui-sans-serif,
     system-ui,
@@ -76,6 +80,7 @@ body {
 
 .dark body {
   background-color: var(--bg-dark);
+  color: var(--text-dark);
 }
 
 body::before {
@@ -785,20 +790,6 @@ a:hover {
   color: var(--text-light);
 }
 
-.home-footer {
-  text-align: center;
-  width: 100%;
-  margin: 2rem auto 0;
-  padding: 2rem;
-  background-color: transparent;
-  border-top: 1px solid var(--border);
-}
-
-.dark .home-footer {
-  background-color: transparent;
-  border-color: var(--bg-dark-accent);
-}
-
 .header-controls {
   display: flex;
   justify-content: space-between;
@@ -843,13 +834,21 @@ a:hover {
 .form-textarea,
 .filter-select {
   width: 100%;
-  font-size: 1rem;
-  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  /* The muted shade is for placeholders; entered values need full contrast. */
+  color: var(--text-light);
   background-color: white;
   border: 1px solid var(--border);
   border-radius: 0.375rem;
   padding: 0.5rem 0.75rem;
   margin-bottom: 0.75rem;
+}
+
+.form-input::placeholder,
+.form-textarea::placeholder {
+  color: var(--text-muted);
 }
 
 .form-input:focus,
@@ -864,9 +863,20 @@ a:hover {
 .dark .form-select,
 .dark .form-textarea,
 .dark .filter-select {
-  color: var(--border);
-  background-color: var(--text-muted);
+  color: var(--text-dark);
+  background-color: var(--bg-dark);
   border-color: var(--text-muted);
+}
+
+.dark .form-input::placeholder,
+.dark .form-textarea::placeholder {
+  color: var(--text-muted);
+}
+
+/* Date pickers render their indicator dark by default, which disappears against
+   a dark field. */
+.dark .form-input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
 }
 
 .form-textarea {
@@ -946,8 +956,9 @@ a:hover {
   color: #e74c3c;
 }
 
+/* Inline filter next to a heading, so it sizes to content and keeps a gap. The
+   font size deliberately matches the other form controls. */
 .filter-select {
-  font-size: 0.875rem;
   width: auto;
   margin-left: 0.5rem;
 }
@@ -1096,16 +1107,41 @@ a:hover {
   margin-bottom: 1rem;
 }
 
-.admin-search-input {
-  max-width: 24rem;
+/* Inputs, selects and buttons each size themselves differently by default, which
+   is what made this row look ragged. Pinning one height and centring the content
+   makes them line up regardless of type. */
+.admin-search-form .form-input,
+.admin-search-form .filter-select,
+.admin-search-form .button {
+  height: 2.5rem;
   margin-bottom: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  font-size: 0.9375rem;
+  line-height: 1.5;
 }
 
-/* Filter controls sit inline in the form, so they drop the stacked-field margin
-   and size to their content rather than filling the row. */
+.admin-search-form .button {
+  display: inline-flex;
+  align-items: center;
+  padding-left: 1.25rem;
+  padding-right: 1.25rem;
+}
+
+.admin-search-input {
+  flex: 1 1 14rem;
+  min-width: 10rem;
+  max-width: 24rem;
+}
+
+/* Filter controls size to their content rather than filling the row. Date fields
+   need an explicit width or they claim far more space than their content. */
 .admin-filter {
   width: auto;
-  margin-bottom: 0;
+}
+
+.admin-search-form .form-input[type="date"] {
+  width: 10rem;
 }
 
 .admin-table-wrapper {
