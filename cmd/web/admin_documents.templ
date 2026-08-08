@@ -80,12 +80,22 @@ templ AdminDocumentsTable(params AdminDocumentsParams) {
 							<td>{ doc.Source }</td>
 							<td>{ storage.FormatFileSize(doc.Size) }</td>
 							<td>{ doc.LastModified.Format("2006-01-02 15:04") }</td>
-							<td>
+							<td class="admin-row-actions">
 								<form method="POST" action="/writer" class="action-form">
 									<input type="hidden" name="document-type" value={ doc.DocType }/>
 									<input type="hidden" name="document-key" value={ doc.Key }/>
 									<input type="hidden" name="type-id" value={ strconv.Itoa(doc.Index) }/>
-									<button type="submit" class="button button-sm">Edit / Suggestions</button>
+									<button type="submit" class="button button-sm">Edit</button>
+								</form>
+								<form
+									class="action-form"
+									hx-post="/admin/documents/delete"
+									hx-target="#documents-table-wrapper"
+									hx-swap="outerHTML"
+									hx-confirm={ "Delete " + doc.Filename + "? This removes the document and cannot be undone." }
+								>
+									<input type="hidden" name="key" value={ doc.Key }/>
+									<button type="submit" class="button button-sm button-danger">Delete</button>
 								</form>
 							</td>
 						</tr>

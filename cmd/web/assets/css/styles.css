@@ -956,6 +956,30 @@ a:hover {
   display: inline;
 }
 
+.admin-row-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+/* Destructive actions read as destructive, so Delete is not mistaken for Edit
+   at a glance. */
+.button-danger {
+  background-color: #c0392b;
+}
+
+.button-danger:hover {
+  background-color: #a33125;
+}
+
+.dark .button-danger {
+  background-color: #a33125;
+}
+
+.dark .button-danger:hover {
+  background-color: #c0392b;
+}
+
 /* View Options (Filter) */
 .view-options {
   display: inline-flex;
