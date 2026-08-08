@@ -1,24 +1,34 @@
 package web
 
 templ AdminPage() {
-    @Base("admin") {
-        @AdminDisplay()
-    }
+	@Base("admin") {
+		@AdminDisplay()
+	}
 }
 
 templ AdminDisplay() {
-    <div id="admin-container">
-        <h1 class="category-title">Admin</h1>
-        <div>
-            <a href="/admin/documents" class="card-subtitle">Documents</a>
-        </div>
-        <div>
-        </div>
-        <div>
-            <a href="/letters" class="card-subtitle">Letters</a>
-        </div>
-        <div>
-            <a href="/writer" class="card-subtitle">Writer</a>
-        </div>
-    </div>
+	<div id="admin-container">
+		<h1 class="category-title">Admin</h1>
+		<p class="content-text">Manage content and create new documents.</p>
+		<div class="section-grid-3">
+			<a href="/admin/documents" class="nav-card">
+				<div class="card-title highlight-blue">
+					<i class="fa-solid fa-folder-open" aria-hidden="true"></i>Documents
+				</div>
+				<div class="card-body">Browse, search and manage existing content</div>
+			</a>
+			<a href="/writer" class="nav-card">
+				<div class="card-title highlight-green">
+					<i class="fa-solid fa-pen-to-square" aria-hidden="true"></i>Writer
+				</div>
+				<div class="card-body">Create a new document or edit an existing one</div>
+			</a>
+			<a href="/letters" class="nav-card">
+				<div class="card-title highlight-purple">
+					<i class="fa-solid fa-envelope" aria-hidden="true"></i>Letters
+				</div>
+				<div class="card-body">Read and manage letters</div>
+			</a>
+		</div>
+	</div>
 }
