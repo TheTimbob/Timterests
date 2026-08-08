@@ -16,9 +16,14 @@ import (
 
 // Asset cache lifetimes. Filenames are not content-hashed, so changes only
 // propagate once the window lapses.
+//
+// Images and fonts are the heavy assets and rarely change, so they get a long
+// window. CSS and JS are small and edited often, and a long window there just
+// means staring at a stale stylesheet wondering why a fix did not land — so they
+// get barely any.
 const (
 	longCacheControl    = "public, max-age=604800"
-	defaultCacheControl = "public, max-age=3600"
+	defaultCacheControl = "public, max-age=60"
 )
 
 // RegisterRoutes configures all HTTP routes and returns the handler.

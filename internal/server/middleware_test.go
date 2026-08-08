@@ -18,8 +18,8 @@ func TestStaticCacheMiddlewareSetsLifetime(t *testing.T) {
 		cacheControl string
 	}{
 		{"image gets the long lifetime", "/assets/images/background.jpg", "public, max-age=604800"},
-		{"stylesheet gets the short lifetime", "/assets/css/styles.css", "public, max-age=3600"},
-		{"script gets the short lifetime", "/assets/js/buttons.js", "public, max-age=3600"},
+		{"stylesheet gets the short lifetime", "/assets/css/styles.css", "public, max-age=60"},
+		{"script gets the short lifetime", "/assets/js/buttons.js", "public, max-age=60"},
 	}
 
 	handler := server.StaticCacheMiddleware(http.FileServer(http.FS(web.Files)))
