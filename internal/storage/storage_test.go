@@ -2,7 +2,6 @@ package storage_test
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
 	"os"
 	"path/filepath"
@@ -13,8 +12,6 @@ import (
 
 	"timterests/internal/model"
 	"timterests/internal/storage"
-
-	_ "github.com/mattn/go-sqlite3"
 )
 
 func TestStorage(t *testing.T) {
@@ -303,8 +300,6 @@ func TestGetPromptContent(t *testing.T) {
 }
 
 func TestHealthOK(t *testing.T) {
-	setupHealthDB(t)
-
 	s := &storage.Storage{
 		UseS3:   false,
 		BaseDir: t.TempDir(),
@@ -327,10 +322,6 @@ func TestHealthOK(t *testing.T) {
 
 	if result.Checks["storage"] != "ok" {
 		t.Errorf("expected storage check 'ok', got %q", result.Checks["storage"])
-	}
-
-	if result.Checks["database"] != "ok" {
-		t.Errorf("expected database check 'ok', got %q", result.Checks["database"])
 	}
 
 	if !result.Healthy() {
@@ -356,37 +347,7 @@ func TestHealthOK(t *testing.T) {
 	}
 }
 
-func TestHealthDegradedDBDown(t *testing.T) {
-	// No database directory → GetDB will fail → database check returns error
-	t.Chdir(t.TempDir())
-
-	s := &storage.Storage{
-		UseS3:   false,
-		BaseDir: t.TempDir(),
-	}
-
-	result := s.Health()
-
-	if result.Status != "degraded" {
-		t.Errorf("expected status 'degraded', got %q", result.Status)
-	}
-
-	if result.Checks["storage"] != "ok" {
-		t.Errorf("expected storage 'ok', got %q", result.Checks["storage"])
-	}
-
-	if result.Checks["database"] == "ok" {
-		t.Error("expected database check to report error, got 'ok'")
-	}
-
-	if result.Healthy() {
-		t.Error("expected Healthy() to return false for degraded status")
-	}
-}
-
 func TestHealthDegradedStorageDown(t *testing.T) {
-	setupHealthDB(t)
-
 	s := &storage.Storage{
 		UseS3:   false,
 		BaseDir: "/nonexistent/path/that/does/not/exist",
@@ -400,10 +361,6 @@ func TestHealthDegradedStorageDown(t *testing.T) {
 
 	if result.Checks["storage"] == "ok" {
 		t.Error("expected storage check to report error, got 'ok'")
-	}
-
-	if result.Checks["database"] != "ok" {
-		t.Errorf("expected database 'ok', got %q", result.Checks["database"])
 	}
 
 	if result.Healthy() {
@@ -438,135 +395,6 @@ func TestFormatFileSize(t *testing.T) {
 			}
 		})
 	}
-}
-
-func setupHealthDB(t *testing.T) {
-	t.Helper()
-
-	dbDir := filepath.Join(t.TempDir(), "database")
-
-	err := os.MkdirAll(dbDir, 0750)
-	if err != nil {
-		t.Fatalf("failed to create database dir: %v", err)
-	}
-
-	dbPath := filepath.Join(dbDir, "timterests.db")
-
-	db, err := sql.Open("sqlite3", dbPath)
-	if err != nil {
-		t.Fatalf("failed to open test db: %v", err)
-	}
-
-	defer func() {
-		_ = db.Close()
-	}()
-
-	_, err = db.ExecContext(context.Background(), `CREATE TABLE IF NOT EXISTS users (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		first_name TEXT NOT NULL,
-		last_name TEXT NOT NULL,
-		email TEXT UNIQUE NOT NULL,
-		password TEXT NOT NULL
-	)`)
-	if err != nil {
-		t.Fatalf("failed to create users table: %v", err)
-	}
-
-	t.Chdir(filepath.Dir(dbDir))
-}
-
-func TestInitDB(t *testing.T) {
-	t.Run("creates users table when missing", func(t *testing.T) {
-		dbDir := filepath.Join(t.TempDir(), "database")
-
-		err := os.MkdirAll(dbDir, 0750)
-		if err != nil {
-			t.Fatalf("failed to create database dir: %v", err)
-		}
-
-		t.Chdir(filepath.Dir(dbDir))
-
-		err = storage.InitDB(context.Background())
-		if err != nil {
-			t.Fatalf("InitDB failed: %v", err)
-		}
-
-		db, err := sql.Open("sqlite3", filepath.Join(dbDir, "timterests.db"))
-		if err != nil {
-			t.Fatalf("failed to open db: %v", err)
-		}
-		defer db.Close()
-
-		var count int
-
-		err = db.QueryRowContext(
-			context.Background(),
-			"SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='users'",
-		).Scan(&count)
-		if err != nil {
-			t.Fatalf("failed to query sqlite_master: %v", err)
-		}
-
-		if count != 1 {
-			t.Errorf("expected users table to exist, got count %d", count)
-		}
-	})
-
-	t.Run("is idempotent when table already exists", func(t *testing.T) {
-		dbDir := filepath.Join(t.TempDir(), "database")
-
-		err := os.MkdirAll(dbDir, 0750)
-		if err != nil {
-			t.Fatalf("failed to create database dir: %v", err)
-		}
-
-		t.Chdir(filepath.Dir(dbDir))
-
-		err = storage.InitDB(context.Background())
-		if err != nil {
-			t.Fatalf("first InitDB failed: %v", err)
-		}
-
-		err = storage.InitDB(context.Background())
-		if err != nil {
-			t.Fatalf("second InitDB failed: %v", err)
-		}
-	})
-
-	t.Run("returns error when no database directory", func(t *testing.T) {
-		t.Chdir(t.TempDir())
-
-		err := storage.InitDB(context.Background())
-		if err == nil {
-			t.Error("expected error when database directory is missing")
-		}
-	})
-}
-
-func TestCreateUserTable(t *testing.T) {
-	t.Run("creates table and allows insert", func(t *testing.T) {
-		dbPath := filepath.Join(t.TempDir(), "test.db")
-
-		db, err := sql.Open("sqlite3", dbPath)
-		if err != nil {
-			t.Fatalf("failed to open db: %v", err)
-		}
-		defer db.Close()
-
-		err = storage.CreateUserTable(context.Background(), db)
-		if err != nil {
-			t.Fatalf("CreateUserTable failed: %v", err)
-		}
-
-		_, err = db.ExecContext(
-			context.Background(),
-			"INSERT INTO users (first_name, last_name, email, password) VALUES (?, ?, ?, ?)",
-			"Test", "User", "test@example.com", "hash",
-		)
-		if err != nil {
-			t.Fatalf("insert into users failed: %v", err)
-		}
-	})
 }
 
 func TestGetImage(t *testing.T) {

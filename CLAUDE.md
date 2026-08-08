@@ -11,7 +11,6 @@ make test       # Run all tests with verbose output (go test ./... -v)
 make watch      # Live reload with air
 make coverage   # Coverage report excluding generated _templ.go files
 make clean      # Remove binary and tmp files
-export DB_PASSWORD=<your-password> && make create-user FIRST=John LAST=Doe EMAIL=john@example.com  # Bootstrap a user
 ```
 
 Run a single test:
@@ -39,9 +38,9 @@ cmd/api/main.go → internal/server/server.go (NewServer)
 
 - **`cmd/web/`** — HTTP handlers and Templ templates. Each content type has a `*.go` (handler logic), `*.templ` (template source), and generated `*_templ.go`. **Never edit `_templ.go` files directly.**
 - **`internal/server/`** — HTTP server setup and route registration. Routes pass `storage.Storage` and `auth.Auth` into handlers.
-- **`internal/storage/`** — Dual-mode storage abstraction (S3 or local filesystem). Content files are YAML; the `body` field is markdown converted to HTML at read time. Also manages the SQLite database connection.
+- **`internal/storage/`** — Dual-mode storage abstraction (S3 or local filesystem). Content files are YAML; the `body` field is markdown converted to HTML at read time.
 - **`internal/model/`** — Shared `Document` struct (`title`, `subtitle`, `body`, `tags`) embedded by all content types via `yaml:",inline"`.
-- **`internal/auth/`** — Cookie-based sessions (gorilla/sessions) with bcrypt password hashing. SQLite stores user records.
+- **`internal/auth/`** — Cookie-based sessions (gorilla/sessions). Sign-in is Google via an Amazon Cognito user pool; `oidc.go` performs the handshake and admits only members of the pool's `admins` group. There is no user database.
 - **`internal/ai/`** — OpenAI GPT-4o integration for the writer's AI suggestion feature. Prompt instruction files live in `prompts/`.
 
 ### Content Types
@@ -61,13 +60,19 @@ Controlled by the `USE_S3` env var. In local mode, files are read directly from 
 | Variable                         | Purpose                                                                          |
 | -------------------------------- | -------------------------------------------------------------------------------- |
 | `PORT`                           | HTTP server port                                                                 |
-| `SESSION_NAME`                   | Cookie session key name                                                          |
+| `SESSION_NAME`                   | Session cookie name (public identifier, not a secret)                            |
+| `SESSION_KEY`                    | Secret signing the session cookie; min 32 chars, server refuses to start if short |
 | `USE_S3`                         | Set to `"true"` to use S3; otherwise local                                       |
 | `AWS_BUCKET_NAME`                | S3 bucket (required if `USE_S3=true`)                                            |
 | `AWS_REGION`                     | AWS region (required if `USE_S3=true`)                                           |
 | `OPENAI_API_KEY`                 | Required for AI writer suggestions                                               |
 | `GOATCOUNTER_URL`                | GoatCounter subdomain (e.g. `mysite.goatcounter.com`); omit to disable analytics |
-| `SITE_URL`                       | Base URL for SEO (canonical, sitemap, OG tags)                                   |
+| `SITE_URL`                       | Base URL for SEO (canonical, sitemap, OG tags) and the OAuth callback            |
+| `COGNITO_DOMAIN`                 | Cognito hosted domain; used for the logout endpoint                              |
+| `COGNITO_USER_POOL_ID`           | Cognito user pool ID; the OIDC issuer is derived from it                         |
+| `COGNITO_CLIENT_ID`              | Cognito app client ID                                                            |
+| `COGNITO_CLIENT_SECRET`          | Cognito app client secret                                                        |
+| _(access control)_               | Membership of the `admins` group in the user pool, managed in the AWS console    |
 | `SITE_NAME`                      | Site name shown in titles, banner, JSON-LD (default: `Timterests`)               |
 | `SITE_SUBTITLE`                  | Banner subtitle (default: `Tim's interests`)                                     |
 | `AUTHOR_NAME`                    | Author name for footer, JSON-LD, descriptions (default: `Tim Scott`)             |

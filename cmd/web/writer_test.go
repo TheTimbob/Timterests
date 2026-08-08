@@ -16,7 +16,7 @@ import (
 func TestWriterPageHandler(t *testing.T) {
 	t.Run("redirects to login when unauthenticated", func(t *testing.T) {
 		s := testSetup(t, context.Background())
-		a := auth.NewAuth("test-session-key-minimum-32-bytes")
+		a := auth.NewAuth("test-session", "test-signing-key-at-least-32-chars!!")
 
 		req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/writer", nil)
 		rec := httptest.NewRecorder()
@@ -139,7 +139,7 @@ func TestWriterPageHandler(t *testing.T) {
 func TestWriteDocumentHandler(t *testing.T) {
 	t.Run("redirects to login when unauthenticated", func(t *testing.T) {
 		s := testSetup(t, context.Background())
-		a := auth.NewAuth("test-session-key-minimum-32-bytes")
+		a := auth.NewAuth("test-session", "test-signing-key-at-least-32-chars!!")
 
 		form := url.Values{}
 		form.Set("document-type", "articles")

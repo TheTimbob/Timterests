@@ -20,6 +20,7 @@ type Server struct {
 	port    int
 	Storage *storage.Storage
 	auth    *auth.Auth
+	oidc    *auth.OIDC
 }
 
 // NewServer creates and configures a new HTTP server instance.
@@ -35,13 +36,23 @@ func NewServer() *http.Server {
 		panic(fmt.Sprintf("failed to initialize storage: %v", err))
 	}
 
-	// Initialize Auth with session name from environment
-	authInstance := auth.NewAuth(os.Getenv("SESSION_NAME"))
+	// Initialize Auth. A weak signing key is refused outright: it would let anyone
+	// forge a session cookie and bypass sign-in entirely.
+	sessionKey := os.Getenv("SESSION_KEY")
+	if len(sessionKey) < auth.MinSessionKeyLength {
+		panic(fmt.Sprintf(
+			"SESSION_KEY must be at least %d characters; it signs session cookies",
+			auth.MinSessionKeyLength,
+		))
+	}
+
+	authInstance := auth.NewAuth(os.Getenv("SESSION_NAME"), sessionKey)
 
 	NewServer := &Server{
 		port:    port,
 		Storage: store,
 		auth:    authInstance,
+		oidc:    auth.NewOIDC(auth.OIDCConfigFromEnv(), authInstance),
 	}
 
 	// Declare Server config

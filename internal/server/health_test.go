@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"path/filepath"
 	"testing"
 
 	"timterests/internal/server"
@@ -11,7 +12,7 @@ import (
 )
 
 func TestHealthHandlerOK(t *testing.T) {
-	setupHealthTestDB(t)
+	isolateWorkingDir(t)
 
 	s := &server.Server{
 		Storage: &storage.Storage{
@@ -52,10 +53,6 @@ func TestHealthHandlerOK(t *testing.T) {
 	if checks["storage"] != "ok" {
 		t.Errorf("expected storage 'ok', got %q", checks["storage"])
 	}
-
-	if checks["database"] != "ok" {
-		t.Errorf("expected database 'ok', got %q", checks["database"])
-	}
 }
 
 func TestHealthHandlerDegraded(t *testing.T) {
@@ -64,7 +61,7 @@ func TestHealthHandlerDegraded(t *testing.T) {
 	s := &server.Server{
 		Storage: &storage.Storage{
 			UseS3:   false,
-			BaseDir: t.TempDir(),
+			BaseDir: filepath.Join(t.TempDir(), "does-not-exist"),
 		},
 	}
 
