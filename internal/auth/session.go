@@ -31,7 +31,9 @@ func InitializeSession(name, key string) *SessionStore {
 		MaxAge:   86400,
 		HttpOnly: true,
 		Secure:   true,
-		SameSite: http.SameSiteStrictMode,
+		// Lax, not Strict: Strict withholds the cookie on the redirect back from
+		// Cognito, so the first request after signing in bounces to /login.
+		SameSite: http.SameSiteLaxMode,
 	}
 	sess := &SessionStore{
 		store,
