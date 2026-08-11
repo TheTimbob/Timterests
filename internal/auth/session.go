@@ -31,11 +31,8 @@ func InitializeSession(name, key string) *SessionStore {
 		MaxAge:   86400,
 		HttpOnly: true,
 		Secure:   true,
-		// Lax, not Strict. Strict withholds the cookie on any cross-site-initiated
-		// navigation, including the redirect chain back from Cognito — so the first
-		// request after signing in arrives with no session and bounces to /login,
-		// despite the cookie having been set. Lax still blocks cross-site POSTs,
-		// which is the CSRF case that matters.
+		// Lax, not Strict: Strict withholds the cookie on the redirect back from
+		// Cognito, so the first request after signing in bounces to /login.
 		SameSite: http.SameSiteLaxMode,
 	}
 	sess := &SessionStore{

@@ -204,13 +204,9 @@ func (s *Server) RegisterRoutes() http.Handler {
 	)
 }
 
-// requireAuth redirects an unauthenticated request to the login page.
-//
-// Applied where routes are registered rather than inside each handler, so
-// protection is visible reading routes.go top to bottom and a new admin route is
-// covered by wrapping it rather than by remembering to add a guard clause. The
-// handlers keep their own checks as well, which protects them when called
-// directly rather than through the router.
+// requireAuth redirects unauthenticated requests to the login page. Applied at
+// registration so a new admin route is covered by wrapping it rather than by
+// remembering a guard clause; handlers keep their own checks for direct calls.
 func (s *Server) requireAuth(next http.HandlerFunc) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !auth.IsAdmin(r.Context()) {
